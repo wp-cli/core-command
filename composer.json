@@ -1,6 +1,6 @@
 {
     "name": "wp-cli/core-command",
-    "description": "Manage WordPress core files.",
+    "description": "Download, install, update and manage a WordPress install.",
     "type": "wp-cli-package",
     "homepage": "https://github.com/wp-cli/core-command",
     "support": {
