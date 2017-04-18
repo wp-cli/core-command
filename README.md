@@ -1,7 +1,7 @@
 wp-cli/core-command
 ===================
 
-Manage WordPress core files.
+Download, install, update and manage a WordPress install.
 
 [![Build Status](https://travis-ci.org/wp-cli/core-command.svg?branch=master)](https://travis-ci.org/wp-cli/core-command)
 
