@@ -1258,5 +1258,3 @@ EOT;
 	}
 
 }
-
-WP_CLI::add_command( 'core', 'Core_Command' );
