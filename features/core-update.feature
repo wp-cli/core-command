@@ -209,7 +209,7 @@ Feature: Update WordPress core
     When I run `wp core update --minor`
     Then STDOUT should contain:
       """
-      Updating to version 4.0.178 (en_US)...
+      Updating to version 4.0.18 (en_US)...
       Descargando paquete de instalación desde https://downloads.wordpress.org/release/wordpress-4.0.16-partial-0.zip
       """
     And STDOUT should contain:
