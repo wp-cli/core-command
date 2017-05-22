@@ -197,7 +197,7 @@ class FeatureContext extends BehatContext implements ClosuredContextInterface {
 
 	public function replace_variables( $str ) {
 		$ret = preg_replace_callback( '/\{([A-Z_]+)\}/', array( $this, '_replace_var' ), $str );
-		if ( false !== strpos( $str, '{WP_VERS[' ) ) {
+		if ( false !== strpos( $str, '{WP_VERSION-' ) ) {
 			$ret = $this->_replace_wp_vers( $ret );
 		}
 		return $ret;
@@ -213,7 +213,7 @@ class FeatureContext extends BehatContext implements ClosuredContextInterface {
 		return $cmd;
 	}
 
-	// Substitute "{WP_VERS[ver]}" and "{WP_VERS[ver][-1]}" variables.
+	// Substitute "{WP_VERSION-version-latest}" variables.
 	private function _replace_wp_vers( $str ) {
 		static $wp_vers = null;
 		if ( null === $wp_vers ) {
@@ -222,10 +222,10 @@ class FeatureContext extends BehatContext implements ClosuredContextInterface {
 			$response = Requests::get( 'https://api.wordpress.org/core/version-check/1.7/', null, array( 'timeout' => 30 ) );
 			if ( 200 === $response->status_code && ( $body = json_decode( $response->body ) ) && is_object( $body ) && isset( $body->offers ) && is_array( $body->offers ) ) {
 				// Latest version alias.
-				$wp_vers["{WP_VERS[now]}"] = count( $body->offers ) ? $body->offers[0]->version : '';
+				$wp_vers["{WP_VERSION-latest}"] = count( $body->offers ) ? $body->offers[0]->version : '';
 				foreach ( $body->offers as $offer ) {
 					$main_ver = preg_replace( '/(^[0-9]+\.[0-9]+)\.[0-9]+$/', '$1', $offer->version );
-					$wp_vers[ "{WP_VERS[{$main_ver}]}" ] = $offer->version;
+					$wp_vers[ "{WP_VERSION-{$main_ver}-latest}" ] = $offer->version;
 				}
 			}
 
