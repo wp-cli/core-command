@@ -12,6 +12,7 @@ Feature: Download WordPress
     And save STDOUT 'Downloading WordPress ([\d\.]+)' as {VERSION}
     Then the wp-settings.php file should exist
     And the {SUITE_CACHE_DIR}/core/wordpress-{VERSION}-en_US.tar.gz file should exist
+    And the {SUITE_CACHE_DIR}/core/wordpress-{WP_VERS[now]}-en_US.tar.gz file should exist
 
     When I run `mkdir inner`
     And I run `cd inner && wp core download`
@@ -44,6 +45,7 @@ Feature: Download WordPress
 
   Scenario: Verify release hash when downloading new version
     Given an empty directory
+    And an empty cache
 
     When I run `wp core download --version=4.4.1`
     Then STDOUT should contain:
