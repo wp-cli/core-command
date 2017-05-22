@@ -219,25 +219,16 @@ class FeatureContext extends BehatContext implements ClosuredContextInterface {
 		if ( null === $wp_vers ) {
 			$wp_vers = array();
 
-			$response = Requests::get( 'https://wordpress.org/download/release-archive/' );
-			// Ignore RCs, betas etc and versions < 3.0.
-			if ( preg_match_all( '/[\'"]http[^\'"]+?-(([3-9]\.[0-9]+)(?:\.[0-9]+)?)\.tar\.gz[\'"]/', $response->body, $matches ) ) {
-				// Assuming the Release Archive list is reverse sorted.
-
+			$response = Requests::get( 'https://api.wordpress.org/core/version-check/1.7/', null, array( 'timeout' => 30 ) );
+			if ( 200 === $response->status_code && ( $body = json_decode( $response->body ) ) && is_object( $body ) && isset( $body->offers ) && is_array( $body->offers ) ) {
 				// Latest version alias.
-				$wp_vers["{WP_VERS[now]}"] = $matches[1][0];
-
-				foreach ( $matches[2] as $i => $main_ver ) {
-					if ( ! isset( $wp_vers[ "{WP_VERS[{$main_ver}]}" ] ) ) {
-						// Current version.
-						$wp_vers[ "{WP_VERS[{$main_ver}]}" ] = $matches[1][ $i ];
-
-					} elseif ( ! isset( $wp_vers[ "{WP_VERS[{$main_ver}][-1]}" ] ) ) {
-						// Previous version.
-						$wp_vers[ "{WP_VERS[{$main_ver}][-1]}" ] = $matches[1][ $i ];
-					}
+				$wp_vers["{WP_VERS[now]}"] = count( $body->offers ) ? $body->offers[0]->version : '';
+				foreach ( $body->offers as $offer ) {
+					$main_ver = preg_replace( '/(^[0-9]+\.[0-9]+)\.[0-9]+$/', '$1', $offer->version );
+					$wp_vers[ "{WP_VERS[{$main_ver}]}" ] = $offer->version;
 				}
 			}
+
 		}
 		return strtr( $str, $wp_vers );
 	}
