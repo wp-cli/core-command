@@ -196,7 +196,11 @@ class FeatureContext extends BehatContext implements ClosuredContextInterface {
 	}
 
 	public function replace_variables( $str ) {
-		return preg_replace_callback( '/\{([A-Z_]+)\}/', array( $this, '_replace_var' ), $str );
+		$ret = preg_replace_callback( '/\{([A-Z_]+)\}/', array( $this, '_replace_var' ), $str );
+		if ( false !== strpos( $str, '{WP_VERS[' ) ) {
+			$ret = $this->_replace_wp_vers( $ret );
+		}
+		return $ret;
 	}
 
 	private function _replace_var( $matches ) {
@@ -207,6 +211,35 @@ class FeatureContext extends BehatContext implements ClosuredContextInterface {
 		}
 
 		return $cmd;
+	}
+
+	// Substitute "{WP_VERS[ver]}" and "{WP_VERS[ver][-1]}" variables.
+	private function _replace_wp_vers( $str ) {
+		static $wp_vers = null;
+		if ( null === $wp_vers ) {
+			$wp_vers = array();
+
+			$response = Requests::get( 'https://wordpress.org/download/release-archive/' );
+			// Ignore RCs, betas etc and versions < 3.0.
+			if ( preg_match_all( '/[\'"]http[^\'"]+?-(([3-9]\.[0-9]+)(?:\.[0-9]+)?)\.tar\.gz[\'"]/', $response->body, $matches ) ) {
+				// Assuming the Release Archive list is reverse sorted.
+
+				// Latest version alias.
+				$wp_vers["{WP_VERS[now]}"] = $matches[1][0];
+
+				foreach ( $matches[2] as $i => $main_ver ) {
+					if ( ! isset( $wp_vers[ "{WP_VERS[{$main_ver}]}" ] ) ) {
+						// Current version.
+						$wp_vers[ "{WP_VERS[{$main_ver}]}" ] = $matches[1][ $i ];
+
+					} elseif ( ! isset( $wp_vers[ "{WP_VERS[{$main_ver}][-1]}" ] ) ) {
+						// Previous version.
+						$wp_vers[ "{WP_VERS[{$main_ver}][-1]}" ] = $matches[1][ $i ];
+					}
+				}
+			}
+		}
+		return strtr( $str, $wp_vers );
 	}
 
 	public function create_run_dir() {
