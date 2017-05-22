@@ -195,7 +195,7 @@ Feature: Update WordPress core
     When I run `wp post create --post_title='Test post' --porcelain`
     Then STDOUT should be a number
 
-  @less-than-php-7 @require-wp-4.0
+  @less-than-php-7
   Scenario: Minor update on an unlocalized WordPress release
     Given a WP install
     And an empty cache
