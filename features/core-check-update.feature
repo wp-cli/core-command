@@ -40,7 +40,6 @@ Feature: Check for more recent versions
       1
       """
 
-  @less-than-php-7
   Scenario: No minor updates for an unlocalized WordPress release
     Given a WP install
 

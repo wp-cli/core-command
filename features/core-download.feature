@@ -44,6 +44,7 @@ Feature: Download WordPress
 
   Scenario: Verify release hash when downloading new version
     Given an empty directory
+    And an empty cache
 
     When I run `wp core download --version=4.4.1`
     Then STDOUT should contain:
