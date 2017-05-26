@@ -29,8 +29,9 @@ Feature: Update WordPress core
       4.0
       """
 
-  # PHP 7.1 needs WP 3.9 (due to wp_check_php_mysql_versions(), see trac changeset [27257]).
-  @less-than-php-7.1
+  # PHP 7.1 needs WP 3.9 (due to wp_check_php_mysql_versions(), see trac changeset [27257]),
+  # and travis doesn't install mysql extension by default for PHP 7.0.
+  @less-than-php-7
   Scenario: Update to the latest minor release
     Given a WP install
 
