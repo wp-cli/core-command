@@ -160,9 +160,8 @@ class Core_Command extends WP_CLI_Command {
 
 		$from_version = '';
 		if ( file_exists( $download_dir . 'wp-includes/version.php' ) ) {
-			global $wp_version;
-			require_once( $download_dir . 'wp-includes/version.php' );
-			$from_version = $wp_version;
+			$wp_details = self::get_wp_details( $download_dir );
+			$from_version = $wp_details['wp_version'];
 		}
 
 		WP_CLI::log( sprintf( 'Downloading WordPress %s (%s)...', $version, $locale ) );
@@ -774,8 +773,8 @@ EOT;
 	 *     @type string $wp_local_package The TinyMCE version.
 	 * }
 	 */
-	private static function get_wp_details() {
-		$versions_path = ABSPATH . 'wp-includes/version.php';
+	private static function get_wp_details( $abspath = ABSPATH ) {
+		$versions_path = $abspath . 'wp-includes/version.php';
 
 		if ( ! is_readable( $versions_path ) ) {
 			WP_CLI::error(
@@ -1022,9 +1021,10 @@ EOT;
 				}
 			} else {
 
+				$to_version = '';
 				if ( file_exists( ABSPATH . 'wp-includes/version.php' ) ) {
-					include( ABSPATH . 'wp-includes/version.php' );
-					$to_version = $wp_version;
+					$wp_details = self::get_wp_details();
+					$to_version = $wp_details['wp_version'];
 				}
 
 				$locale = \WP_CLI\Utils\get_flag_value( $assoc_args, 'locale', get_locale() );

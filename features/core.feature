@@ -77,7 +77,7 @@ Feature: Manage WordPress installation
       admin@example.com
       """
 
-    When I run `wp core install --url=localhost:8001 --title=Test --admin_user=wpcli --prompt=admin_email,admin_password < session`
+    When I run `wp core install --url=localhost:8001 --title=Test --admin_user=wpcli --prompt=admin_password,admin_email < session`
     Then STDOUT should not be empty
 
     When I run `wp eval 'echo home_url();'`
