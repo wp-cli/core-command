@@ -1,20 +1,19 @@
 Feature: Update WordPress core
 
-  @less-than-php-7
   Scenario: Update from a ZIP file
     Given a WP install
 
-    When I run `wp core download --version=3.8 --force`
+    When I run `wp core download --version=3.9 --force`
     Then STDOUT should not be empty
 
     When I run `wp eval 'echo $GLOBALS["wp_version"];'`
     Then STDOUT should be:
       """
-      3.8
+      3.9
       """
 
-    When I run `wget http://wordpress.org/wordpress-3.9.zip --quiet`
-    And I run `wp core update wordpress-3.9.zip`
+    When I run `wget http://wordpress.org/wordpress-4.0.zip --quiet`
+    And I run `wp core update wordpress-4.0.zip`
     Then STDOUT should be:
       """
       Starting update...
@@ -27,9 +26,11 @@ Feature: Update WordPress core
     When I run `wp eval 'echo $GLOBALS["wp_version"];'`
     Then STDOUT should be:
       """
-      3.9
+      4.0
       """
 
+  # PHP 7.1 needs WP 3.9 (due to wp_check_php_mysql_versions(), see trac changeset [27257]),
+  # and travis doesn't install mysql extension by default for PHP 7.0.
   @less-than-php-7
   Scenario: Update to the latest minor release
     Given a WP install
@@ -55,12 +56,35 @@ Feature: Update WordPress core
       3.7.21
       """
 
-  @less-than-php-7
+  Scenario: Update to the latest minor release (PHP 7.1 compatible with WP >= 3.9)
+    Given a WP install
+
+    When I run `wp core download --version=3.9.9 --force`
+    Then STDOUT should not be empty
+
+    When I run `wp core update --minor`
+    Then STDOUT should contain:
+      """
+      Updating to version 3.9.19
+      """
+
+    When I run `wp core update --minor`
+    Then STDOUT should be:
+      """
+      Success: WordPress is at the latest minor release.
+      """
+
+    When I run `wp core version`
+    Then STDOUT should be:
+      """
+      3.9.19
+      """
+
   Scenario: Core update from cache
     Given a WP install
     And an empty cache
 
-    When I run `wp core update --version=3.8.1 --force`
+    When I run `wp core update --version=3.9.1 --force`
     Then STDOUT should not contain:
       """
       Using cached file
@@ -70,13 +94,13 @@ Feature: Update WordPress core
       Downloading
       """
 
-    When I run `wp core update --version=3.9 --force`
+    When I run `wp core update --version=4.0 --force`
     Then STDOUT should not be empty
 
-    When I run `wp core update --version=3.8.1 --force`
+    When I run `wp core update --version=3.9.1 --force`
     Then STDOUT should contain:
       """
-      Using cached file '{SUITE_CACHE_DIR}/core/wordpress-3.8.1-en_US.zip'...
+      Using cached file '{SUITE_CACHE_DIR}/core/wordpress-3.9.1-en_US.zip'...
       """
     And STDOUT should not contain:
       """
@@ -161,7 +185,6 @@ Feature: Update WordPress core
       wordpress-4.2.4-partial-1-en_US.zip
       """
 
-  @less-than-php-7
   Scenario: Make sure files are cleaned up
     Given a WP install
     When I run `wp core update --version=4.4 --force`
@@ -195,7 +218,6 @@ Feature: Update WordPress core
     When I run `wp post create --post_title='Test post' --porcelain`
     Then STDOUT should be a number
 
-  @less-than-php-7 @require-wp-4.0
   Scenario: Minor update on an unlocalized WordPress release
     Given a WP install
     And an empty cache
@@ -210,7 +232,7 @@ Feature: Update WordPress core
     Then STDOUT should contain:
       """
       Updating to version 4.0.18 (en_US)...
-      Descargando paquete de instalación desde https://downloads.wordpress.org/release/wordpress-4.0.16-partial-0.zip
+      Descargando paquete de instalación desde https://downloads.wordpress.org/release/wordpress-4.0.18-partial-0.zip
       """
     And STDOUT should contain:
       """
