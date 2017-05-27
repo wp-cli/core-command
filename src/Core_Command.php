@@ -1272,15 +1272,15 @@ EOT;
 	 * ## EXAMPLES
 	 *
 	 *     # Display the latest WordPress version
-	 *     $ wp core latest-version
+	 *     $ wp core latest_version
 	 *     4.7.5
 	 *
 	 *     # Display the latest WordPress 4.2 version
-	 *     $ wp core latest-version 4.2
+	 *     $ wp core latest_version 4.2
 	 *     4.2.15
 	 *
 	 *     # Display the latest WordPress 3 version
-	 *     $ wp core latest-version 3
+	 *     $ wp core latest_version 3
 	 *     3.9.19
 	 *
 	 * @when before_wp_load
@@ -1327,8 +1327,6 @@ EOT;
 			}
 		}
 
-		if ( $latest_version ) {
-			WP_CLI::line( $latest_version );
-		}
+		WP_CLI::line( $latest_version );
 	}
 }
