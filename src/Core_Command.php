@@ -766,8 +766,6 @@ EOT;
 	/**
 	 * Get version information from `wp-includes/version.php`.
 	 *
-	 * @param string $abspath Optional. The absolute path to use.
-	 *
 	 * @return array {
 	 *     @type string $wp_version The WordPress version.
 	 *     @type int $wp_db_version The WordPress DB revision.
@@ -1259,74 +1257,4 @@ EOT;
 		}
 	}
 
-	/**
-	 * Display the latest WordPress version.
-	 *
-	 * ## OPTIONS
-	 *
-	 * [<version>]
-	 * : A particular version to show the latest version available for.
-	 *   Can be the first number only or the first two numbers, dot separated,
-	 *   or the special strings "trunk" or "latest".
-	 *
-	 * ## EXAMPLES
-	 *
-	 *     # Display the latest WordPress version
-	 *     $ wp core latest_version
-	 *     4.7.5
-	 *
-	 *     # Display the latest WordPress 4.2 version
-	 *     $ wp core latest_version 4.2
-	 *     4.2.15
-	 *
-	 *     # Display the latest WordPress 3 version
-	 *     $ wp core latest_version 3
-	 *     3.9.19
-	 *
-	 * @when before_wp_load
-	 */
-	public function latest_version( $args = array(), $assoc_args = array() ) {
-		$latest_version = $version_match = '';
-		if ( isset( $args[0] ) ) {
-			if ( 'latest' === $args[0] ) {
-				// Ignore.
-			} elseif ( 'trunk' === $args[0] ) {
-				$version_match = 'trunk';
-			} else {
-				if ( ! preg_match( '/^[0-9]+(\.[0-9]+)?$/', $args[0], $matches ) ) {
-					WP_CLI::error( 'Invalid version.' );
-				}
-				$version_match = '/^' . preg_quote( $args[0] ) . '/';
-			}
-		}
-
-		if ( 'trunk' === $version_match ) {
-			$response = Requests::get( 'https://core.trac.wordpress.org/browser/trunk/src/wp-includes/version.php?format=txt', null, array( 'timeout' => 30 ) );
-			if ( 200 === $response->status_code ) {
-				$latest_version = self::find_var( 'wp_version', $response->body );
-				if ( ! $latest_version ) {
-					WP_CLI::error( 'Failed to retrieve trunk version.' );
-				}
-			} else {
-				WP_CLI::error( 'Failed to retrieve trunk version info.' );
-			}
-		} else {
-			$response = Requests::get( 'https://api.wordpress.org/core/version-check/1.7/', null, array( 'timeout' => 30 ) );
-			if ( 200 === $response->status_code && ( $body = json_decode( $response->body ) ) && is_object( $body ) && isset( $body->offers ) && is_array( $body->offers ) ) {
-				foreach ( $body->offers as $offer ) {
-					if ( ! $version_match || preg_match( $version_match, $offer->version ) ) {
-						$latest_version = $offer->version;
-						break;
-					}
-				}
-				if ( ! $latest_version ) {
-					WP_CLI::error( 'Failed to match version.' );
-				}
-			} else {
-				WP_CLI::error( 'Failed to retrieve version info.' );
-			}
-		}
-
-		WP_CLI::line( $latest_version );
-	}
 }
