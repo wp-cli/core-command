@@ -8,9 +8,9 @@ Feature: Check for more recent versions
 
     When I run `wp core check-update`
     Then STDOUT should be a table containing rows:
-      | version | update_type | package_url                                                  |
-      | 4.7.5   | major       | https://downloads.wordpress.org/release/wordpress-4.7.5.zip    |
-      | 4.4.10  | minor       | https://downloads.wordpress.org/release/wordpress-4.4.10-partial-0.zip |
+      | version                 | update_type | package_url                                                                             |
+      | {WP_VERSION-latest}     | major       | https://downloads.wordpress.org/release/wordpress-{WP_VERSION-latest}.zip               |
+      | {WP_VERSION-4.4-latest} | minor       | https://downloads.wordpress.org/release/wordpress-{WP_VERSION-4.4-latest}-partial-0.zip |
 
     When I run `wp core check-update --format=count`
     Then STDOUT should be:
@@ -20,8 +20,8 @@ Feature: Check for more recent versions
 
     When I run `wp core check-update --major`
     Then STDOUT should be a table containing rows:
-      | version | update_type | package_url                                                  |
-      | 4.7.5   | major       | https://downloads.wordpress.org/release/wordpress-4.7.5.zip  |
+      | version             | update_type | package_url                                                               |
+      | {WP_VERSION-latest} | major       | https://downloads.wordpress.org/release/wordpress-{WP_VERSION-latest}.zip |
 
     When I run `wp core check-update --major --format=count`
     Then STDOUT should be:
@@ -31,8 +31,8 @@ Feature: Check for more recent versions
 
     When I run `wp core check-update --minor`
     Then STDOUT should be a table containing rows:
-      | version | update_type | package_url                                |
-      | 4.4.10  | minor       | https://downloads.wordpress.org/release/wordpress-4.4.10-partial-0.zip |
+      | version                 | update_type | package_url                                                                             |
+      | {WP_VERSION-4.4-latest} | minor       | https://downloads.wordpress.org/release/wordpress-{WP_VERSION-4.4-latest}-partial-0.zip |
 
     When I run `wp core check-update --minor --format=count`
     Then STDOUT should be:
@@ -51,5 +51,5 @@ Feature: Check for more recent versions
 
     When I run `wp core check-update --minor`
     Then STDOUT should be a table containing rows:
-      | version | update_type | package_url                                        |
-      | 4.0.18  | minor       | https://downloads.wordpress.org/release/wordpress-4.0.18-partial-0.zip |
+      | version                 | update_type | package_url                                                                             |
+      | {WP_VERSION-4.0-latest} | minor       | https://downloads.wordpress.org/release/wordpress-{WP_VERSION-4.0-latest}-partial-0.zip |

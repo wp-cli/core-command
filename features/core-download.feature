@@ -12,6 +12,7 @@ Feature: Download WordPress
     And save STDOUT 'Downloading WordPress ([\d\.]+)' as {VERSION}
     Then the wp-settings.php file should exist
     And the {SUITE_CACHE_DIR}/core/wordpress-{VERSION}-en_US.tar.gz file should exist
+    And the {SUITE_CACHE_DIR}/core/wordpress-{WP_VERSION-latest}-en_US.tar.gz file should exist
 
     When I run `mkdir inner`
     And I run `cd inner && wp core download`
@@ -117,7 +118,7 @@ Feature: Download WordPress
       Success: WordPress downloaded.
       """
 
-	# we shouldn't cache nightly builds
+    # we shouldn't cache nightly builds
     When I run `wp core download --version=nightly --force`
     Then the wp-settings.php file should exist
     And STDOUT should not contain:
@@ -185,7 +186,7 @@ Feature: Download WordPress
     And an empty cache
 
     When I try `wp core download --version=nightly --locale=de_DE`
-		Then the return code should be 1
+    Then the return code should be 1
     And STDERR should contain:
     """
     Error: Nightly builds are only available for the en_US locale.
