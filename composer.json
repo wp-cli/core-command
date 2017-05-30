@@ -31,6 +31,7 @@
         "branch-alias": {
             "dev-master": "1.x-dev"
         },
+        "bundled": true,
         "commands": [
             "core check-update",
             "core download",
