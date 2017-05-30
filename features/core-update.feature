@@ -41,7 +41,7 @@ Feature: Update WordPress core
     When I run `wp core update --minor`
     Then STDOUT should contain:
       """
-      Updating to version 3.7.21
+      Updating to version {WP_VERSION-3.7-latest}
       """
 
     When I run `wp core update --minor`
@@ -53,7 +53,7 @@ Feature: Update WordPress core
     When I run `wp core version`
     Then STDOUT should be:
       """
-      3.7.21
+      {WP_VERSION-3.7-latest}
       """
 
   Scenario: Update to the latest minor release (PHP 7.1 compatible with WP >= 3.9)
@@ -65,7 +65,7 @@ Feature: Update WordPress core
     When I run `wp core update --minor`
     Then STDOUT should contain:
       """
-      Updating to version 3.9.19
+      Updating to version {WP_VERSION-3.9-latest}
       """
 
     When I run `wp core update --minor`
@@ -77,7 +77,7 @@ Feature: Update WordPress core
     When I run `wp core version`
     Then STDOUT should be:
       """
-      3.9.19
+      {WP_VERSION-3.9-latest}
       """
 
   Scenario: Core update from cache
@@ -105,7 +105,7 @@ Feature: Update WordPress core
     And STDOUT should not contain:
       """
       Downloading
-	  """
+      """
 
   Scenario: Don't run update when up-to-date
     Given a WP install
@@ -231,8 +231,8 @@ Feature: Update WordPress core
     When I run `wp core update --minor`
     Then STDOUT should contain:
       """
-      Updating to version 4.0.18 (en_US)...
-      Descargando paquete de instalación desde https://downloads.wordpress.org/release/wordpress-4.0.18-partial-0.zip
+      Updating to version {WP_VERSION-4.0-latest} (en_US)...
+      Descargando paquete de instalación desde https://downloads.wordpress.org/release/wordpress-{WP_VERSION-4.0-latest}-partial-0.zip
       """
     And STDOUT should contain:
       """
