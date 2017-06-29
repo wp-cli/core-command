@@ -640,7 +640,7 @@ EOT;
 
 			$wp_config_path = Utils\locate_wp_config();
 			if ( true === \WP_CLI\Utils\get_flag_value( $assoc_args, 'skip-config' ) ) {
-				WP_CLI::log( "Addition of multisite constants to 'wp-config.php' skipped. You need to add them manually:" . PHP_EOL );
+				WP_CLI::log( "Addition of multisite constants to 'wp-config.php' skipped. You need to add them manually:" . PHP_EOL . $ms_config );
 			} elseif ( is_writable( $wp_config_path ) && self::modify_wp_config( $ms_config ) ) {
 				WP_CLI::log( "Added multisite constants to 'wp-config.php'." );
 			} else {
