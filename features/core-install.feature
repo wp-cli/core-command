@@ -184,3 +184,15 @@ Feature: Install WordPress core
       """
       Success: Network installed. Don't forget to set up rewrite rules.
       """
+
+  Scenario: Install WordPress multisite without adding multisite constants to wp-config file
+    Given an empty directory
+    And WP files
+    And wp-config.php
+    And a database
+
+    When I run `wp core multisite-install --url=foobar.org --title=Test --admin_user=wpcli --admin_email=admin@example.com --admin_password=password --skip-config`
+    Then STDOUT should contain:
+    """
+    Addition of multisite constants to 'wp-config.php' skipped. You need to add them manually:
+    """
