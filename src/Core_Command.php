@@ -117,7 +117,7 @@ class Core_Command extends WP_CLI_Command {
 	 */
 	public function download( $args, $assoc_args ) {
 
-		$download_dir = ! empty( $assoc_args['path'] ) ? $assoc_args['path'] : ABSPATH;
+		$download_dir = ! empty( $assoc_args['path'] ) ? ( rtrim( $assoc_args['path'], '/\//' ) . '/' ) : ABSPATH;
 		$wordpress_present = is_readable( $download_dir . 'wp-load.php' );
 
 		if ( ! \WP_CLI\Utils\get_flag_value( $assoc_args, 'force' ) && $wordpress_present )
@@ -129,8 +129,7 @@ class Core_Command extends WP_CLI_Command {
 			}
 
 			WP_CLI::log( sprintf( "Creating directory '%s'.", $download_dir ) );
-			$mkdir = \WP_CLI\Utils\is_windows() ? 'mkdir %s' : 'mkdir -p %s';
-			WP_CLI::launch( Utils\esc_cmd( $mkdir, $download_dir ) );
+			mkdir( $download_dir, 0777, true /*recursive*/ );
 		}
 
 		if ( ! is_writable( $download_dir ) ) {
@@ -1122,7 +1121,11 @@ EOT;
 				if ( $dry_run ) {
 					WP_CLI::success( "WordPress database will be upgraded from db version {$wp_current_db_version} to {$wp_db_version}." );
 				} else {
+					// WP upgrade isn't too fussy about generating MySQL warnings such as "Duplicate key name" during on upgrade so suppress.
+					$wpdb->suppress_errors();
+
 					wp_upgrade();
+
 					WP_CLI::success( "WordPress database upgraded successfully from db version {$wp_current_db_version} to {$wp_db_version}." );
 				}
 			} else {
