@@ -129,7 +129,7 @@ class Core_Command extends WP_CLI_Command {
 			}
 
 			WP_CLI::log( sprintf( "Creating directory '%s'.", $download_dir ) );
-			if ( ! mkdir( $download_dir, 0777, true /*recursive*/ ) ) {
+			if ( ! @mkdir( $download_dir, 0777, true /*recursive*/ ) ) {
 				$error = error_get_last();
 				WP_CLI::error( sprintf( "Failed to create directory '%s': %s.", $download_dir, $error['message'] ) );
 			}
