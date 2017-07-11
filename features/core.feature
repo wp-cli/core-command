@@ -212,9 +212,13 @@ Feature: Manage WordPress installation
 
   Scenario: Install multisite from scratch, with MULTISITE already set in wp-config.php
     Given a WP multisite install
+    And a suppress-error-log.php file:
+      """
+      <?php ini_set( 'error_log', null );
+      """
     And I run `wp db reset --yes`
 
-    When I try `wp core is-installed`
+    When I try `wp --require=suppress-error-log.php core is-installed`
     Then the return code should be 1
 
     When I run `wp core multisite-install --title=Test --admin_user=wpcli --admin_email=admin@example.com --admin_password=1`

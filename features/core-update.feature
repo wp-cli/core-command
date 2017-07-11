@@ -232,7 +232,10 @@ Feature: Update WordPress core
     Then STDOUT should contain:
       """
       Updating to version {WP_VERSION-4.0-latest} (en_US)...
-      Descargando paquete de instalación desde https://downloads.wordpress.org/release/wordpress-{WP_VERSION-4.0-latest}-partial-0.zip
+      """
+    And STDOUT should contain:
+      """
+      https://downloads.wordpress.org/release/wordpress-{WP_VERSION-4.0-latest}-partial-0.zip
       """
     And STDOUT should contain:
       """
