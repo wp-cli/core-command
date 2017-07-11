@@ -269,3 +269,13 @@ Feature: Download WordPress
     """
     root-level-directory
     """
+
+    When I try `WP_CLI_STRICT_ARGS_MODE=1 wp core download --path=/root-level-directory`
+    Then STDERR should contain:
+    """
+    Insufficient permission to create directory
+    """
+    And STDERR should contain:
+    """
+    root-level-directory
+    """
