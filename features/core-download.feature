@@ -18,7 +18,7 @@ Feature: Download WordPress
     And I run `cd inner && wp core download`
     Then the inner/wp-settings.php file should exist
 
-	When I try `WP_CLI_STRICT_ARGS_MODE=1 wp core download --path=inner`
+    When I try `WP_CLI_STRICT_ARGS_MODE=1 wp core download --path=inner`
     Then STDERR should be:
       """
       Error: WordPress files seem to already be present here.
@@ -233,3 +233,39 @@ Feature: Download WordPress
     Then save STDOUT as {VERSION}
     And the {SUITE_CACHE_DIR}/core/wordpress-latest-en_US.tar.gz file should not exist
     And the {SUITE_CACHE_DIR}/core/wordpress-{VERSION}-en_US.tar.gz file should exist
+
+  Scenario: Fail if path can't be created
+    Given an empty directory
+    And a non-directory-path file:
+    """
+    """
+
+    When I try `wp core download --path=non-directory-path`
+    Then STDERR should contain:
+    """
+    Failed to create directory
+    """
+    And STDERR should contain:
+    """
+    non-directory-path
+    """
+
+    When I try `WP_CLI_STRICT_ARGS_MODE=1 wp core download --path=non-directory-path`
+    Then STDERR should contain:
+    """
+    Failed to create directory
+    """
+    And STDERR should contain:
+    """
+    non-directory-path
+    """
+
+    When I try `wp core download --path=/root-level-directory`
+    Then STDERR should contain:
+    """
+    Insufficient permission to create directory
+    """
+    And STDERR should contain:
+    """
+    root-level-directory
+    """
