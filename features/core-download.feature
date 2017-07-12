@@ -18,6 +18,12 @@ Feature: Download WordPress
     And I run `cd inner && wp core download`
     Then the inner/wp-settings.php file should exist
 
+    When I try `wp core download --path=inner`
+    Then STDERR should be:
+      """
+      Error: WordPress files seem to already be present here.
+      """
+
     When I try `WP_CLI_STRICT_ARGS_MODE=1 wp core download --path=inner`
     Then STDERR should be:
       """
