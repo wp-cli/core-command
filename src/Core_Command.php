@@ -1124,7 +1124,7 @@ EOT;
 				if ( $dry_run ) {
 					WP_CLI::success( "WordPress database will be upgraded from db version {$wp_current_db_version} to {$wp_db_version}." );
 				} else {
-					// WP upgrade isn't too fussy about generating MySQL warnings such as "Duplicate key name" during on upgrade so suppress.
+					// WP upgrade isn't too fussy about generating MySQL warnings such as "Duplicate key name" during an upgrade so suppress.
 					$wpdb->suppress_errors();
 
 					wp_upgrade();
