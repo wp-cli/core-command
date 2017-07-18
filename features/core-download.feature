@@ -253,7 +253,7 @@ Feature: Download WordPress
     """
     And STDERR should contain:
     """
-    non-directory-path
+    /non-directory-path/
     """
 
     When I try `WP_CLI_STRICT_ARGS_MODE=1 wp core download --path=non-directory-path`
@@ -263,7 +263,17 @@ Feature: Download WordPress
     """
     And STDERR should contain:
     """
-    non-directory-path
+    non-directory-path/
+    """
+
+    When I try `WP_CLI_STRICT_ARGS_MODE=1 wp core download --path=non-directory-path\\`
+    Then STDERR should contain:
+    """
+    Failed to create directory
+    """
+    And STDERR should contain:
+    """
+    non-directory-path/
     """
 
     When I try `wp core download --path=/root-level-directory`
@@ -273,7 +283,7 @@ Feature: Download WordPress
     """
     And STDERR should contain:
     """
-    root-level-directory
+    /root-level-directory/
     """
 
     When I try `WP_CLI_STRICT_ARGS_MODE=1 wp core download --path=/root-level-directory`
@@ -283,5 +293,5 @@ Feature: Download WordPress
     """
     And STDERR should contain:
     """
-    root-level-directory
+    /root-level-directory/
     """
