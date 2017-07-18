@@ -117,7 +117,7 @@ class Core_Command extends WP_CLI_Command {
 	 */
 	public function download( $args, $assoc_args ) {
 
-		$download_dir = ! empty( $assoc_args['path'] ) ? ( rtrim( $assoc_args['path'], '/\//' ) . '/' ) : ABSPATH;
+		$download_dir = ! empty( $assoc_args['path'] ) ? ( rtrim( $assoc_args['path'], '/\\' ) . '/' ) : ABSPATH;
 		$wordpress_present = is_readable( $download_dir . 'wp-load.php' );
 
 		if ( ! \WP_CLI\Utils\get_flag_value( $assoc_args, 'force' ) && $wordpress_present )
