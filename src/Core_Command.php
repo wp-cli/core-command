@@ -89,13 +89,15 @@ class Core_Command extends WP_CLI_Command {
 	 * Download core WordPress files.
 	 *
 	 * Downloads and extracts WordPress core files to the specified path. Uses
-	 * an archive file stored in cache if WordPress has been previously
-	 * downloaded.
+	 * current directory when no path is specified. Downloaded build is verified
+	 * to have the correct md5 and then cached to the local filesytem.
+	 * Subsequent uses of command will use the local cache if it still exists.
 	 *
 	 * ## OPTIONS
 	 *
 	 * [--path=<path>]
-	 * : Specify the path in which to install WordPress.
+	 * : Specify the path in which to install WordPress. Defaults to current
+	 * directory.
 	 *
 	 * [--locale=<locale>]
 	 * : Select which language you want to download.
