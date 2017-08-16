@@ -407,7 +407,7 @@ class Core_Command extends WP_CLI_Command {
 		}
 
 		if ( $this->_multisite_convert( $assoc_args ) ) {
-			WP_CLI::success( "Network installed. Don't forget to set up rewrite rules." );
+			WP_CLI::success( "Network installed. Don't forget to set up rewrite rules (and a .htaccess file, if using Apache)." );
 		}
 	}
 
@@ -509,7 +509,7 @@ class Core_Command extends WP_CLI_Command {
 			);
 		}
 
-		WP_CLI::success( "Network installed. Don't forget to set up rewrite rules." );
+		WP_CLI::success( "Network installed. Don't forget to set up rewrite rules (and a .htaccess file, if using Apache)." );
 	}
 
 	private static function _set_multisite_defaults( $assoc_args ) {
