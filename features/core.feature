@@ -156,7 +156,7 @@ Feature: Manage WordPress installation
       """
       Set up multisite database tables.
       Added multisite constants to 'wp-config.php'.
-      Success: Network installed. Don't forget to set up rewrite rules.
+      Success: Network installed. Don't forget to set up rewrite rules (and a .htaccess file, if using Apache).
       """
     And STDERR should be empty
 
@@ -190,7 +190,7 @@ Feature: Manage WordPress installation
       Created single site database tables.
       Set up multisite database tables.
       Added multisite constants to 'wp-config.php'.
-      Success: Network installed. Don't forget to set up rewrite rules.
+      Success: Network installed. Don't forget to set up rewrite rules (and a .htaccess file, if using Apache).
       """
     And STDERR should be empty
 
@@ -366,7 +366,7 @@ Feature: Manage WordPress installation
     Then STDOUT should be:
       """
       Set up multisite database tables.
-      Success: Network installed. Don't forget to set up rewrite rules.
+      Success: Network installed. Don't forget to set up rewrite rules (and a .htaccess file, if using Apache).
       """
     And STDERR should contain:
       """

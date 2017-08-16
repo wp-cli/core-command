@@ -182,7 +182,7 @@ Feature: Install WordPress core
       """
     And STDOUT should contain:
       """
-      Success: Network installed. Don't forget to set up rewrite rules.
+      Success: Network installed. Don't forget to set up rewrite rules (and a .htaccess file, if using Apache).
       """
 
   Scenario: Install WordPress multisite without adding multisite constants to wp-config file
