@@ -418,6 +418,9 @@ class Core_Command extends WP_CLI_Command {
 	 * default admin user details provided. Then, creates the multisite tables
 	 * in the database and adds multisite constants to the wp-config.php.
 	 *
+	 * For those using WordPress with Apache, remember to update the `.htaccess`
+	 * file with the appropriate multisite rewrite rules.
+	 *
 	 * ## OPTIONS
 	 *
 	 * [--url=<url>]
