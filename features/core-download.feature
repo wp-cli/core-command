@@ -15,7 +15,7 @@ Feature: Download WordPress
     And the {SUITE_CACHE_DIR}/core/wordpress-{WP_VERSION-latest}-en_US.tar.gz file should exist
 
     When I run `wp core download --skip-content`
-    And save STDOUT 'Downloading WordPress ([\d\.]+)' as {VERSION} without content
+    And save STDOUT 'Downloading WordPress ([\d\.]+)' as {VERSION}
     Then the wp-settings.php file should exist
     And the {SUITE_CACHE_DIR}/core/wordpress-{WP_VERSION-latest}-without-content-en_US.zip file should exist
 
