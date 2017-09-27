@@ -167,6 +167,10 @@ class Core_Command extends WP_CLI_Command {
 			$version = $offer['offers'][0]["current"].' without content';
 		}
 
+		if ( true === \WP_CLI\Utils\get_flag_value( $assoc_args, 'skip-content' ) && 'en_US' !== $locale ) {
+			WP_CLI::error( 'The skip content build is only available for the en_US locale.' );
+		}
+
 		if ( 'nightly' === $version && 'en_US' !== $locale ) {
 			WP_CLI::error( 'Nightly builds are only available for the en_US locale.' );
 		}
