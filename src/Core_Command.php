@@ -108,6 +108,9 @@ class Core_Command extends WP_CLI_Command {
 	 * [--force]
 	 * : Overwrites existing files, if present.
 	 *
+	 * [--skip-content]
+	 * : Download the latest version of WP without the default themes and plugins
+	 *
 	 * ## EXAMPLES
 	 *
 	 *     $ wp core download --locale=nl_NL
@@ -156,6 +159,12 @@ class Core_Command extends WP_CLI_Command {
 			}
 			$version = $offer['current'];
 			$download_url = str_replace( '.zip', '.tar.gz', $offer['download'] );
+		}
+
+		if ( true === \WP_CLI\Utils\get_flag_value( $assoc_args, 'skip-content' ) ) {
+			$offer = unserialize( self::_read( 'https://api.wordpress.org/core/version-check/1.6/' ) );
+			$download_url = $offer['offers'][0]["packages"]["no_content"];
+			$version = $offer['offers'][0]["current"].' without content';
 		}
 
 		if ( 'nightly' === $version && 'en_US' !== $locale ) {
