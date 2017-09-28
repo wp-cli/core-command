@@ -317,3 +317,14 @@ Feature: Download WordPress
       """
 
 
+  Scenario: Core download without the wp-content dir should error for non US locale
+    Given an empty directory
+    And an empty cache
+
+    When I run `wp core download --skip-content --version=4.7`
+    Then STDOUT should contain:
+      """
+      Error: The skip content build is only available for the latest version.
+      """
+
+
