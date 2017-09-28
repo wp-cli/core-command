@@ -161,14 +161,14 @@ class Core_Command extends WP_CLI_Command {
 			$download_url = str_replace( '.zip', '.tar.gz', $offer['download'] );
 		}
 
+		if ( true === \WP_CLI\Utils\get_flag_value( $assoc_args, 'skip-content' ) && 'en_US' !== $locale ) {
+			WP_CLI::error( 'The skip content build is only available for the en_US locale.' );
+		}
+
 		if ( true === \WP_CLI\Utils\get_flag_value( $assoc_args, 'skip-content' ) ) {
 			$offer = unserialize( self::_read( 'https://api.wordpress.org/core/version-check/1.6/' ) );
 			$download_url = $offer['offers'][0]["packages"]["no_content"];
 			$version = $offer['offers'][0]["current"].' without content';
-		}
-
-		if ( true === \WP_CLI\Utils\get_flag_value( $assoc_args, 'skip-content' ) && 'en_US' !== $locale ) {
-			WP_CLI::error( 'The skip content build is only available for the en_US locale.' );
 		}
 
 		if ( 'nightly' === $version && 'en_US' !== $locale ) {
