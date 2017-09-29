@@ -310,8 +310,8 @@ Feature: Download WordPress
     Given an empty directory
     And an empty cache
 
-    When I run `wp core download --skip-content --locale=nl_NL`
-    Then STDOUT should contain:
+    When I try `wp core download --skip-content --locale=nl_NL`
+    Then STDERR should contain:
       """
       Error: The skip content build is only available for the en_US locale.
       """
@@ -321,8 +321,8 @@ Feature: Download WordPress
     Given an empty directory
     And an empty cache
 
-    When I run `wp core download --skip-content --version=4.7`
-    Then STDOUT should contain:
+    When I try `wp core download --skip-content --version=4.7`
+    Then STDERR should contain:
       """
       Error: The skip content build is only available for the latest version.
       """
