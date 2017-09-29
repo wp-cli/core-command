@@ -66,9 +66,9 @@ class CoreUpgrader extends \Core_Upgrader {
 			 */
 			$headers = array( 'Accept' => 'application/json' );
 			$options = array(
-				'timeout'  => 600,  // 10 minutes ought to be enough for everybody.
-				'filename' => $temp,
-				'throw_exception_on_error' => true,
+				'timeout'       => 600,  // 10 minutes ought to be enough for everybody.
+				'filename'      => $temp,
+				'halt_on_error' => false,
 			);
 
 			$this->skin->feedback( 'downloading_package', $package );
