@@ -109,7 +109,7 @@ class Core_Command extends WP_CLI_Command {
 	 * : Overwrites existing files, if present.
 	 *
 	 * [--skip-content]
-	 * : Download the latest version of WP without the default themes and plugins
+	 * : Download the latest version of WP without the default themes and plugins (en_US locale only)
 	 *
 	 * ## EXAMPLES
 	 *
