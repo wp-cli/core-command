@@ -170,9 +170,11 @@ class Core_Command extends WP_CLI_Command {
 		}
 
 		if ( true === \WP_CLI\Utils\get_flag_value( $assoc_args, 'skip-content' ) ) {
-			$offer = unserialize( self::_read( 'https://api.wordpress.org/core/version-check/1.6/' ) );
-			$download_url = $offer['offers'][0]["packages"]["no_content"];
-			$version = $offer['offers'][0]["current"].' without content';
+			$response = Requests::get( 'https://api.wordpress.org/core/version-check/1.7/', null, array( 'timeout' => 30 ) );
+			if ( 200 === $response->status_code && ( $body = json_decode( $response->body ) ) && is_object( $body ) && isset( $body->offers ) && is_array( $body->offers ) ) {
+				$download_url = $body->offers[0]->packages->no_content;
+				$version = $body->offers[0]->version;
+			}
 		}
 
 		if ( 'nightly' === $version && 'en_US' !== $locale ) {
