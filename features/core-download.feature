@@ -303,8 +303,6 @@ Feature: Download WordPress
     When I run `wp core download --skip-content`
     And save STDOUT 'Downloading WordPress ([\d\.]+)' as {VERSION}
     Then the wp-settings.php file should exist
-    And the {SUITE_CACHE_DIR}/core/wordpress-{WP_VERSION-latest}-without-content-en_US.zip file should exist
-
 
   Scenario: Core download without the wp-content dir should error for non US locale
     Given an empty directory
