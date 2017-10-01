@@ -169,11 +169,13 @@ class Core_Command extends WP_CLI_Command {
 			$download_url = str_replace( '.zip', '.tar.gz', $offer['download'] );
 		}
 
+		$no_content = '';
 		if ( true === \WP_CLI\Utils\get_flag_value( $assoc_args, 'skip-content' ) ) {
 			$response = Requests::get( 'https://api.wordpress.org/core/version-check/1.7/', null, array( 'timeout' => 30 ) );
 			if ( 200 === $response->status_code && ( $body = json_decode( $response->body ) ) && is_object( $body ) && isset( $body->offers[0]->packages->no_content ) && is_array( $body->offers ) ) {
 				$download_url = $body->offers[0]->packages->no_content;
 				$version = $body->offers[0]->version;
+				$no_content = 'no-content-';
 			} else {
 				WP_CLI::error( 'Skip content build is not available.' );
 			}
@@ -201,7 +203,7 @@ class Core_Command extends WP_CLI_Command {
 		}
 
 		$cache = WP_CLI::get_cache();
-		$cache_key = "core/wordpress-{$version}-{$locale}.{$extension}";
+		$cache_key = "core/wordpress-{$version}-{$no_content}{$locale}.{$extension}";
 		$cache_file = $cache->has($cache_key);
 
 		$bad_cache = false;
