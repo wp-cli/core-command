@@ -105,11 +105,11 @@ class Core_Command extends WP_CLI_Command {
 	 * [--version=<version>]
 	 * : Select which version you want to download. Accepts a version number, 'latest' or 'nightly'
 	 *
-	 * [--force]
-	 * : Overwrites existing files, if present.
-	 *
 	 * [--skip-content]
 	 * : Download the latest version of WP without the default themes and plugins (en_US locale only)
+	 *
+	 * [--force]
+	 * : Overwrites existing files, if present.
 	 *
 	 * ## EXAMPLES
 	 *
