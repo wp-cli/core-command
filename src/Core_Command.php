@@ -108,6 +108,9 @@ class Core_Command extends WP_CLI_Command {
 	 * [--force]
 	 * : Overwrites existing files, if present.
 	 *
+	 * [--skip-content]
+	 * : Download the latest version of WP without the default themes and plugins (en_US locale only)
+	 *
 	 * ## EXAMPLES
 	 *
 	 *     $ wp core download --locale=nl_NL
@@ -156,6 +159,24 @@ class Core_Command extends WP_CLI_Command {
 			}
 			$version = $offer['current'];
 			$download_url = str_replace( '.zip', '.tar.gz', $offer['download'] );
+		}
+
+		if ( true === \WP_CLI\Utils\get_flag_value( $assoc_args, 'skip-content' ) && 'en_US' !== $locale ) {
+			WP_CLI::error( 'Skip content build is only available for the en_US locale.' );
+		}
+
+		if ( true === \WP_CLI\Utils\get_flag_value( $assoc_args, 'skip-content' ) && isset( $assoc_args['version'] ) ) {
+			WP_CLI::error( 'Skip content build is only available for the latest version.' );
+		}
+
+		if ( true === \WP_CLI\Utils\get_flag_value( $assoc_args, 'skip-content' ) ) {
+			$response = Requests::get( 'https://api.wordpress.org/core/version-check/1.7/', null, array( 'timeout' => 30 ) );
+			if ( 200 === $response->status_code && ( $body = json_decode( $response->body ) ) && is_object( $body ) && isset( $body->offers[0]->packages->no_content ) && is_array( $body->offers ) ) {
+				$download_url = $body->offers[0]->packages->no_content;
+				$version = $body->offers[0]->version;
+			} else {
+				WP_CLI::error( 'Skip content build is not available.' );
+			}
 		}
 
 		if ( 'nightly' === $version && 'en_US' !== $locale ) {

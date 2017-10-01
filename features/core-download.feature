@@ -295,3 +295,35 @@ Feature: Download WordPress
     """
     /root-level-directory/
     """
+
+  Scenario: Core download without the wp-content dir
+    Given an empty directory
+    And an empty cache
+
+    When I run `wp core download --skip-content`
+    And save STDOUT 'Downloading WordPress ([\d\.]+)' as {VERSION}
+    Then the wp-settings.php file should exist
+
+
+  Scenario: Core download without the wp-content dir should error for non US locale
+    Given an empty directory
+    And an empty cache
+
+    When I try `wp core download --skip-content --locale=nl_NL`
+    Then STDERR should contain:
+    """
+    Skip content build is only available for the en_US locale.
+    """
+
+
+  Scenario: Core download without the wp-content dir should error if a version is set
+    Given an empty directory
+    And an empty cache
+
+    When I try `wp core download --skip-content --version=4.7`
+    Then STDERR should contain:
+    """
+    Skip content build is only available for the latest version.
+    """
+
+
