@@ -311,7 +311,7 @@ Feature: Download WordPress
     When I try `wp core download --skip-content --locale=nl_NL`
     Then STDERR should contain:
       """
-      Error: The skip content build is only available for the en_US locale.
+      Error: Skip content build is only available for the latest version.
       """
 
 
