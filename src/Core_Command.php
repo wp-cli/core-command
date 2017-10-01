@@ -162,7 +162,7 @@ class Core_Command extends WP_CLI_Command {
 		}
 
 		if ( true === \WP_CLI\Utils\get_flag_value( $assoc_args, 'skip-content' ) && 'en_US' !== $locale ) {
-			WP_CLI::error( 'The skip content build is only available for the en_US locale.' );
+			WP_CLI::error( 'Skip content build is only available for the en_US locale.' );
 		}
 
 		if ( true === \WP_CLI\Utils\get_flag_value( $assoc_args, 'skip-content' ) && isset( $assoc_args['version'] ) ) {
