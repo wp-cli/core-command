@@ -154,7 +154,17 @@ class Core_Command extends WP_CLI_Command {
 			WP_CLI::error( 'Skip content build is only available for the latest version.' );
 		}
 
-		if ( isset( $assoc_args['version'] ) && 'latest' !== $assoc_args['version'] ) {
+		$no_content = '';
+		if ( true === \WP_CLI\Utils\get_flag_value( $assoc_args, 'skip-content' ) ) {
+			$response = Requests::get( 'https://api.wordpress.org/core/version-check/1.7/', null, array( 'timeout' => 30 ) );
+			if ( 200 === $response->status_code && ( $body = json_decode( $response->body ) ) && is_object( $body ) && isset( $body->offers[0]->packages->no_content ) && is_array( $body->offers ) ) {
+				$download_url = $body->offers[0]->packages->no_content;
+				$version = $body->offers[0]->version;
+				$no_content = 'no-content-';
+			} else {
+				WP_CLI::error( 'Skip content build is not available.' );
+			}
+		} elseif ( isset( $assoc_args['version'] ) && 'latest' !== $assoc_args['version'] ) {
 			$version = $assoc_args['version'];
 			$version = ( in_array( strtolower( $version ), array( 'trunk', 'nightly' ) ) ? 'nightly' : $version );
 			//nightly builds are only available in .zip format
@@ -167,18 +177,6 @@ class Core_Command extends WP_CLI_Command {
 			}
 			$version = $offer['current'];
 			$download_url = str_replace( '.zip', '.tar.gz', $offer['download'] );
-		}
-
-		$no_content = '';
-		if ( true === \WP_CLI\Utils\get_flag_value( $assoc_args, 'skip-content' ) ) {
-			$response = Requests::get( 'https://api.wordpress.org/core/version-check/1.7/', null, array( 'timeout' => 30 ) );
-			if ( 200 === $response->status_code && ( $body = json_decode( $response->body ) ) && is_object( $body ) && isset( $body->offers[0]->packages->no_content ) && is_array( $body->offers ) ) {
-				$download_url = $body->offers[0]->packages->no_content;
-				$version = $body->offers[0]->version;
-				$no_content = 'no-content-';
-			} else {
-				WP_CLI::error( 'Skip content build is not available.' );
-			}
 		}
 
 		if ( 'nightly' === $version && 'en_US' !== $locale ) {
