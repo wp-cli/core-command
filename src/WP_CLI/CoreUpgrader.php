@@ -66,14 +66,19 @@ class CoreUpgrader extends \Core_Upgrader {
 			 */
 			$headers = array( 'Accept' => 'application/json' );
 			$options = array(
-				'timeout'  => 600,  // 10 minutes ought to be enough for everybody.
-				'filename' => $temp
+				'timeout'       => 600,  // 10 minutes ought to be enough for everybody.
+				'filename'      => $temp,
+				'halt_on_error' => false,
 			);
 
 			$this->skin->feedback( 'downloading_package', $package );
 
 			/** @var \Requests_Response|null $req */
-			$req = Utils\http_request( 'GET', $package, null, $headers, $options );
+			try {
+				$req = Utils\http_request( 'GET', $package, null, $headers, $options );
+			} catch( \Exception $e ) {
+				return new \WP_Error( 'download_failed', $e->getMessage() );
+			}
 			if ( ! is_null( $req ) && $req->status_code !== 200 ) {
 				return new \WP_Error( 'download_failed', $this->strings['download_failed'] );
 			}
