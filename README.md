@@ -64,7 +64,7 @@ or success message when up to date.
 Download core WordPress files.
 
 ~~~
-wp core download [--path=<path>] [--locale=<locale>] [--version=<version>] [--force]
+wp core download [--path=<path>] [--locale=<locale>] [--version=<version>] [--skip-content] [--force]
 ~~~
 
 Downloads and extracts WordPress core files to the specified path. Uses
@@ -83,6 +83,9 @@ Subsequent uses of command will use the local cache if it still exists.
 
 	[--version=<version>]
 		Select which version you want to download. Accepts a version number, 'latest' or 'nightly'
+
+	[--skip-content]
+		Download the latest version of WP without the default themes and plugins (en_US locale only)
 
 	[--force]
 		Overwrites existing files, if present.
