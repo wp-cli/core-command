@@ -156,7 +156,7 @@ class Core_Command extends WP_CLI_Command {
 
 		$no_content = '';
 		if ( true === \WP_CLI\Utils\get_flag_value( $assoc_args, 'skip-content' ) ) {
-			$response = Requests::get( 'https://api.wordpress.org/core/version-check/1.7/', null, array( 'timeout' => 30 ) );
+			$response = \WP_CLI\Utils\http_request( 'GET', 'https://api.wordpress.org/core/version-check/1.7/' );
 			if ( 200 === $response->status_code && ( $body = json_decode( $response->body ) ) && is_object( $body ) && isset( $body->offers[0]->packages->no_content ) && is_array( $body->offers ) ) {
 				$download_url = $body->offers[0]->packages->no_content;
 				$version = $body->offers[0]->version;

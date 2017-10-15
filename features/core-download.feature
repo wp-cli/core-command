@@ -304,6 +304,7 @@ Feature: Download WordPress
       """
       Success: WordPress downloaded.
       """
+    And the wp-includes directory should exist
     And the wp-content directory should not exist
 
   Scenario: Core download without the wp-content dir should error for non US locale
