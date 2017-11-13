@@ -55,7 +55,8 @@ class CoreUpgrader extends \Core_Upgrader {
 		$cache_key = "core/{$filename}-{$update->locale}.{$ext}";
 		$cache_file = $cache->has( $cache_key );
 
-		if ( $cache_file && false === stripos( $package, 'https://wordpress.org/nightly-builds/' ) ) {
+		if ( $cache_file && false === stripos( $package, 'https://wordpress.org/nightly-builds/' )
+			&& false === stripos( $package, 'http://wordpress.org/nightly-builds/' ) ) {
 			WP_CLI::log( "Using cached file '$cache_file'..." );
 			copy( $cache_file, $temp );
 			return $temp;
