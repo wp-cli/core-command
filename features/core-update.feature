@@ -260,3 +260,26 @@ Feature: Update WordPress core
     | version    |
     | trunk      |
     | nightly    |
+
+  Scenario: Installing latest nightly build should skip cache
+    Given a WP install
+
+    When I run `wp core upgrade --force http://wordpress.org/nightly-builds/wordpress-4.9-latest.zip`
+    Then STDOUT should contain:
+      """
+      Success:
+      """
+    And STDOUT should not contain:
+      """
+      Using cached
+      """
+
+    When I run `wp core upgrade --force http://wordpress.org/nightly-builds/wordpress-4.9-latest.zip`
+    Then STDOUT should contain:
+      """
+      Success:
+      """
+    And STDOUT should not contain:
+      """
+      Using cached
+      """
