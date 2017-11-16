@@ -555,11 +555,16 @@ class Core_Command extends WP_CLI_Command {
 			return false;
 		}
 
-		if ( true === \WP_CLI\Utils\get_flag_value( $assoc_args, 'skip-email' )
-			&& ! function_exists( 'wp_new_blog_notification' ) ) {
-			function wp_new_blog_notification() {
-				// Silence is golden
+		if ( true === \WP_CLI\Utils\get_flag_value( $assoc_args, 'skip-email' ) ) {
+			if ( ! function_exists( 'wp_new_blog_notification' ) ) {
+				function wp_new_blog_notification() {
+					// Silence is golden
+				}
 			}
+			// WP 4.9.0 - skip "Notice of Admin Email Change" email as well (https://core.trac.wordpress.org/ticket/39117).
+			add_filter( 'send_site_admin_email_change_email', function() {
+				return false;
+			} );
 		}
 
 		require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
@@ -880,14 +885,19 @@ EOT;
 		);
 		$response = Utils\http_request( 'GET', $url, null, $headers, $options );
 
-		if ( ! $response->success || 200 != $response->status_code )
+		if ( ! $response->success || 200 != $response->status_code ) {
+			WP_CLI::warning( sprintf( "Checksum request '%s' failed (HTTP %d).", $url, $response->status_code ) );
 			return false;
+		}
 
 		$body = trim( $response->body );
 		$body = json_decode( $body, true );
 
-		if ( ! is_array( $body ) || ! isset( $body['checksums'] ) || ! is_array( $body['checksums'] ) )
+		if ( ! is_array( $body ) || ! isset( $body['checksums'] ) || ! is_array( $body['checksums'] ) ) {
+			$body_msg = strlen( $response->body ) > 40 ? ( substr( $response->body, 0, 40 ) . ' [...]' ) : $response->body;
+			WP_CLI::warning( sprintf( "Checksum request '%s' returned body '%s'.", $url, $body_msg ) );
 			return false;
+		}
 
 		return $body['checksums'];
 	}
@@ -1155,6 +1165,11 @@ EOT;
 				} else {
 					// WP upgrade isn't too fussy about generating MySQL warnings such as "Duplicate key name" during an upgrade so suppress.
 					$wpdb->suppress_errors();
+
+					// WP upgrade expects `$_SERVER['HTTP_HOST']` to be set, otherwise get PHP notice.
+					if ( ! isset( $_SERVER['HTTP_HOST'] ) ) {
+						$_SERVER['HTTP_HOST'] = 'http://example.com';
+					}
 
 					wp_upgrade();
 
