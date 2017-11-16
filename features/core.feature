@@ -129,7 +129,7 @@ Feature: Manage WordPress installation
       false
       """
 
-    When I run `wp eval 'var_export( function_exists( 'media_handle_upload' ) );'`
+    When I run `wp eval 'var_export( function_exists( "media_handle_upload" ) );'`
     Then STDOUT should be:
       """
       true
@@ -238,6 +238,7 @@ Feature: Manage WordPress installation
       """
       Error: Multisite with subdomains cannot be configured when domain is 'localhost'.
       """
+    And the return code should be 1
 
   Scenario: Custom wp-content directory
     Given a WP install
@@ -294,6 +295,7 @@ Feature: Manage WordPress installation
       """
       Error: WordPress files seem to already be present here.
       """
+    And the return code should be 1
 
   Scenario: Install WordPress in a subdirectory
     Given an empty directory
@@ -340,7 +342,7 @@ Feature: Manage WordPress installation
     And the wp/wp-blog-header.php file should exist
 
     When I run `wp db create`
-    And I run `wp core install --url=wp.dev --title="WP Dev" --admin_user=wpcli --admin_password=wpcli --admin_email=wpcli@example.com`
+    And I run `wp core install --url=wp.dev --title="WP Dev" --admin_user=wpcli --admin_password=wpcli --admin_email=wpcli@example.com --skip-email`
     Then STDOUT should not be empty
 
     When I run `wp option get home`
@@ -359,7 +361,7 @@ Feature: Manage WordPress installation
     Given a WP install
     And "That's all" replaced with "C'est tout" in the wp-config.php file
 
-    When I run `wp core multisite-convert`
+    When I try `wp core multisite-convert`
     Then STDOUT should be:
       """
       Set up multisite database tables.
@@ -369,3 +371,4 @@ Feature: Manage WordPress installation
       """
       Warning: Multisite constants could not be written to 'wp-config.php'. You may need to add them manually:
       """
+    And the return code should be 0
