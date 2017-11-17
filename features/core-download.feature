@@ -143,9 +143,9 @@ Feature: Download WordPress
     When I try `wp core download --version=nightly --force`
     Then the wp-settings.php file should exist
     And STDOUT should not contain:
-    """
-    Using cached file '{SUITE_CACHE_DIR}/core/wordpress-nightly-en_US.zip'...
-    """
+      """
+      Using cached file '{SUITE_CACHE_DIR}/core/wordpress-nightly-en_US.zip'...
+      """
     And STDERR should contain:
       """
       Warning: md5 hash checks are not available for nightly downloads.
@@ -164,11 +164,11 @@ Feature: Download WordPress
     When I try `wp core download --version=nightly --force`
     Then STDERR should not contain:
       """
-      Warning: Failed to find WordPress version. Please cleanup files manually.
+      Failed to find WordPress version
       """
     And STDERR should contain:
       """
-      Warning: Failed to fetch checksums. Please cleanup files manually.
+      Warning: Checksums not available for WordPress nightly/en_US. Please cleanup files manually.
       """
     And STDOUT should contain:
       """

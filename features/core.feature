@@ -216,7 +216,11 @@ Feature: Manage WordPress installation
 
     When I try `wp core is-installed`
     Then the return code should be 1
-    And STDERR should be empty
+    # WP will produce wpdb database errors in `get_sites()` on loading if the WP tables don't exist
+    And STDERR should contain:
+      """
+      WordPress database error Table
+      """
 
     When I run `wp core multisite-install --title=Test --admin_user=wpcli --admin_email=admin@example.com --admin_password=1`
     Then STDOUT should not be empty
@@ -342,8 +346,11 @@ Feature: Manage WordPress installation
     And the wp/wp-blog-header.php file should exist
 
     When I run `wp db create`
-    And I run `wp core install --url=wp.dev --title="WP Dev" --admin_user=wpcli --admin_password=wpcli --admin_email=wpcli@example.com --skip-email`
-    Then STDOUT should not be empty
+    And I run `wp core install --url=wp.dev --title="WP Dev" --admin_user=wpcli --admin_password=wpcli --admin_email=wpcli@example.com`
+    Then STDOUT should contain:
+      """
+      Success: WordPress installed successfully.
+      """
 
     When I run `wp option get home`
     Then STDOUT should be:
