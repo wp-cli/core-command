@@ -871,7 +871,7 @@ EOT;
 	 *
 	 * @param string $version Version string to query.
 	 * @param string $locale  Locale to query.
-	 * @return bool|array False on failure. An array of checksums on success.
+	 * @return string|array String message on failure. An array of checksums on success.
 	 */
 	private static function get_core_checksums( $version, $locale ) {
 		$url = 'https://api.wordpress.org/core/checksums/1.0/?' . http_build_query( compact( 'version', 'locale' ), null, '&' );
@@ -886,17 +886,14 @@ EOT;
 		$response = Utils\http_request( 'GET', $url, null, $headers, $options );
 
 		if ( ! $response->success || 200 != $response->status_code ) {
-			WP_CLI::warning( sprintf( "Checksum request '%s' failed (HTTP %d).", $url, $response->status_code ) );
-			return false;
+			return sprintf( "Checksum request '%s' failed (HTTP %d).", $url, $response->status_code );
 		}
 
 		$body = trim( $response->body );
 		$body = json_decode( $body, true );
 
 		if ( ! is_array( $body ) || ! isset( $body['checksums'] ) || ! is_array( $body['checksums'] ) ) {
-			$body_msg = strlen( $response->body ) > 40 ? ( substr( $response->body, 0, 40 ) . ' [...]' ) : $response->body;
-			WP_CLI::warning( sprintf( "Checksum request '%s' returned body '%s'.", $url, $body_msg ) );
-			return false;
+			return sprintf( 'Checksums not available for WordPress %s/%s.', $version, $locale );
 		}
 
 		return $body['checksums'];
@@ -936,7 +933,7 @@ EOT;
 	 *     Downloading update from https://downloads.wordpress.org/release/wordpress-4.5.2-no-content.zip...
 	 *     Unpacking the update...
 	 *     Cleaning up files...
-	 *     No files found that need cleaned up
+	 *     No files found that need cleaning up
 	 *     Success: WordPress updated successfully.
 	 *
 	 *     # Update WordPress to latest version of 3.8 release
@@ -955,7 +952,7 @@ EOT;
 	 *     Updating to version 3.1 (en_US)...
 	 *     Downloading update from https://wordpress.org/wordpress-3.1.zip...
 	 *     Unpacking the update...
-	 *     Warning: Failed to fetch checksums. Please cleanup files manually.
+	 *     Warning: Checksums not available for WordPress 3.1/en_US. Please cleanup files manually.
 	 *     Success: WordPress updated successfully.
 	 *
 	 * @alias upgrade
@@ -1166,7 +1163,7 @@ EOT;
 					// WP upgrade isn't too fussy about generating MySQL warnings such as "Duplicate key name" during an upgrade so suppress.
 					$wpdb->suppress_errors();
 
-					// WP upgrade expects `$_SERVER['HTTP_HOST']` to be set, otherwise get PHP notice.
+					// WP upgrade expects `$_SERVER['HTTP_HOST']` to be set in `wp_guess_url()`, otherwise get PHP notice.
 					if ( ! isset( $_SERVER['HTTP_HOST'] ) ) {
 						$_SERVER['HTTP_HOST'] = 'http://example.com';
 					}
@@ -1277,10 +1274,13 @@ EOT;
 		}
 
 		$old_checksums = self::get_core_checksums( $version_from, $locale ? $locale : 'en_US' );
+		if ( ! is_array( $old_checksums ) ) {
+			WP_CLI::warning( $old_checksums . ' Please cleanup files manually.' );
+			return;
+		}
 		$new_checksums = self::get_core_checksums( $version_to, $locale ? $locale : 'en_US' );
-
-		if ( empty( $old_checksums ) || empty( $new_checksums ) ) {
-			WP_CLI::warning( 'Failed to fetch checksums. Please cleanup files manually.' );
+		if ( ! is_array( $new_checksums ) ) {
+			WP_CLI::warning( $new_checksums . ' Please cleanup files manually.' );
 			return;
 		}
 
@@ -1307,7 +1307,7 @@ EOT;
 			if ( $count ) {
 				WP_CLI::log( number_format( $count ) . ' files cleaned up.' );
 			} else {
-				WP_CLI::log( 'No files found that need cleaned up.' );
+				WP_CLI::log( 'No files found that need cleaning up.' );
 			}
 		}
 	}

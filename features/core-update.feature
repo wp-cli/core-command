@@ -19,7 +19,7 @@ Feature: Update WordPress core
       Starting update...
       Unpacking the update...
       Cleaning up files...
-      No files found that need cleaned up.
+      No files found that need cleaning up.
       Success: WordPress updated successfully.
       """
 
@@ -245,13 +245,16 @@ Feature: Update WordPress core
     Given a WP install
     And an empty cache
 
-    When I run `wp core download --version=4.0 --locale=es_ES --force`
+    # If current WP_VERSION is nightly, trunk or old then from checksums might not exist, so STDERR may or may not be empty.
+    When I try `wp core download --version=4.0 --locale=es_ES --force`
     Then STDOUT should contain:
       """
       Success: WordPress downloaded.
       """
+    And the return code should be 0
 
     # No checksums available for this WP version/locale
+	Given I run `wp option set WPLANG es_ES`
     When I try `wp core update --minor`
     Then STDOUT should contain:
       """
@@ -265,9 +268,9 @@ Feature: Update WordPress core
       """
       Success: WordPress updated successfully.
       """
-    And STDERR should contain:
+    And STDERR should be:
       """
-      Warning: Failed to fetch checksums. Please cleanup files manually.
+      Warning: Checksums not available for WordPress {WP_VERSION-4.0-latest}/es_ES. Please cleanup files manually.
       """
     And the return code should be 0
 
