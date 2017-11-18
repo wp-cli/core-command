@@ -254,7 +254,7 @@ Feature: Update WordPress core
     And the return code should be 0
 
     # No checksums available for this WP version/locale
-	Given I run `wp option set WPLANG es_ES`
+    Given I run `wp option set WPLANG es_ES`
     When I try `wp core update --minor`
     Then STDOUT should contain:
       """
