@@ -159,7 +159,8 @@ Feature: Install WordPress core
     And wp-config.php
     And a database
 
-    When I run `wp core install --url=localhost:8001 --title=Test --admin_user=wpcli --admin_email=wpcli@example.org`
+    # Old versions of WP can generate wpdb database errors if the WP tables don't exist, so STDERR may or may not be empty
+    When I try `wp core install --url=localhost:8001 --title=Test --admin_user=wpcli --admin_email=wpcli@example.org`
     Then STDOUT should contain:
       """
       Admin password:
@@ -168,6 +169,7 @@ Feature: Install WordPress core
       """
       Success: WordPress installed successfully.
       """
+    And the return code should be 0
 
   Scenario: Install WordPress multisite without specifying the password
     Given an empty directory
@@ -175,7 +177,8 @@ Feature: Install WordPress core
     And wp-config.php
     And a database
 
-    When I run `wp core multisite-install --url=foobar.org --title=Test --admin_user=wpcli --admin_email=admin@example.com`
+    # Old versions of WP can generate wpdb database errors if the WP tables don't exist, so STDERR may or may not be empty
+    When I try `wp core multisite-install --url=foobar.org --title=Test --admin_user=wpcli --admin_email=admin@example.com`
     Then STDOUT should contain:
       """
       Admin password:
@@ -184,6 +187,7 @@ Feature: Install WordPress core
       """
       Success: Network installed. Don't forget to set up rewrite rules (and a .htaccess file, if using Apache).
       """
+    And the return code should be 0
 
   Scenario: Install WordPress multisite without adding multisite constants to wp-config file
     Given an empty directory

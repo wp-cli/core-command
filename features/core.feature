@@ -129,7 +129,7 @@ Feature: Manage WordPress installation
       false
       """
 
-    When I run `wp eval 'var_export( function_exists( 'media_handle_upload' ) );'`
+    When I run `wp eval 'var_export( function_exists( "media_handle_upload" ) );'`
     Then STDOUT should be:
       """
       true
@@ -212,14 +212,15 @@ Feature: Manage WordPress installation
 
   Scenario: Install multisite from scratch, with MULTISITE already set in wp-config.php
     Given a WP multisite install
-    And a suppress-error-log.php file:
-      """
-      <?php ini_set( 'error_log', null );
-      """
     And I run `wp db reset --yes`
 
-    When I try `wp --require=suppress-error-log.php core is-installed`
+    When I try `wp core is-installed`
     Then the return code should be 1
+    # WP will produce wpdb database errors in `get_sites()` on loading if the WP tables don't exist
+    And STDERR should contain:
+      """
+      WordPress database error Table
+      """
 
     When I run `wp core multisite-install --title=Test --admin_user=wpcli --admin_email=admin@example.com --admin_password=1`
     Then STDOUT should not be empty
@@ -241,6 +242,7 @@ Feature: Manage WordPress installation
       """
       Error: Multisite with subdomains cannot be configured when domain is 'localhost'.
       """
+    And the return code should be 1
 
   Scenario: Custom wp-content directory
     Given a WP install
@@ -297,6 +299,7 @@ Feature: Manage WordPress installation
       """
       Error: WordPress files seem to already be present here.
       """
+    And the return code should be 1
 
   Scenario: Install WordPress in a subdirectory
     Given an empty directory
@@ -343,8 +346,12 @@ Feature: Manage WordPress installation
     And the wp/wp-blog-header.php file should exist
 
     When I run `wp db create`
-    And I run `wp core install --url=wp.dev --title="WP Dev" --admin_user=wpcli --admin_password=wpcli --admin_email=wpcli@example.com`
-    Then STDOUT should not be empty
+    # extra/no-mail.php not present as mu-plugin so skip sending email else will fail on Travis with "sh: 1: -t: not found"
+    And I run `wp core install --url=wp.dev --title="WP Dev" --admin_user=wpcli --admin_password=wpcli --admin_email=wpcli@example.com --skip-email`
+    Then STDOUT should contain:
+      """
+      Success: WordPress installed successfully.
+      """
 
     When I run `wp option get home`
     Then STDOUT should be:
@@ -362,7 +369,7 @@ Feature: Manage WordPress installation
     Given a WP install
     And "That's all" replaced with "C'est tout" in the wp-config.php file
 
-    When I run `wp core multisite-convert`
+    When I try `wp core multisite-convert`
     Then STDOUT should be:
       """
       Set up multisite database tables.
@@ -372,3 +379,4 @@ Feature: Manage WordPress installation
       """
       Warning: Multisite constants could not be written to 'wp-config.php'. You may need to add them manually:
       """
+    And the return code should be 0

@@ -19,7 +19,7 @@ Feature: Update WordPress core
       Starting update...
       Unpacking the update...
       Cleaning up files...
-      No files found that need cleaned up.
+      No files found that need cleaning up.
       Success: WordPress updated successfully.
       """
 
@@ -43,6 +43,10 @@ Feature: Update WordPress core
       """
       Updating to version {WP_VERSION-3.7-latest}
       """
+    And STDOUT should contain:
+      """
+      Success: WordPress updated successfully.
+      """
 
     When I run `wp core update --minor`
     Then STDOUT should be:
@@ -62,11 +66,21 @@ Feature: Update WordPress core
     When I run `wp core download --version=3.9.9 --force`
     Then STDOUT should not be empty
 
-    When I run `wp core update --minor`
+    # This version of WP throws a PHP notice
+    When I try `wp core update --minor`
     Then STDOUT should contain:
       """
       Updating to version {WP_VERSION-3.9-latest}
       """
+    And STDOUT should contain:
+      """
+      Success: WordPress updated successfully.
+      """
+    And STDERR should contain:
+      """
+      Notice: Undefined variable: base
+      """
+    And the return code should be 0
 
     When I run `wp core update --minor`
     Then STDOUT should be:
@@ -157,13 +171,17 @@ Feature: Update WordPress core
                 'new_files' => '',
              ),
           ),
+          'version_checked' => '4.2.4', // Needed to avoid PHP notice in `wp_version_check()`.
         );
       });
       """
 
     When I run `wp core download --version=4.2.1 --force`
     And I run `wp core update`
-    Then STDOUT should not be empty
+    Then STDOUT should contain:
+      """
+      Success: WordPress updated successfully.
+      """
     And the {SUITE_CACHE_DIR}/core directory should contain:
       """
       wordpress-4.2.1-en_US.tar.gz
@@ -172,7 +190,12 @@ Feature: Update WordPress core
 
     When I run `wp core download --version=4.1.1 --force`
     And I run `wp core update`
-    And I run `wp core verify-checksums`
+    Then STDOUT should contain:
+      """
+      Success: WordPress updated successfully.
+      """
+
+    When I run `wp core verify-checksums`
     Then STDOUT should be:
       """
       Success: WordPress install verifies against checksums.
@@ -222,13 +245,17 @@ Feature: Update WordPress core
     Given a WP install
     And an empty cache
 
-    When I run `wp core download --version=4.0 --locale=es_ES --force`
+    # If current WP_VERSION is nightly, trunk or old then from checksums might not exist, so STDERR may or may not be empty.
+    When I try `wp core download --version=4.0 --locale=es_ES --force`
     Then STDOUT should contain:
       """
       Success: WordPress downloaded.
       """
+    And the return code should be 0
 
-    When I run `wp core update --minor`
+    # No checksums available for this WP version/locale
+    Given I run `wp option set WPLANG es_ES`
+    When I try `wp core update --minor`
     Then STDOUT should contain:
       """
       Updating to version {WP_VERSION-4.0-latest} (en_US)...
@@ -241,6 +268,11 @@ Feature: Update WordPress core
       """
       Success: WordPress updated successfully.
       """
+    And STDERR should be:
+      """
+      Warning: Checksums not available for WordPress {WP_VERSION-4.0-latest}/es_ES. Please cleanup files manually.
+      """
+    And the return code should be 0
 
   Scenario Outline: Use `--version=(nightly|trunk)` to update to the latest nightly version
     Given a WP install
