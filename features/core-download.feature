@@ -6,7 +6,11 @@ Feature: Download WordPress
 
     When I try `wp core is-installed`
     Then the return code should be 1
-    And STDERR should not be empty
+    And STDERR should contain:
+      """
+      Error: This does not seem to be a WordPress install.
+      """
+    And STDOUT should be empty
 
     When I run `wp core download`
     And save STDOUT 'Downloading WordPress ([\d\.]+)' as {VERSION}
@@ -23,12 +27,14 @@ Feature: Download WordPress
       """
       Error: WordPress files seem to already be present here.
       """
+    And the return code should be 1
 
     When I try `WP_CLI_STRICT_ARGS_MODE=1 wp core download --path=inner`
     Then STDERR should be:
       """
       Error: WordPress files seem to already be present here.
       """
+    And the return code should be 1
 
     # test core tarball cache
     When I run `wp core download --force`
@@ -54,6 +60,7 @@ Feature: Download WordPress
       """
       Error: Release not found.
       """
+    And the return code should be 1
 
   Scenario: Verify release hash when downloading new version
     Given an empty directory
@@ -91,6 +98,7 @@ Feature: Download WordPress
       """
       Error: WordPress files seem to already be present here.
       """
+    And the return code should be 1
 
   Scenario: Make sure files are cleaned up
     Given an empty directory
@@ -114,7 +122,7 @@ Feature: Download WordPress
     Given an empty directory
     And an empty cache
 
-    When I run `wp core download --version=nightly`
+    When I try `wp core download --version=nightly`
     Then the wp-settings.php file should exist
     And the {SUITE_CACHE_DIR}/core/wordpress-nightly-en_US.zip file should not exist
     And STDOUT should contain:
@@ -129,43 +137,59 @@ Feature: Download WordPress
       """
       Success: WordPress downloaded.
       """
+    And the return code should be 0
 
     # we shouldn't cache nightly builds
-    When I run `wp core download --version=nightly --force`
+    When I try `wp core download --version=nightly --force`
     Then the wp-settings.php file should exist
     And STDOUT should not contain:
-    """
-    Using cached file '{SUITE_CACHE_DIR}/core/wordpress-nightly-en_US.zip'...
-    """
+      """
+      Using cached file '{SUITE_CACHE_DIR}/core/wordpress-nightly-en_US.zip'...
+      """
+    And STDERR should contain:
+      """
+      Warning: md5 hash checks are not available for nightly downloads.
+      """
+    And STDOUT should contain:
+      """
+      Success: WordPress downloaded.
+      """
+    And the return code should be 0
 
   Scenario: Installing nightly over an existing install
     Given an empty directory
     And an empty cache
     When I run `wp core download --version=4.5.3`
     Then the wp-settings.php file should exist
-    When I run `wp core download --version=nightly --force`
+    When I try `wp core download --version=nightly --force`
     Then STDERR should not contain:
       """
-      Warning: Failed to find WordPress version. Please cleanup files manually.
+      Failed to find WordPress version
       """
     And STDERR should contain:
       """
-      Warning: Failed to fetch checksums. Please cleanup files manually.
+      Warning: Checksums not available for WordPress nightly/en_US. Please cleanup files manually.
       """
     And STDOUT should contain:
       """
       Success: WordPress downloaded.
       """
+    And the return code should be 0
 
   Scenario: Installing a version over nightly
     Given an empty directory
     And an empty cache
-    When I run `wp core download --version=nightly`
+    When I try `wp core download --version=nightly`
     Then the wp-settings.php file should exist
     And STDERR should not contain:
       """
       Warning: Failed to find WordPress version. Please cleanup files manually.
       """
+    And STDOUT should contain:
+      """
+      Success: WordPress downloaded.
+      """
+    And the return code should be 0
 
     When I run `wp core download --version=4.3.2 --force`
     Then the wp-includes/rest-api.php file should not exist
@@ -178,7 +202,7 @@ Feature: Download WordPress
   Scenario: Trunk is an alias for nightly
     Given an empty directory
     And an empty cache
-    When I run `wp core download --version=trunk`
+    When I try `wp core download --version=trunk`
     Then the wp-settings.php file should exist
     And STDOUT should contain:
       """
@@ -192,6 +216,7 @@ Feature: Download WordPress
       """
       Success: WordPress downloaded.
       """
+    And the return code should be 0
 
   Scenario: Installing nightly for a non-default locale
     Given an empty directory
@@ -255,6 +280,7 @@ Feature: Download WordPress
     """
     /non-directory-path/
     """
+    And the return code should be 1
 
     When I try `WP_CLI_STRICT_ARGS_MODE=1 wp core download --path=non-directory-path`
     Then STDERR should contain:
@@ -265,6 +291,7 @@ Feature: Download WordPress
     """
     non-directory-path/
     """
+    And the return code should be 1
 
     When I try `WP_CLI_STRICT_ARGS_MODE=1 wp core download --path=non-directory-path\\`
     Then STDERR should contain:
@@ -275,6 +302,7 @@ Feature: Download WordPress
     """
     non-directory-path/
     """
+    And the return code should be 1
 
     When I try `wp core download --path=/root-level-directory`
     Then STDERR should contain:
@@ -285,6 +313,7 @@ Feature: Download WordPress
     """
     /root-level-directory/
     """
+    And the return code should be 1
 
     When I try `WP_CLI_STRICT_ARGS_MODE=1 wp core download --path=/root-level-directory`
     Then STDERR should contain:
@@ -295,6 +324,7 @@ Feature: Download WordPress
     """
     /root-level-directory/
     """
+    And the return code should be 1
 
   Scenario: Core download without the wp-content dir
     Given an empty directory
@@ -315,6 +345,7 @@ Feature: Download WordPress
       """
       Error: Skip content build is only available for the en_US locale.
       """
+    And the return code should be 1
 
   Scenario: Core download without the wp-content dir should error if a version is set
     Given an empty directory
@@ -324,3 +355,4 @@ Feature: Download WordPress
       """
       Skip content build is only available for the latest version.
       """
+    And the return code should be 1
