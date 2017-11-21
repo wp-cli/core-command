@@ -112,11 +112,11 @@ class CoreUpgrader extends \Core_Upgrader {
 	 * @return null|false|WP_Error False or WP_Error on failure, null on success.
 	 */
 	public function upgrade( $current, $args = array() ) {
-		$old_error_handler = set_error_handler( array( __CLASS__, 'error_handler' ), E_USER_WARNING | E_USER_NOTICE );
+		set_error_handler( array( __CLASS__, 'error_handler' ), E_USER_WARNING | E_USER_NOTICE );
 
 		$result = parent::upgrade( $current, $args );
 
-		set_error_handler( $old_error_handler );
+		restore_error_handler();
 
 		return $result;
 	}
