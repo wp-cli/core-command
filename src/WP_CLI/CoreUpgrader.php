@@ -124,7 +124,7 @@ class CoreUpgrader extends \Core_Upgrader {
 	/**
 	 * Error handler to ignore failures on accessing SSL "https://api.wordpress.org/core/checksums/1.0/" in `get_core_checksums()` which seem to occur intermittently.
 	 */
-	static public function error_handler( int $errno, string $errstr, string $errfile, int $errline, array $errcontext = null ) {
+	static public function error_handler( $errno, $errstr, $errfile, $errline, $errcontext = null ) {
 		// If ignoring E_USER_WARNING | E_USER_NOTICE, default.
 		if ( ! ( error_reporting() & $errno ) ) {
 			return false;

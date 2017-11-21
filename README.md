@@ -183,7 +183,7 @@ to communicate whether WordPress is installed.
 
 ### wp core multisite-convert
 
-Transform a single-site install into a WordPress multisite install.
+Transforms an existing single-site install into a multisite install.
 
 ~~~
 wp core multisite-convert [--title=<network-title>] [--base=<url-path>] [--subdomains]
@@ -194,6 +194,9 @@ to wp-config.php.
 
 For those using WordPress with Apache, remember to update the `.htaccess`
 file with the appropriate multisite rewrite rules.
+
+[Review the multisite documentation](https://codex.wordpress.org/Create_A_Network)
+for more details about how multisite works.
 
 **OPTIONS**
 
@@ -319,7 +322,7 @@ update isn't actually running.
     Downloading update from https://downloads.wordpress.org/release/wordpress-4.5.2-no-content.zip...
     Unpacking the update...
     Cleaning up files...
-    No files found that need cleaned up
+    No files found that need cleaning up
     Success: WordPress updated successfully.
 
     # Update WordPress to latest version of 3.8 release
@@ -338,7 +341,7 @@ update isn't actually running.
     Updating to version 3.1 (en_US)...
     Downloading update from https://wordpress.org/wordpress-3.1.zip...
     Unpacking the update...
-    Warning: Failed to fetch checksums. Please cleanup files manually.
+    Warning: Checksums not available for WordPress 3.1/en_US. Please cleanup files manually.
     Success: WordPress updated successfully.
 
 
