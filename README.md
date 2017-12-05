@@ -13,7 +13,7 @@ This package implements the following commands:
 
 ### wp core check-update
 
-Check for WordPress updates via Version Check API.
+Checks for WordPress updates via Version Check API.
 
 ~~~
 wp core check-update [--minor] [--major] [--field=<field>] [--fields=<fields>] [--format=<format>]
@@ -61,7 +61,7 @@ or success message when up to date.
 
 ### wp core download
 
-Download core WordPress files.
+Downloads core WordPress files.
 
 ~~~
 wp core download [--path=<path>] [--locale=<locale>] [--version=<version>] [--skip-content] [--force]
@@ -154,7 +154,7 @@ user_login doesn't exist, a new user will be created.
 
 ### wp core is-installed
 
-Check if WordPress is installed.
+Checks if WordPress is installed.
 
 ~~~
 wp core is-installed [--network]
@@ -223,7 +223,7 @@ for more details about how multisite works.
 
 ### wp core multisite-install
 
-Install WordPress multisite from scratch.
+Installs WordPress multisite from scratch.
 
 ~~~
 wp core multisite-install [--url=<url>] [--base=<url-path>] [--subdomains] --title=<site-title> --admin_user=<username> [--admin_password=<password>] --admin_email=<email> [--skip-email] [--skip-config]
@@ -285,7 +285,7 @@ file with the appropriate multisite rewrite rules.
 
 ### wp core update
 
-Update WordPress to a newer version.
+Updates WordPress to a newer version.
 
 ~~~
 wp core update [<zip>] [--minor] [--version=<version>] [--force] [--locale=<locale>]
@@ -348,7 +348,7 @@ update isn't actually running.
 
 ### wp core update-db
 
-Run the WordPress database update procedure.
+Runs the WordPress database update procedure.
 
 ~~~
 wp core update-db [--network] [--dry-run]
@@ -375,7 +375,7 @@ wp core update-db [--network] [--dry-run]
 
 ### wp core version
 
-Display the WordPress version.
+Displays the WordPress version.
 
 ~~~
 wp core version [--extra]
