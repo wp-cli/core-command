@@ -5,7 +5,7 @@ use \WP_CLI\Extractor;
 use \WP_CLI\Utils;
 
 /**
- * Download, install, update and manage a WordPress install.
+ * Downloads, installs, updates, and manages a WordPress install.
  *
  * ## EXAMPLES
  *
