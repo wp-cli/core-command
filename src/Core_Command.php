@@ -5,7 +5,7 @@ use \WP_CLI\Extractor;
 use \WP_CLI\Utils;
 
 /**
- * Download, install, update and manage a WordPress install.
+ * Downloads, installs, updates, and manages a WordPress install.
  *
  * ## EXAMPLES
  *
@@ -28,7 +28,7 @@ use \WP_CLI\Utils;
 class Core_Command extends WP_CLI_Command {
 
 	/**
-	 * Check for WordPress updates via Version Check API.
+	 * Checks for WordPress updates via Version Check API.
 	 *
 	 * Lists the most recent versions when there are updates available,
 	 * or success message when up to date.
@@ -86,7 +86,7 @@ class Core_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Download core WordPress files.
+	 * Downloads core WordPress files.
 	 *
 	 * Downloads and extracts WordPress core files to the specified path. Uses
 	 * current directory when no path is specified. Downloaded build is verified
@@ -293,7 +293,7 @@ class Core_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Check if WordPress is installed.
+	 * Checks if WordPress is installed.
 	 *
 	 * Determines whether WordPress is installed by checking if the standard
 	 * database tables are installed. Doesn't produce output; uses exit codes
@@ -436,7 +436,7 @@ class Core_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Install WordPress multisite from scratch.
+	 * Installs WordPress multisite from scratch.
 	 *
 	 * Creates the WordPress tables in the database using the URL, title, and
 	 * default admin user details provided. Then, creates the multisite tables
@@ -753,7 +753,7 @@ EOT;
 	}
 
 	/**
-	 * Display the WordPress version.
+	 * Displays the WordPress version.
 	 *
 	 * ## OPTIONS
 	 *
@@ -805,7 +805,7 @@ EOT;
 	}
 
 	/**
-	 * Get version information from `wp-includes/version.php`.
+	 * Gets version information from `wp-includes/version.php`.
 	 *
 	 * @return array {
 	 *     @type string $wp_version The WordPress version.
@@ -836,7 +836,7 @@ EOT;
 	}
 
 	/**
-	 * Search for the value assigned to variable `$var_name` in PHP code `$code`.
+	 * Searches for the value assigned to variable `$var_name` in PHP code `$code`.
 	 *
 	 * This is equivalent to matching the `\$VAR_NAME = ([^;]+)` regular expression and returning
 	 * the first match either as a `string` or as an `integer` (depending if it's surrounded by
@@ -900,7 +900,7 @@ EOT;
 	}
 
 	/**
-	 * Update WordPress to a newer version.
+	 * Updates WordPress to a newer version.
 	 *
 	 * Defaults to updating WordPress to the latest version.
 	 *
@@ -1082,7 +1082,7 @@ EOT;
 	}
 
 	/**
-	 * Run the WordPress database update procedure.
+	 * Runs the WordPress database update procedure.
 	 *
 	 * [--network]
 	 * : Update databases for all sites on a network
@@ -1213,7 +1213,7 @@ EOT;
 	}
 
 	/**
-	 * Returns update information
+	 * Returns update information.
 	 */
 	private function get_updates( $assoc_args ) {
 		wp_version_check();
