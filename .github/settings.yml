@@ -1,6 +1,6 @@
 # Used by Probot Settings: https://probot.github.io/apps/settings/
 repository:
-  description: Download, install, update and manage a WordPress install.
+  description: Downloads, installs, updates and manages a WordPress install.
 labels:
   - name: bug
     color: fc2929
