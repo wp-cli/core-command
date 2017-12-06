@@ -33,6 +33,7 @@
         },
         "bundled": true,
         "commands": [
+            "core",
             "core check-update",
             "core download",
             "core install",
