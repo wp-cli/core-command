@@ -1,7 +1,7 @@
 wp-cli/core-command
 ===================
 
-Download, install, update and manage a WordPress install.
+Download, install, update and manage a WordPress installation.
 
 [![Build Status](https://travis-ci.org/wp-cli/core-command.svg?branch=master)](https://travis-ci.org/wp-cli/core-command)
 
@@ -115,7 +115,7 @@ Note: if you've installed WordPress in a subdirectory, then you'll need
 to `wp option update siteurl` after `wp core install`. For instance, if
 WordPress is installed in the `/wp` directory and your domain is wp.dev,
 then you'll need to run `wp option update siteurl http://wp.dev/wp` for
-your WordPress install to function properly.
+your WordPress installation to function properly.
 
 Note: When using custom user tables (e.g. `CUSTOM_USER_TABLE`), the admin
 email and password are ignored if the user_login already exists. If the
@@ -183,7 +183,7 @@ to communicate whether WordPress is installed.
 
 ### wp core multisite-convert
 
-Transforms an existing single-site install into a multisite install.
+Transforms an existing single-site installation into a multisite installation.
 
 ~~~
 wp core multisite-convert [--title=<network-title>] [--base=<url-path>] [--subdomains]
