@@ -5,7 +5,7 @@ use \WP_CLI\Extractor;
 use \WP_CLI\Utils;
 
 /**
- * Downloads, installs, updates, and manages a WordPress install.
+ * Downloads, installs, updates, and manages a WordPress installation.
  *
  * ## EXAMPLES
  *
@@ -300,7 +300,7 @@ class Core_Command extends WP_CLI_Command {
 	 * to communicate whether WordPress is installed.
 	 *
 	 * [--network]
-	 * : Check if this is a multisite install.
+	 * : Check if this is a multisite installation.
 	 *
 	 * ## EXAMPLES
 	 *
@@ -342,7 +342,7 @@ class Core_Command extends WP_CLI_Command {
 	 * to `wp option update siteurl` after `wp core install`. For instance, if
 	 * WordPress is installed in the `/wp` directory and your domain is wp.dev,
 	 * then you'll need to run `wp option update siteurl http://wp.dev/wp` for
-	 * your WordPress install to function properly.
+	 * your WordPress installation to function properly.
 	 *
 	 * Note: When using custom user tables (e.g. `CUSTOM_USER_TABLE`), the admin
 	 * email and password are ignored if the user_login already exists. If the
@@ -386,7 +386,7 @@ class Core_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Transforms an existing single-site install into a multisite install.
+	 * Transforms an existing single-site installation into a multisite installation.
 	 *
 	 * Creates the multisite database tables, and adds the multisite constants
 	 * to wp-config.php.
