@@ -337,22 +337,24 @@ Feature: Download WordPress
     And the wp-includes directory should exist
     And the wp-content directory should not exist
 
-  Scenario: Core download without the wp-content dir should error for non US locale
+  Scenario: Core download without the wp-content dir should work non US locale
     Given an empty directory
 
-    When I try `wp core download --skip-content --locale=nl_NL`
-    Then STDERR should be:
+    When I run `wp core download --skip-content --locale=nl_NL`
+    Then STDOUT should contain:
       """
-      Error: Skip content build is only available for the en_US locale.
+      Success: WordPress downloaded.
       """
-    And the return code should be 1
+    And the wp-includes directory should exist
+    And the wp-content directory should not exist
 
-  Scenario: Core download without the wp-content dir should error if a version is set
+  Scenario: Core download without the wp-content dir should work if a version is set
     Given an empty directory
 
     When I try `wp core download --skip-content --version=4.7`
-    Then STDERR should contain:
+    Then STDOUT should contain:
       """
-      Skip content build is only available for the latest version.
+      Success: WordPress downloaded.
       """
-    And the return code should be 1
+    And the wp-includes directory should exist
+    And the wp-content directory should not exist
