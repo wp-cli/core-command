@@ -106,7 +106,7 @@ class Core_Command extends WP_CLI_Command {
 	 * : Select which version you want to download. Accepts a version number, 'latest' or 'nightly'
 	 *
 	 * [--skip-content]
-	 * : Download the latest version of WP without the default themes and plugins (en_US locale only)
+	 * : Download WP without the default themes and plugins.
 	 *
 	 * [--force]
 	 * : Overwrites existing files, if present.
