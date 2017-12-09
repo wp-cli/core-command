@@ -199,11 +199,9 @@ class Core_Command extends WP_CLI_Command {
 		$bad_cache = false;
 		if ( $cache_file ) {
 			WP_CLI::log( "Using cached file '$cache_file'..." );
-			if ( $skip_content ) {
-				$cache_file = self::strip_content_dir( $cache_file );
-			}
+			$skip_content_cache_file = $skip_content ? self::strip_content_dir( $cache_file ) : null;
 			try{
-				Extractor::extract( $cache_file, $download_dir );
+				Extractor::extract( $skip_content_cache_file ? $skip_content_cache_file : $cache_file, $download_dir );
 			} catch ( Exception $e ) {
 				WP_CLI::warning( "Extraction failed, downloading a new copy..." );
 				$bad_cache = true;
@@ -214,6 +212,11 @@ class Core_Command extends WP_CLI_Command {
 			// We need to use a temporary file because piping from cURL to tar is flaky
 			// on MinGW (and probably in other environments too).
 			$temp = \WP_CLI\Utils\get_temp_dir() . uniqid('wp_') . ".{$extension}";
+			register_shutdown_function( function () use ( $temp ) {
+				if ( file_exists( $temp ) ) {
+					unlink( $temp );
+				}
+			} );
 
 			$headers = array('Accept' => 'application/json');
 			$options = array(
@@ -245,12 +248,10 @@ class Core_Command extends WP_CLI_Command {
 				WP_CLI::warning( 'md5 hash checks are not available for nightly downloads.' );
 			}
 
-			if ( $skip_content ) {
-				$temp = self::strip_content_dir( $temp );
-			}
+			$skip_content_temp = $skip_content ? self::strip_content_dir( $temp ): null;
 
 			try {
-				Extractor::extract( $temp, $download_dir );
+				Extractor::extract( $skip_content_temp ? $skip_content_temp : $temp, $download_dir );
 			} catch ( Exception $e ) {
 				WP_CLI::error( "Couldn't extract WordPress archive. " . $e->getMessage() );
 			}
@@ -258,7 +259,6 @@ class Core_Command extends WP_CLI_Command {
 			if ( 'nightly' !== $version ) {
 				$cache->import( $cache_key, $temp );
 			}
-			unlink( $temp );
 		}
 
 		if ( $wordpress_present ) {
@@ -1313,6 +1313,11 @@ EOT;
 
 	private static function strip_content_dir( $zip_file ) {
 		$new_zip_file = \WP_CLI\Utils\get_temp_dir() . uniqid( 'wp_' ) . '.zip';
+		register_shutdown_function( function () use ( $new_zip_file ) {
+			if ( file_exists( $new_zip_file ) ) {
+				unlink( $new_zip_file );
+			}
+		} );
 		// Duplicate file to avoid modifying the original, which could be cache.
 		if ( ! copy( $zip_file, $new_zip_file ) ) {
 			WP_CLI::error( 'Failed to copy ZIP file.' );

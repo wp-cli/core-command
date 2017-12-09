@@ -49,6 +49,11 @@ class CoreUpgrader extends \Core_Upgrader {
 		$ext = pathinfo( $package, PATHINFO_EXTENSION );
 
 		$temp = \WP_CLI\Utils\get_temp_dir() . uniqid( 'wp_' ) . '.' . $ext;
+		register_shutdown_function( function () use ( $temp ) {
+			if ( file_exists( $temp ) ) {
+				unlink( $temp );
+			}
+		} );
 
 		$cache = WP_CLI::get_cache();
 		$update = $GLOBALS['wp_cli_update_obj'];
