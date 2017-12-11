@@ -106,7 +106,7 @@ class Core_Command extends WP_CLI_Command {
 	 * : Select which version you want to download. Accepts a version number, 'latest' or 'nightly'
 	 *
 	 * [--skip-content]
-	 * : Download the latest version of WP without the default themes and plugins (en_US locale only)
+	 * : Download WP without the default themes and plugins.
 	 *
 	 * [--force]
 	 * : Overwrites existing files, if present.
@@ -145,30 +145,15 @@ class Core_Command extends WP_CLI_Command {
 		}
 
 		$locale = \WP_CLI\Utils\get_flag_value( $assoc_args, 'locale', 'en_US' );
+		$skip_content = \WP_CLI\Utils\get_flag_value( $assoc_args, 'skip-content' );
 
-		if ( true === \WP_CLI\Utils\get_flag_value( $assoc_args, 'skip-content' ) && 'en_US' !== $locale ) {
-			WP_CLI::error( 'Skip content build is only available for the en_US locale.' );
-		}
-
-		if ( true === \WP_CLI\Utils\get_flag_value( $assoc_args, 'skip-content' ) && isset( $assoc_args['version'] ) ) {
-			WP_CLI::error( 'Skip content build is only available for the latest version.' );
-		}
-
-		$no_content = '';
-		if ( true === \WP_CLI\Utils\get_flag_value( $assoc_args, 'skip-content' ) ) {
-			$response = \WP_CLI\Utils\http_request( 'GET', 'https://api.wordpress.org/core/version-check/1.7/' );
-			if ( 200 === $response->status_code && ( $body = json_decode( $response->body ) ) && is_object( $body ) && isset( $body->offers[0]->packages->no_content ) && is_array( $body->offers ) ) {
-				$download_url = $body->offers[0]->packages->no_content;
-				$version = $body->offers[0]->version;
-				$no_content = 'no-content-';
-			} else {
-				WP_CLI::error( 'Skip content build is not available.' );
-			}
-		} elseif ( isset( $assoc_args['version'] ) && 'latest' !== $assoc_args['version'] ) {
+		if ( isset( $assoc_args['version'] ) && 'latest' !== $assoc_args['version'] ) {
 			$version = $assoc_args['version'];
 			$version = ( in_array( strtolower( $version ), array( 'trunk', 'nightly' ) ) ? 'nightly' : $version );
-			//nightly builds are only available in .zip format
+			// nightly builds are only available in .zip format
 			$ext     = ( 'nightly' === $version ? 'zip' : 'tar.gz' );
+			// Skip content requires ZIP.
+			$ext     = ( $skip_content ) ? 'zip' : $ext;
 			$download_url = $this->get_download_url( $version, $locale, $ext );
 		} else {
 			$offer = $this->get_download_offer( $locale );
@@ -176,7 +161,10 @@ class Core_Command extends WP_CLI_Command {
 				WP_CLI::error( "The requested locale ($locale) was not found." );
 			}
 			$version = $offer['current'];
-			$download_url = str_replace( '.zip', '.tar.gz', $offer['download'] );
+			$download_url = $offer['download'];
+			if ( ! $skip_content ) {
+				$download_url = str_replace( '.zip', '.tar.gz', $download_url );
+			}
 		}
 
 		if ( 'nightly' === $version && 'en_US' !== $locale ) {
@@ -200,15 +188,20 @@ class Core_Command extends WP_CLI_Command {
 			}
 		}
 
+		if ( $skip_content && 'zip' !== $extension ) {
+			WP_CLI::error( 'Skip content is only available for ZIP files.' );
+		}
+
 		$cache = WP_CLI::get_cache();
-		$cache_key = "core/wordpress-{$version}-{$no_content}{$locale}.{$extension}";
+		$cache_key = "core/wordpress-{$version}-{$locale}.{$extension}";
 		$cache_file = $cache->has($cache_key);
 
 		$bad_cache = false;
 		if ( $cache_file ) {
 			WP_CLI::log( "Using cached file '$cache_file'..." );
+			$skip_content_cache_file = $skip_content ? self::strip_content_dir( $cache_file ) : null;
 			try{
-				Extractor::extract( $cache_file, $download_dir );
+				Extractor::extract( $skip_content_cache_file ? $skip_content_cache_file : $cache_file, $download_dir );
 			} catch ( Exception $e ) {
 				WP_CLI::warning( "Extraction failed, downloading a new copy..." );
 				$bad_cache = true;
@@ -219,6 +212,11 @@ class Core_Command extends WP_CLI_Command {
 			// We need to use a temporary file because piping from cURL to tar is flaky
 			// on MinGW (and probably in other environments too).
 			$temp = \WP_CLI\Utils\get_temp_dir() . uniqid('wp_') . ".{$extension}";
+			register_shutdown_function( function () use ( $temp ) {
+				if ( file_exists( $temp ) ) {
+					unlink( $temp );
+				}
+			} );
 
 			$headers = array('Accept' => 'application/json');
 			$options = array(
@@ -250,8 +248,10 @@ class Core_Command extends WP_CLI_Command {
 				WP_CLI::warning( 'md5 hash checks are not available for nightly downloads.' );
 			}
 
+			$skip_content_temp = $skip_content ? self::strip_content_dir( $temp ): null;
+
 			try {
-				Extractor::extract( $temp, $download_dir );
+				Extractor::extract( $skip_content_temp ? $skip_content_temp : $temp, $download_dir );
 			} catch ( Exception $e ) {
 				WP_CLI::error( "Couldn't extract WordPress archive. " . $e->getMessage() );
 			}
@@ -259,7 +259,6 @@ class Core_Command extends WP_CLI_Command {
 			if ( 'nightly' !== $version ) {
 				$cache->import( $cache_key, $temp );
 			}
-			unlink( $temp );
 		}
 
 		if ( $wordpress_present ) {
@@ -1309,6 +1308,33 @@ EOT;
 			} else {
 				WP_CLI::log( 'No files found that need cleaning up.' );
 			}
+		}
+	}
+
+	private static function strip_content_dir( $zip_file ) {
+		$new_zip_file = \WP_CLI\Utils\get_temp_dir() . uniqid( 'wp_' ) . '.zip';
+		register_shutdown_function( function () use ( $new_zip_file ) {
+			if ( file_exists( $new_zip_file ) ) {
+				unlink( $new_zip_file );
+			}
+		} );
+		// Duplicate file to avoid modifying the original, which could be cache.
+		if ( ! copy( $zip_file, $new_zip_file ) ) {
+			WP_CLI::error( 'Failed to copy ZIP file.' );
+		}
+		$zip = new ZipArchive();
+		$res = $zip->open( $new_zip_file );
+		if ( true === $res ) {
+			for ( $i = 0; $i < $zip->numFiles; $i++ ) {
+				$info = $zip->statIndex( $i );
+				if ( false !== stripos( $info['name'], 'wp-content/' ) ) {
+					$zip->deleteIndex( $i );
+				}
+			}
+			$zip->close();
+			return $new_zip_file;
+		} else {
+			WP_CLI::error( 'ZipArchive failed to open ZIP file.' );
 		}
 	}
 
