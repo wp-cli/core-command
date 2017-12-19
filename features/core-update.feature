@@ -198,7 +198,7 @@ Feature: Update WordPress core
     When I run `wp core verify-checksums`
     Then STDOUT should be:
       """
-      Success: WordPress install verifies against checksums.
+      Success: WordPress installation verifies against checksums.
       """
     And the {SUITE_CACHE_DIR}/core directory should contain:
       """
