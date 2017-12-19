@@ -1,10 +1,7 @@
 Feature: Check for more recent versions
 
   Scenario: Check for update via Version Check API
-    Given a WP install
-
-    When I run `wp core download --version=4.4 --force`
-    Then STDOUT should not be empty
+    Given a WP 4.4 installation
 
     When I run `wp core check-update`
     Then STDOUT should be a table containing rows:
