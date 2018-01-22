@@ -920,9 +920,9 @@ EOT;
 	 *
 	 * [--force]
 	 * : Update even when installed WP version is greater than the requested version.
-     *
-     * [--locale=<locale>]
-     * : Select which language you want to download.
+	 *
+	 * [--locale=<locale>]
+	 * : Select which language you want to download.
 	 *
 	 * ## EXAMPLES
 	 *
