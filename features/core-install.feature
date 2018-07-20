@@ -200,3 +200,38 @@ Feature: Install WordPress core
     """
     Addition of multisite constants to 'wp-config.php' skipped. You need to add them manually:
     """
+
+  Scenario: Install WordPress multisite with existing multisite constants in wp-config file
+    Given an empty directory
+    And WP files
+    And a database
+    And a extra-config file:
+      """
+      define( 'WP_ALLOW_MULTISITE', true );
+      define( 'MULTISITE', true );
+      define( 'SUBDOMAIN_INSTALL', true );
+      $base = '/';
+      define( 'DOMAIN_CURRENT_SITE', 'foobar.org' );
+      define( 'PATH_CURRENT_SITE', '/' );
+      define( 'SITE_ID_CURRENT_SITE', 1 );
+      define( 'BLOG_ID_CURRENT_SITE', 1 );
+      """
+
+    When I run `wp core config {CORE_CONFIG_SETTINGS} --extra-php < extra-config`
+    Then STDOUT should be:
+      """
+      Success: Generated 'wp-config.php' file.
+      """
+
+    When I run `wp core multisite-install --url=foobar.org --title=Test --admin_user=wpcli --admin_email=admin@example.com --admin_password=password --skip-config`
+    Then STDOUT should be:
+      """
+      Created single site database tables.
+      Set up multisite database tables.
+      Success: Network installed. Don't forget to set up rewrite rules (and a .htaccess file, if using Apache).
+      """
+
+    When I run `wp db query "select * from wp_sitemeta where meta_key = 'site_admins' and meta_value = ''"`
+    Then STDOUT should be:
+      """
+      """
