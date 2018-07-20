@@ -421,12 +421,14 @@ class Core_Command extends WP_CLI_Command {
 	 * @alias install-network
 	 */
 	public function multisite_convert( $args, $assoc_args ) {
-		if ( is_multisite() )
+		if ( is_multisite() ) {
 			WP_CLI::error( 'This already is a multisite install.' );
+		}
 
 		$assoc_args = self::_set_multisite_defaults( $assoc_args );
-		if ( !isset( $assoc_args['title'] ) ) {
-			$assoc_args['title'] = sprintf( _x('%s Sites', 'Default network name' ), get_option( 'blogname' ) );
+		if ( ! isset( $assoc_args['title'] ) ) {
+			// translators: placeholder is blog name
+			$assoc_args['title'] = sprintf( _x( '%s Sites', 'Default network name' ), get_option( 'blogname' ) );
 		}
 
 		if ( $this->_multisite_convert( $assoc_args ) ) {
@@ -499,7 +501,8 @@ class Core_Command extends WP_CLI_Command {
 		}
 
 		$assoc_args = self::_set_multisite_defaults( $assoc_args );
-		$assoc_args['title'] = sprintf( _x('%s Sites', 'Default network name' ), $assoc_args['title'] );
+		// translators: placeholder is user supplied title
+		$assoc_args['title'] = sprintf( _x( '%s Sites', 'Default network name' ), $assoc_args['title'] );
 
 		// Overwrite runtime args, to avoid mismatches.
 		$consts_to_args = array(
@@ -515,7 +518,7 @@ class Core_Command extends WP_CLI_Command {
 			}
 		}
 
-		if ( !$this->_multisite_convert( $assoc_args ) ) {
+		if ( ! $this->_multisite_convert( $assoc_args ) ) {
 			return;
 		}
 
@@ -624,8 +627,9 @@ class Core_Command extends WP_CLI_Command {
 		}
 
 		// need to register the multisite tables manually for some reason
-		foreach ( $wpdb->tables( 'ms_global' ) as $table => $prefixed_table )
+		foreach ( $wpdb->tables( 'ms_global' ) as $table => $prefixed_table ) {
 			$wpdb->$table = $prefixed_table;
+		}
 
 		install_network();
 
@@ -640,19 +644,19 @@ class Core_Command extends WP_CLI_Command {
 
 		if ( true === $result ) {
 			WP_CLI::log( 'Set up multisite database tables.' );
-		} else if ( is_wp_error( $result ) ) {
+		} elseif ( is_wp_error( $result ) ) {
 			switch ( $result->get_error_code() ) {
 
-			case 'siteid_exists':
-				WP_CLI::log( $result->get_error_message() );
-				return false;
+				case 'siteid_exists':
+					WP_CLI::log( $result->get_error_message() );
+					return false;
 
-			case 'no_wildcard_dns':
-				WP_CLI::warning( __( 'Wildcard DNS may not be configured correctly.' ) );
-				break;
+				case 'no_wildcard_dns':
+					WP_CLI::warning( __( 'Wildcard DNS may not be configured correctly.' ) );
+					break;
 
-			default:
-				WP_CLI::error( $result );
+				default:
+					WP_CLI::error( $result );
 			}
 		}
 
@@ -660,7 +664,7 @@ class Core_Command extends WP_CLI_Command {
 		delete_site_option( 'upload_space_check_disabled' );
 		update_site_option( 'upload_space_check_disabled', 1 );
 
-		if ( !is_multisite() ) {
+		if ( ! is_multisite() ) {
 			$subdomain_export = Utils\get_flag_value( $assoc_args, 'subdomains' ) ? 'true' : 'false';
 			$ms_config = <<<EOT
 define( 'WP_ALLOW_MULTISITE', true );
