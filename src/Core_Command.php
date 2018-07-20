@@ -785,7 +785,7 @@ EOT;
 				$human_readable_tiny_mce = '';
 			}
 
-			echo \WP_CLI\Utils\mustache_render( 'versions.mustache', array(
+			echo \WP_CLI\Utils\mustache_render( dirname( __DIR__ ) . '/templates/versions.mustache', array(
 				'wp-version'    => $details['wp_version'],
 				'db-version'    => $details['wp_db_version'],
 				'local-package' => ( empty( $details['wp_local_package'] ) ?
