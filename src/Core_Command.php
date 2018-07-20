@@ -685,6 +685,22 @@ EOT;
 			} else {
 				WP_CLI::warning( "Multisite constants could not be written to 'wp-config.php'. You may need to add them manually:" . PHP_EOL . $ms_config );
 			}
+		} else {
+			/**
+			 * Multisite constants are defined, therefore we already have an empty site_admins site meta
+			 *
+			 * Code based on parts of delete_network_option
+			 */
+			$rows = $wpdb->get_results( "SELECT meta_id, site_id FROM {$wpdb->sitemeta} WHERE meta_key = 'site_admins'" );
+
+			foreach ( $rows as $row ) {
+				$cache_key = sprintf( '%d:site_admins', $row->site_id );
+				wp_cache_delete( $cache_key, 'site-options' );
+
+				$result = $wpdb->delete( $wpdb->sitemeta, array(
+					'meta_id' => $row->meta_id,
+				) );
+			}
 		}
 
 		return true;
