@@ -803,7 +803,7 @@ EOT;
 				$human_readable_tiny_mce = '';
 			}
 
-			echo \WP_CLI\Utils\mustache_render( dirname( __DIR__ ) . '/templates/versions.mustache', array(
+			echo \WP_CLI\Utils\mustache_render( self::get_template_path( 'versions.mustache' ), array(
 				'wp-version'    => $details['wp_version'],
 				'db-version'    => $details['wp_db_version'],
 				'local-package' => ( empty( $details['wp_local_package'] ) ?
@@ -850,6 +850,20 @@ EOT;
 		}
 
 		return $result;
+	}
+
+	/**
+	 * Gets the template path based on installation type.
+	 */
+	private static function get_template_path( $template ) {
+		$command_root = Utils\phar_safe_path( dirname( __DIR__ ) );
+		$template_path = "{$command_root}/templates/{$template}";
+
+		if ( ! file_exists( $template_path ) ) {
+			WP_CLI::error( "Couldn't find {$template}" );
+		}
+
+		return $template_path;
 	}
 
 	/**
