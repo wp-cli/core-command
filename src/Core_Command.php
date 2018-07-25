@@ -855,7 +855,6 @@ EOT;
 	/**
 	 * Gets the template path based on installation type.
 	 */
-
 	private static function get_template_path( $template ) {
 		$command_root = Utils\phar_safe_path( dirname( __DIR__ ) );
 		$template_path = "{$command_root}/templates/{$template}";
