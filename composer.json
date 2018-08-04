@@ -30,7 +30,8 @@
         "wp-cli/wp-cli-tests": "^0",
         "wp-cli/db-command": "^1.3",
         "wp-cli/entity-command": "^1.3",
-        "wp-cli/checksum-command": "^1.0"
+        "wp-cli/checksum-command": "^1.0",
+        "wp-cli/extension-command": "^1.2"
     },
     "extra": {
         "branch-alias": {
