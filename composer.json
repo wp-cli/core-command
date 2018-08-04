@@ -1,11 +1,8 @@
 {
     "name": "wp-cli/core-command",
-    "description": "Downloads, installs, updates, and manages a WordPress installation.",
     "type": "wp-cli-package",
+    "description": "Downloads, installs, updates, and manages a WordPress installation.",
     "homepage": "https://github.com/wp-cli/core-command",
-    "support": {
-        "issues": "https://github.com/wp-cli/core-command/issues"
-    },
     "license": "MIT",
     "authors": [
         {
@@ -14,18 +11,20 @@
             "homepage": "https://runcommand.io"
         }
     ],
-    "minimum-stability": "dev",
-    "prefer-stable": true,
-    "autoload": {
-        "psr-4": {
-            "": "src/"
-        },
-        "files": [ "core-command.php" ]
+    "require": {
+        "composer/semver": "^1.4",
+        "wp-cli/wp-cli": "^2"
     },
-    "require": {},
     "require-dev": {
-        "behat/behat": "~2.5",
-        "wp-cli/wp-cli": "*"
+        "wp-cli/checksum-command": "^1.0",
+        "wp-cli/db-command": "^1.3",
+        "wp-cli/entity-command": "^1.3",
+        "wp-cli/extension-command": "^1.2",
+        "wp-cli/wp-cli-tests": "^0"
+    },
+    "config": {
+        "sort-packages": true,
+        "process-timeout": 7200
     },
     "extra": {
         "branch-alias": {
@@ -44,5 +43,31 @@
             "core update-db",
             "core version"
         ]
+    },
+    "autoload": {
+        "psr-4": {
+            "": "src/"
+        },
+        "files": [
+            "core-command.php"
+        ]
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "scripts": {
+        "behat": "run-behat-tests",
+        "lint": "run-linter-tests",
+        "phpcs": "run-phpcs-tests",
+        "phpunit": "run-php-unit-tests",
+        "prepare-tests": "install-package-tests",
+        "test": [
+            "@lint",
+            "@phpcs",
+            "@phpunit",
+            "@behat"
+        ]
+    },
+    "support": {
+        "issues": "https://github.com/wp-cli/core-command/issues"
     }
 }
