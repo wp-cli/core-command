@@ -20,7 +20,8 @@
         "wp-cli/db-command": "^1.3",
         "wp-cli/entity-command": "^1.3",
         "wp-cli/extension-command": "^1.2",
-        "wp-cli/wp-cli-tests": "^0"
+        "wp-cli/wp-cli-tests": "^0",
+		"wp-cli/eval-command": "dev-master"
     },
     "config": {
         "sort-packages": true,
@@ -45,12 +46,12 @@
         ]
     },
     "autoload": {
+	    "files": [
+            "core-command.php"
+        ],
         "psr-4": {
             "": "src/"
-        },
-        "files": [
-            "core-command.php"
-        ]
+        }
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
