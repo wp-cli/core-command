@@ -45,12 +45,12 @@
         ]
     },
     "autoload": {
+	    "files": [
+            "core-command.php"
+        ],
         "psr-4": {
             "": "src/"
-        },
-        "files": [
-            "core-command.php"
-        ]
+        }
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
