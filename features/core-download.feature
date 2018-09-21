@@ -8,7 +8,7 @@ Feature: Download WordPress
     Then the return code should be 1
     And STDERR should contain:
       """
-      Error: This does not seem to be a WordPress installation.
+      Error: This does not seem to be a WordPress install
       """
     And STDOUT should be empty
 
