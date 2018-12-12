@@ -1139,7 +1139,7 @@ EOT;
 
 		$network = Utils\get_flag_value( $assoc_args, 'network' );
 		if ( $network && ! is_multisite() ) {
-			WP_CLI::error( 'This is not a multisite install.' );
+			WP_CLI::error( 'This is not a multisite installation.' );
 		}
 
 		$dry_run = Utils\get_flag_value( $assoc_args, 'dry-run' );
