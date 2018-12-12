@@ -296,7 +296,8 @@ Feature: Update WordPress core
   Scenario: Installing latest nightly build should skip cache
     Given a WP install
 
-    When I run `wp core upgrade --force http://wordpress.org/nightly-builds/wordpress-4.9-latest.zip`
+    # May produce warnings if checksums cannot be retrieved.
+    When I try `wp core upgrade --force http://wordpress.org/nightly-builds/wordpress-4.9-latest.zip`
     Then STDOUT should contain:
       """
       Success:
@@ -306,7 +307,8 @@ Feature: Update WordPress core
       Using cached
       """
 
-    When I run `wp core upgrade --force http://wordpress.org/nightly-builds/wordpress-4.9-latest.zip`
+    # May produce warnings if checksums cannot be retrieved.
+    When I try `wp core upgrade --force http://wordpress.org/nightly-builds/wordpress-4.9-latest.zip`
     Then STDOUT should contain:
       """
       Success:
