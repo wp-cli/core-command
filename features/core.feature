@@ -327,7 +327,7 @@ Feature: Manage WordPress installation
 
       $table_prefix = 'wp_';
 
-      /* That's all, stop editing! Happy blogging. */
+      /* That's all, stop editing! Happy publishing. */
 
       /** Absolute path to the WordPress directory. */
       if ( !defined('ABSPATH') )
