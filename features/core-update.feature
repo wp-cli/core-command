@@ -297,7 +297,7 @@ Feature: Update WordPress core
     Given a WP install
 
     # May produce warnings if checksums cannot be retrieved.
-    When I try `wp core upgrade --force http://wordpress.org/nightly-builds/wordpress-4.9-latest.zip`
+    When I try `wp core upgrade --force http://wordpress.org/nightly-builds/wordpress-latest.zip`
     Then STDOUT should contain:
       """
       Success:
@@ -308,7 +308,7 @@ Feature: Update WordPress core
       """
 
     # May produce warnings if checksums cannot be retrieved.
-    When I try `wp core upgrade --force http://wordpress.org/nightly-builds/wordpress-4.9-latest.zip`
+    When I try `wp core upgrade --force http://wordpress.org/nightly-builds/wordpress-latest.zip`
     Then STDOUT should contain:
       """
       Success:
