@@ -273,7 +273,8 @@ Feature: Update WordPress core
       Warning: Checksums not available for WordPress {WP_VERSION-4.0-latest}/es_ES. Please cleanup files manually.
       """
     And the return code should be 0
-
+    
+  @require-php-5.6
   Scenario Outline: Use `--version=(nightly|trunk)` to update to the latest nightly version
     Given a WP install
 
@@ -293,6 +294,7 @@ Feature: Update WordPress core
     | trunk      |
     | nightly    |
 
+  @require-php-5.6
   Scenario: Installing latest nightly build should skip cache
     Given a WP install
 
