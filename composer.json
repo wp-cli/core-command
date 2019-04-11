@@ -39,6 +39,7 @@
             "core is-installed",
             "core multisite-convert",
             "core multisite-install",
+            "core release",
             "core update",
             "core update-db",
             "core version"

@@ -309,6 +309,82 @@ file with the appropriate multisite rewrite rules.
 
 
 
+### wp core release
+
+Retrieves a list of available core releases.
+
+~~~
+wp core release [<version>] [--latest] [--fields=<fields>] [--field=<field>] [--format=<format>]
+~~~
+
+Contacts the wordpress.org update servers to retrieve a list of available
+core releases and their associated information.
+
+The list of releases can be filtered by a version constraint on major or
+minor version (as they are understood for semantic versioning). It can
+not be filtered by patch version, as the wordpress.org API server does
+not provide the required querying capability.
+
+**OPTIONS**
+
+	[<version>]
+		Filter the available releases using a version number constraint. The version number contains at least the major version number, with an optional minor separated by a dot.
+
+	[--latest]
+		Only return the most up-to-date release if multiple releases have been found.
+
+	[--fields=<fields>]
+		Limit the output to specific object fields separated by comma. Defaults to version,download,mysql_version,php_version.
+
+	[--field=<field>]
+		Prints the value of a single field for each update.
+
+	[--format=<format>]
+		Render output in a particular format.
+		---
+		default: table
+		options:
+		  - table
+		  - csv
+		  - count
+		  - json
+		  - yaml
+		---
+
+**EXAMPLES**
+
+# Retrieve a list of available releases for each branch
+$ wp core release
++---------+--------------------------------------------------------------+---------------+-------------+
+| version | download                                                     | mysql_version | php_version |
++---------+--------------------------------------------------------------+---------------+-------------+
+| 5.1.1   | https://downloads.wordpress.org/release/wordpress-5.1.1.zip  | 5.0           | 5.2.4       |
+| 5.0.4   | https://downloads.wordpress.org/release/wordpress-5.0.4.zip  | 5.0           | 5.2.4       |
+| 4.9.10  | https://downloads.wordpress.org/release/wordpress-4.9.10.zip | 5.0           | 5.2.4       |
+| 4.8.9   | https://downloads.wordpress.org/release/wordpress-4.8.9.zip  | 5.0           | 5.2.4       |
+| 4.7.13  | https://downloads.wordpress.org/release/wordpress-4.7.13.zip | 5.0           | 5.2.4       |
+| 4.6.14  | https://downloads.wordpress.org/release/wordpress-4.6.14.zip | 5.0           | 5.2.4       |
+| 4.5.17  | https://downloads.wordpress.org/release/wordpress-4.5.17.zip | 5.0           | 5.2.4       |
+| 4.4.18  | https://downloads.wordpress.org/release/wordpress-4.4.18.zip | 5.0           | 5.2.4       |
+| 4.3.19  | https://downloads.wordpress.org/release/wordpress-4.3.19.zip | 5.0           | 5.2.4       |
+| 4.2.23  | https://downloads.wordpress.org/release/wordpress-4.2.23.zip | 5.0           | 5.2.4       |
+| 4.1.26  | https://downloads.wordpress.org/release/wordpress-4.1.26.zip | 5.0           | 5.2.4       |
+| 4.0.26  | https://downloads.wordpress.org/release/wordpress-4.0.26.zip | 5.0           | 5.2.4       |
+| 3.9.27  | https://downloads.wordpress.org/release/wordpress-3.9.27.zip | 5.0           | 5.2.4       |
+| 3.8.29  | https://downloads.wordpress.org/release/wordpress-3.8.29.zip | 5.0           | 5.2.4       |
+| 3.7.29  | https://downloads.wordpress.org/release/wordpress-3.7.29.zip | 5.0           | 5.2.4       |
++---------+--------------------------------------------------------------+---------------+-------------+
+
+# Retrieve the latest stable patch version for the 4.9 branch
+$ wp core release 4.9 --latest --field=version
+4.9.10
+
+# Retrieve the minimum PHP version for the latest stable release
+$ wp core release --latest --field=php_version
+5.2.4
+
+
+
 ### wp core update
 
 Updates WordPress to a newer version.
