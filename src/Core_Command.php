@@ -1370,4 +1370,245 @@ EOT;
 		}
 	}
 
+	/**
+	 * Retrieves a list of available core releases.
+	 *
+	 * Contacts the wordpress.org update servers to retrieve a list of available
+	 * core releases and their associated information.
+	 *
+	 * The list of releases can be filtered by a version constraint on major or
+	 * minor version (as they are understood for semantic versioning). It can
+	 * not be filtered by patch version, as the wordpress.org API server does
+	 * not provide the required querying capability.
+	 *
+	 * ## OPTIONS
+	 *
+	 * [<version>]
+	 * : Filter the available releases using a version number constraint. The version number contains at least the major version number, with an optional minor separated by a dot.
+	 *
+	 * [--latest]
+	 * : Only return the most up-to-date release if multiple releases have been found.
+	 *
+	 * [--fields=<fields>]
+	 * : Limit the output to specific object fields separated by comma. Defaults to version,download,mysql_version,php_version.
+	 *
+	 * [--field=<field>]
+	 * : Prints the value of a single field for each update.
+	 *
+	 * [--format=<format>]
+	 * : Render output in a particular format.
+	 * ---
+	 * default: table
+	 * options:
+	 *   - table
+	 *   - csv
+	 *   - count
+	 *   - json
+	 *   - yaml
+	 * ---
+	 *
+	 * ## EXAMPLES
+	 *
+	 * # Retrieve a list of available releases for each branch
+	 * $ wp core release
+	 * +---------+--------------------------------------------------------------+---------------+-------------+
+	 * | version | download                                                     | mysql_version | php_version |
+	 * +---------+--------------------------------------------------------------+---------------+-------------+
+	 * | 5.1.1   | https://downloads.wordpress.org/release/wordpress-5.1.1.zip  | 5.0           | 5.2.4       |
+	 * | 5.0.4   | https://downloads.wordpress.org/release/wordpress-5.0.4.zip  | 5.0           | 5.2.4       |
+	 * | 4.9.10  | https://downloads.wordpress.org/release/wordpress-4.9.10.zip | 5.0           | 5.2.4       |
+	 * | 4.8.9   | https://downloads.wordpress.org/release/wordpress-4.8.9.zip  | 5.0           | 5.2.4       |
+	 * | 4.7.13  | https://downloads.wordpress.org/release/wordpress-4.7.13.zip | 5.0           | 5.2.4       |
+	 * | 4.6.14  | https://downloads.wordpress.org/release/wordpress-4.6.14.zip | 5.0           | 5.2.4       |
+	 * | 4.5.17  | https://downloads.wordpress.org/release/wordpress-4.5.17.zip | 5.0           | 5.2.4       |
+	 * | 4.4.18  | https://downloads.wordpress.org/release/wordpress-4.4.18.zip | 5.0           | 5.2.4       |
+	 * | 4.3.19  | https://downloads.wordpress.org/release/wordpress-4.3.19.zip | 5.0           | 5.2.4       |
+	 * | 4.2.23  | https://downloads.wordpress.org/release/wordpress-4.2.23.zip | 5.0           | 5.2.4       |
+	 * | 4.1.26  | https://downloads.wordpress.org/release/wordpress-4.1.26.zip | 5.0           | 5.2.4       |
+	 * | 4.0.26  | https://downloads.wordpress.org/release/wordpress-4.0.26.zip | 5.0           | 5.2.4       |
+	 * | 3.9.27  | https://downloads.wordpress.org/release/wordpress-3.9.27.zip | 5.0           | 5.2.4       |
+	 * | 3.8.29  | https://downloads.wordpress.org/release/wordpress-3.8.29.zip | 5.0           | 5.2.4       |
+	 * | 3.7.29  | https://downloads.wordpress.org/release/wordpress-3.7.29.zip | 5.0           | 5.2.4       |
+	 * +---------+--------------------------------------------------------------+---------------+-------------+
+	 *
+	 * # Retrieve the latest stable patch version for the 4.9 branch
+	 * $ wp core release 4.9 --latest --field=version
+	 * 4.9.10
+	 *
+	 * # Retrieve the minimum PHP version for the latest stable release
+	 * $ wp core release --latest --field=php_version
+	 * 5.2.4
+	 *
+	 * @when before_wp_load
+	 */
+	public function release( $args, $assoc_args ) {
+		$version_constraint = [];
+
+		if ( ! empty( $args ) ) {
+			$version_constraint = $this->get_version_data( $args[0] );
+
+			if ( ! empty( $version_constraint['patch'] )
+			     || 0 === $version_constraint['patch']
+			     || ! empty( $version_constraint['pre_release'] )
+			     || ! empty( $version_constraint['build'] ) ) {
+				WP_CLI::error(
+					'Only major or minor versions are supported as constraints.'
+				);
+			}
+		}
+
+		$releases = $this->get_releases( $assoc_args );
+
+		// Deduplicate the offers. Some versions can be offered in multiple
+		// declinations.
+		$releases = $this->deduplicate_versions( $releases );
+
+		// Sort by version number, for consistency and to ensure the --latest
+		// flag works as expected.
+		usort( $releases, [ $this, 'sort_by_version' ] );
+
+		if ( ! empty( $version_constraint ) ) {
+			// Filter the releases by the version constraint, only keeping versions
+			// that make sense to include according to semantic versioning.
+			$releases = array_filter(
+				$releases,
+				function ( $release ) use ( $version_constraint ) {
+					return $this->filter_by_version_constraint(
+						$release,
+						$version_constraint['major'],
+						$version_constraint['minor']
+					);
+				}
+			);
+		}
+
+		// If the --latest flag was provided, we only return the first offer.
+		if ( Utils\get_flag_value( $assoc_args, 'latest', false ) ) {
+			$releases = array_slice( $releases, 0, 1 );
+		}
+
+		if ( empty( $releases ) ) {
+			WP_CLI::error(
+				'No releases found that satisfy the provided version constraint.'
+			);
+		}
+
+		$formatter = new WP_CLI\Formatter(
+			$assoc_args,
+			[ 'version', 'download', 'mysql_version', 'php_version' ]
+		);
+
+		$formatter->display_items( $releases );
+	}
+
+	/**
+	 * Get the list of release offers provided by the WordPress.org API server.
+	 *
+	 * @param array $assoc_args Associative array of query arguments.
+	 * @return array Array of offered releases.
+	 * @throws \WP_CLI\ExitException If the request could not be made.
+	 */
+	private function get_releases( array $assoc_args ) {
+		$query = [];
+
+		if ( array_key_exists( 'version', $assoc_args ) ) {
+			$query['version'] = $assoc_args['version'];
+		}
+
+		$url = 'https://api.wordpress.org/core/version-check/1.7/';
+		if ( ! empty( $query ) ) {
+			$url .= '?' . http_build_query( $query, null, '&' );
+		}
+
+		$response = Utils\http_request( 'GET', $url );
+
+		if ( strncmp( (string) $response->status_code, '2', 1 ) ) {
+			WP_CLI::error( sprintf(
+				'Could not retrieve releases from the wordpress.org API server (HTTP code %d)',
+				$response->status_code
+			) );
+		}
+
+		$releases = json_decode( $response->body, true );
+
+		return array_key_exists( 'offers', $releases )
+			? $releases['offers']
+			: [];
+	}
+
+	/**
+	 * Deduplicate version numbers in the array of returned offers.
+	 *
+	 * @param array $releases Array of offered releases
+	 * @return array Deduplicated array of releases.
+	 */
+	private function deduplicate_versions( array $releases ) {
+		return array_intersect_key(
+			$releases,
+			array_unique( array_column( $releases, 'version' ) )
+		);
+	}
+
+	/**
+	 * Sort the offered releases by descending version number.
+	 *
+	 * @param array $a Array of release data.
+	 * @param array $b Array of release data.
+	 * @return int Comparison result.
+	 */
+	private function sort_by_version( array $a, array $b ) {
+		return version_compare( $a['version'], $b['version'] ) * - 1;
+	}
+
+	/**
+	 * Filter releases by version constraint similar to semantic versioning.
+	 *
+	 * @param array  $release    Array of release data to filter.
+	 * @param int|null $major Major version constraint to filter by.
+	 * @param int|null $minor Minor version constraint to filter by.
+	 * @return bool Whether to keep the release or not.
+	 * @throws \WP_CLI\ExitException If the version string could not be parsed.
+	 */
+	private function filter_by_version_constraint( array $release, $major, $minor ) {
+		$release_version = $this->get_version_data( $release['version'] );
+
+		if ( $major !== null
+		     && $release_version['major'] !== $major ) {
+			return false;
+		}
+
+		if ( $minor !== null
+		     && $release_version['major'] === $major
+		     && $release_version['minor'] !== $minor ) {
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Get semantic version data.
+	 *
+	 * @param string $version Version string to parse.
+	 * @return array Associative array of version data.
+	 * @throws \WP_CLI\ExitException If the version string could not be parsed.
+	 */
+	public function get_version_data( $version ) {
+		$semverRegex = '/^v?(\d+)(?:\.(\d+))?(?:\.(\d+))?(?:-([0-9A-Z-.]+))?(?:\+([0-9A-Z-.]+)?)?$/i';
+
+		if ( ! preg_match( $semverRegex, $version, $matches ) ) {
+			WP_CLI::error( sprintf(
+				'Unable to parse version string data (%s).',
+				$version
+			) );
+		}
+
+		return [
+			'major'       => (int) $matches[1],
+			'minor'       => isset( $matches[2] ) ? (int) $matches[2] : null,
+			'patch'       => isset( $matches[3] ) ? (int) $matches[3] : null,
+			'pre_release' => isset( $matches[4] ) ? $matches[4] : null,
+			'build'       => isset( $matches[5] ) ? $matches[5] : null,
+		];
+	}
 }
