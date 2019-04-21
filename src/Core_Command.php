@@ -778,7 +778,7 @@ EOT;
 	private static function get_clean_basedomain() {
 		$domain = preg_replace( '|https?://|', '', get_option( 'siteurl' ) );
 		$slash  = strpos( $domain, '/' );
-		if ( $slash ) {
+		if ( false !== $slash ) {
 			$domain = substr( $domain, 0, $slash );
 		}
 		return $domain;
