@@ -381,7 +381,7 @@ class Core_Command extends WP_CLI_Command {
 	 *     $ wp core install --url=example.com --title=Example --admin_user=supervisor --admin_email=info@example.com --prompt=admin_password < admin_password.txt
 	 */
 	public function install( $args, $assoc_args ) {
-		if ( $this->_install( $assoc_args ) ) {
+		if ( $this->install_( $assoc_args ) ) {
 			WP_CLI::success( 'WordPress installed successfully.' );
 		} else {
 			WP_CLI::log( 'WordPress is already installed.' );
@@ -498,7 +498,7 @@ class Core_Command extends WP_CLI_Command {
 	 * @subcommand multisite-install
 	 */
 	public function multisite_install( $args, $assoc_args ) {
-		if ( $this->_install( $assoc_args ) ) {
+		if ( $this->install_( $assoc_args ) ) {
 			WP_CLI::log( 'Created single site database tables.' );
 		} else {
 			WP_CLI::log( 'Single site database tables already present.' );
@@ -556,7 +556,7 @@ class Core_Command extends WP_CLI_Command {
 		return array_merge( $defaults, $assoc_args );
 	}
 
-	private function _install( $assoc_args ) {
+	private function install_( $assoc_args ) {
 		if ( is_blog_installed() ) {
 			return false;
 		}
@@ -1086,7 +1086,7 @@ EOT;
 		}
 
 		if ( ! empty( $update )
-			&& ( $update->version != $wp_version || Utils\get_flag_value( $assoc_args, 'force' ) ) ) {
+			&& ( $update->version !== $wp_version || Utils\get_flag_value( $assoc_args, 'force' ) ) ) {
 
 			require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
