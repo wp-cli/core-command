@@ -788,7 +788,8 @@ EOT;
 
 	private static function get_clean_basedomain() {
 		$domain = preg_replace( '|https?://|', '', get_option( 'siteurl' ) );
-		if ( $slash = strpos( $domain, '/' ) ) {
+		$slash  = strpos( $domain, '/' );
+		if ( $slash ) {
 			$domain = substr( $domain, 0, $slash );
 		}
 		return $domain;
@@ -942,7 +943,7 @@ EOT;
 		);
 		$response = Utils\http_request( 'GET', $url, null, $headers, $options );
 
-		if ( ! $response->success || 200 != $response->status_code ) {
+		if ( ! $response->success || 200 !== (int) $response->status_code ) {
 			return sprintf( "Checksum request '%s' failed (HTTP %d).", $url, $response->status_code );
 		}
 
@@ -1017,7 +1018,8 @@ EOT;
 	public function update( $args, $assoc_args ) {
 		global $wp_version;
 
-		$update   = $from_api = null;
+		$update   = null;
+		$from_api = null;
 		$upgrader = 'WP_CLI\\CoreUpgrader';
 
 		if ( 'trunk' === Utils\get_flag_value( $assoc_args, 'version' ) ) {
