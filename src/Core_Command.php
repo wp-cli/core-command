@@ -283,11 +283,8 @@ class Core_Command extends WP_CLI_Command {
 	}
 
 	private function get_download_offer( $locale ) {
-		$out = unserialize(
-			self::read(
-				'https://api.wordpress.org/core/version-check/1.6/?locale=' . $locale
-			)
-		);
+		$out = self::read( 'https://api.wordpress.org/core/version-check/1.6/?locale=' . $locale);
+		$out = unserialize( $out );
 
 		$offer = $out['offers'][0];
 
@@ -581,18 +578,13 @@ class Core_Command extends WP_CLI_Command {
 
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
-		extract(
-			wp_parse_args(
-				$assoc_args,
-				array(
-					'title'          => '',
-					'admin_user'     => '',
-					'admin_email'    => '',
-					'admin_password' => '',
-				)
-			),
-			EXTR_SKIP
+		$defaults = array(
+			'title'          => '',
+			'admin_user'     => '',
+			'admin_email'    => '',
+			'admin_password' => '',
 		);
+		extract( wp_parse_args( $assoc_args, $defaults ), EXTR_SKIP );
 
 		// Support prompting for the `--url=<url>`,
 		// which is normally a runtime argument
@@ -713,9 +705,7 @@ EOT;
 
 				$result = $wpdb->delete(
 					$wpdb->sitemeta,
-					array(
-						'meta_id' => $row->meta_id,
-					)
+					array( 'meta_id' => $row->meta_id )
 				);
 			}
 		}
@@ -732,15 +722,13 @@ EOT;
 		$current_site->domain    = $domain;
 		$current_site->path      = $path;
 		$current_site->site_name = ucfirst( $domain );
-		$wpdb->insert(
-			$wpdb->blogs,
-			array(
+		$blog_data = array(
 				'site_id'    => $network_id,
 				'domain'     => $domain,
 				'path'       => $path,
 				'registered' => current_time( 'mysql' ),
-			)
-		);
+			);
+		$wpdb->insert( $wpdb->blogs, $blog_data );
 		$current_site->blog_id = $wpdb->insert_id;
 		$blog_id               = $wpdb->insert_id;
 		update_user_meta( $site_user->ID, 'source_domain', $domain );
@@ -789,7 +777,7 @@ EOT;
 
 	private static function get_clean_basedomain() {
 		$domain = preg_replace( '|https?://|', '', get_option( 'siteurl' ) );
-		$slash  === strpos( $domain, '/' );
+		$slash  = strpos( $domain, '/' );
 		if ( $slash ) {
 			$domain = substr( $domain, 0, $slash );
 		}
