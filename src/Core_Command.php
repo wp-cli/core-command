@@ -126,7 +126,7 @@ class Core_Command extends WP_CLI_Command {
 		$download_dir      = ! empty( $assoc_args['path'] ) ? ( rtrim( $assoc_args['path'], '/\\' ) . '/' ) : ABSPATH;
 		$wordpress_present = is_readable( $download_dir . 'wp-load.php' );
 
-		if ( ! Utils\get_flag_value $assoc_args, 'force' ) && $wordpress_present ) {
+		if ( ! Utils\get_flag_value( $assoc_args, 'force' ) && $wordpress_present ) {
 			WP_CLI::error( 'WordPress files seem to already be present here.' );
 		}
 
