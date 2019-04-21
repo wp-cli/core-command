@@ -437,7 +437,7 @@ class Core_Command extends WP_CLI_Command {
 			$assoc_args['title'] = sprintf( _x( '%s Sites', 'Default network name' ), get_option( 'blogname' ) );
 		}
 
-		if ( $this->multisite_convert( $assoc_args ) ) {
+		if ( $this->multisite_convert_( $assoc_args ) ) {
 			WP_CLI::success( "Network installed. Don't forget to set up rewrite rules (and a .htaccess file, if using Apache)." );
 		}
 	}
@@ -524,7 +524,7 @@ class Core_Command extends WP_CLI_Command {
 			}
 		}
 
-		if ( ! $this->multisite_convert( $assoc_args ) ) {
+		if ( ! $this->multisite_convert_( $assoc_args ) ) {
 			return;
 		}
 
@@ -631,7 +631,7 @@ class Core_Command extends WP_CLI_Command {
 		return true;
 	}
 
-	private function multisite_convert( $assoc_args ) {
+	private function multisite_convert_( $assoc_args ) {
 		global $wpdb;
 
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
