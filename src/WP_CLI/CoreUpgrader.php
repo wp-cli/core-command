@@ -52,7 +52,7 @@ class CoreUpgrader extends \Core_Upgrader {
 		register_shutdown_function(
 			function () use ( $temp ) {
 				if ( file_exists( $temp ) ) {
-					  unlink( $temp );
+					unlink( $temp );
 				}
 			}
 		);
@@ -87,7 +87,7 @@ class CoreUpgrader extends \Core_Upgrader {
 			} catch ( \Exception $e ) {
 				return new \WP_Error( 'download_failed', $e->getMessage() );
 			}
-			if ( ! is_null( $req ) && $req->status_code !== 200 ) {
+			if ( ! is_null( $req ) && 200 !== (int) $req->status_code ) {
 				return new \WP_Error( 'download_failed', $this->strings['download_failed'] );
 			}
 			if ( false === stripos( $package, 'https://wordpress.org/nightly-builds/' ) ) {
