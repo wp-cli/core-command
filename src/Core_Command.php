@@ -3,6 +3,7 @@
 use \Composer\Semver\Comparator;
 use \WP_CLI\Extractor;
 use \WP_CLI\Utils;
+use WP_CLI\Formatter;
 
 /**
  * Downloads, installs, updates, and manages a WordPress installation.
@@ -75,7 +76,7 @@ class Core_Command extends WP_CLI_Command {
 		$updates = $this->get_updates( $assoc_args );
 		if ( $updates ) {
 			$updates   = array_reverse( $updates );
-			$formatter = new \WP_CLI\Formatter(
+			$formatter = new Formatter(
 				$assoc_args,
 				array( 'version', 'update_type', 'package_url' )
 			);
@@ -125,7 +126,7 @@ class Core_Command extends WP_CLI_Command {
 		$download_dir      = ! empty( $assoc_args['path'] ) ? ( rtrim( $assoc_args['path'], '/\\' ) . '/' ) : ABSPATH;
 		$wordpress_present = is_readable( $download_dir . 'wp-load.php' );
 
-		if ( ! \WP_CLI\Utils\get_flag_value( $assoc_args, 'force' ) && $wordpress_present ) {
+		if ( ! Utils\get_flag_value $assoc_args, 'force' ) && $wordpress_present ) {
 			WP_CLI::error( 'WordPress files seem to already be present here.' );
 		}
 
@@ -145,8 +146,8 @@ class Core_Command extends WP_CLI_Command {
 			WP_CLI::error( sprintf( "'%s' is not writable by current user.", $download_dir ) );
 		}
 
-		$locale       = \WP_CLI\Utils\get_flag_value( $assoc_args, 'locale', 'en_US' );
-		$skip_content = \WP_CLI\Utils\get_flag_value( $assoc_args, 'skip-content' );
+		$locale       = Utils\get_flag_value $assoc_args, 'locale', 'en_US' );
+		$skip_content = Utils\get_flag_value $assoc_args, 'skip-content' );
 
 		if ( isset( $assoc_args['version'] ) && 'latest' !== $assoc_args['version'] ) {
 			$version = $assoc_args['version'];
@@ -236,7 +237,7 @@ class Core_Command extends WP_CLI_Command {
 
 			if ( 'nightly' !== $version ) {
 				$md5_response = Utils\http_request( 'GET', $download_url . '.md5' );
-				if ( 20 !== substr( (int) $md5_response->status_code, 0, 2 ) ) {
+				if ( 20 !== (int) substr( $md5_response->status_code, 0, 2 ) ) {
 					WP_CLI::error( "Couldn't access md5 hash for release (HTTP code {$response->status_code})." );
 				}
 
@@ -323,7 +324,7 @@ class Core_Command extends WP_CLI_Command {
 	 */
 	public function is_installed( $_, $assoc_args ) {
 
-		if ( \WP_CLI\Utils\get_flag_value( $assoc_args, 'network' ) ) {
+		if ( Utils\get_flag_value $assoc_args, 'network' ) ) {
 			if ( is_blog_installed() && is_multisite() ) {
 				WP_CLI::halt( 0 );
 			} else {
@@ -563,7 +564,7 @@ class Core_Command extends WP_CLI_Command {
 			return false;
 		}
 
-		if ( true === \WP_CLI\Utils\get_flag_value( $assoc_args, 'skip-email' ) ) {
+		if ( true === Utils\get_flag_value $assoc_args, 'skip-email' ) ) {
 			if ( ! function_exists( 'wp_new_blog_notification' ) ) {
 				function wp_new_blog_notification() {
 					// Silence is golden
@@ -693,7 +694,7 @@ define( 'BLOG_ID_CURRENT_SITE', 1 );
 EOT;
 
 			$wp_config_path = Utils\locate_wp_config();
-			if ( true === \WP_CLI\Utils\get_flag_value( $assoc_args, 'skip-config' ) ) {
+			if ( true === Utils\get_flag_value $assoc_args, 'skip-config' ) ) {
 				WP_CLI::log( "Addition of multisite constants to 'wp-config.php' skipped. You need to add them manually:" . PHP_EOL . $ms_config );
 			} elseif ( is_writable( $wp_config_path ) && self::modify_wp_config( $ms_config ) ) {
 				WP_CLI::log( "Added multisite constants to 'wp-config.php'." );
@@ -788,7 +789,7 @@ EOT;
 
 	private static function get_clean_basedomain() {
 		$domain = preg_replace( '|https?://|', '', get_option( 'siteurl' ) );
-		$slash  = strpos( $domain, '/' );
+		$slash  === strpos( $domain, '/' );
 		if ( $slash ) {
 			$domain = substr( $domain, 0, $slash );
 		}
@@ -822,7 +823,7 @@ EOT;
 		$details = self::get_wp_details();
 
 		// @codingStandardsIgnoreStart
-		if ( \WP_CLI\Utils\get_flag_value( $assoc_args, 'extra' ) ) {
+		if ( Utils\get_flag_value $assoc_args, 'extra' ) ) {
 			if ( preg_match( '/(\d)(\d+)-/', $details['tinymce_version'], $match ) ) {
 				$human_readable_tiny_mce = $match[1] . '.' . $match[2];
 			} else {
@@ -1030,7 +1031,7 @@ EOT;
 
 			// ZIP path or URL is given
 			$upgrader = 'WP_CLI\\NonDestructiveCoreUpgrader';
-			$version  = \WP_CLI\Utils\get_flag_value( $assoc_args, 'version' );
+			$version  = Utils\get_flag_value $assoc_args, 'version' );
 
 			$update = (object) array(
 				'response' => 'upgrade',
@@ -1052,7 +1053,7 @@ EOT;
 			wp_version_check();
 			$from_api = get_site_transient( 'update_core' );
 
-			if ( \WP_CLI\Utils\get_flag_value( $assoc_args, 'minor' ) ) {
+			if ( Utils\get_flag_value $assoc_args, 'minor' ) ) {
 				foreach ( $from_api->updates as $offer ) {
 					$sem_ver = Utils\get_named_sem_ver( $offer->version, $wp_version );
 					if ( ! $sem_ver || 'patch' !== $sem_ver ) {
@@ -1072,11 +1073,11 @@ EOT;
 			}
 		} elseif ( \WP_CLI\Utils\wp_version_compare( $assoc_args['version'], '<' )
 			|| 'nightly' === $assoc_args['version']
-			|| \WP_CLI\Utils\get_flag_value( $assoc_args, 'force' ) ) {
+			|| Utils\get_flag_value $assoc_args, 'force' ) ) {
 
 			// Specific version is given
 			$version = $assoc_args['version'];
-			$locale  = \WP_CLI\Utils\get_flag_value( $assoc_args, 'locale', get_locale() );
+			$locale  = Utils\get_flag_value $assoc_args, 'locale', get_locale() );
 
 			$new_package = $this->get_download_url( $version, $locale );
 
@@ -1097,7 +1098,7 @@ EOT;
 		}
 
 		if ( ! empty( $update )
-			&& ( $update->version != $wp_version || \WP_CLI\Utils\get_flag_value( $assoc_args, 'force' ) ) ) {
+			&& ( $update->version != $wp_version || Utils\get_flag_value $assoc_args, 'force' ) ) ) {
 
 			require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
@@ -1128,7 +1129,7 @@ EOT;
 					$to_version = $wp_details['wp_version'];
 				}
 
-				$locale = \WP_CLI\Utils\get_flag_value( $assoc_args, 'locale', get_locale() );
+				$locale = Utils\get_flag_value $assoc_args, 'locale', get_locale() );
 				$this->cleanup_extra_files( $from_version, $to_version, $locale );
 
 				WP_CLI::success( 'WordPress updated successfully.' );
@@ -1322,7 +1323,7 @@ EOT;
 		}
 
 		foreach ( array( 'major', 'minor' ) as $type ) {
-			if ( true === \WP_CLI\Utils\get_flag_value( $assoc_args, $type ) ) {
+			if ( true === Utils\get_flag_value $assoc_args, $type ) ) {
 				return ! empty( $updates[ $type ] ) ? array( $updates[ $type ] ) : false;
 			}
 		}
