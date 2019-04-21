@@ -46,18 +46,20 @@ class CoreUpgrader extends \Core_Upgrader {
 		}
 
 		$filename = pathinfo( $package, PATHINFO_FILENAME );
-		$ext = pathinfo( $package, PATHINFO_EXTENSION );
+		$ext      = pathinfo( $package, PATHINFO_EXTENSION );
 
 		$temp = \WP_CLI\Utils\get_temp_dir() . uniqid( 'wp_' ) . '.' . $ext;
-		register_shutdown_function( function () use ( $temp ) {
-			if ( file_exists( $temp ) ) {
-				unlink( $temp );
+		register_shutdown_function(
+			function () use ( $temp ) {
+				if ( file_exists( $temp ) ) {
+					  unlink( $temp );
+				}
 			}
-		} );
+		);
 
-		$cache = WP_CLI::get_cache();
-		$update = $GLOBALS['wp_cli_update_obj'];
-		$cache_key = "core/{$filename}-{$update->locale}.{$ext}";
+		$cache      = WP_CLI::get_cache();
+		$update     = $GLOBALS['wp_cli_update_obj'];
+		$cache_key  = "core/{$filename}-{$update->locale}.{$ext}";
 		$cache_file = $cache->has( $cache_key );
 
 		if ( $cache_file && false === stripos( $package, 'https://wordpress.org/nightly-builds/' )
@@ -82,7 +84,7 @@ class CoreUpgrader extends \Core_Upgrader {
 			/** @var \Requests_Response|null $req */
 			try {
 				$req = Utils\http_request( 'GET', $package, null, $headers, $options );
-			} catch( \Exception $e ) {
+			} catch ( \Exception $e ) {
 				return new \WP_Error( 'download_failed', $e->getMessage() );
 			}
 			if ( ! is_null( $req ) && $req->status_code !== 200 ) {
@@ -129,7 +131,7 @@ class CoreUpgrader extends \Core_Upgrader {
 	/**
 	 * Error handler to ignore failures on accessing SSL "https://api.wordpress.org/core/checksums/1.0/" in `get_core_checksums()` which seem to occur intermittently.
 	 */
-	static public function error_handler( $errno, $errstr, $errfile, $errline, $errcontext = null ) {
+	public static function error_handler( $errno, $errstr, $errfile, $errline, $errcontext = null ) {
 		// If ignoring E_USER_WARNING | E_USER_NOTICE, default.
 		if ( ! ( error_reporting() & $errno ) ) {
 			return false;
