@@ -146,8 +146,8 @@ class Core_Command extends WP_CLI_Command {
 			WP_CLI::error( sprintf( "'%s' is not writable by current user.", $download_dir ) );
 		}
 
-		$locale       = Utils\get_flag_value $assoc_args, 'locale', 'en_US' );
-		$skip_content = Utils\get_flag_value $assoc_args, 'skip-content' );
+		$locale       = Utils\get_flag_value( $assoc_args, 'locale', 'en_US' );
+		$skip_content = Utils\get_flag_value( $assoc_args, 'skip-content' );
 
 		if ( isset( $assoc_args['version'] ) && 'latest' !== $assoc_args['version'] ) {
 			$version = $assoc_args['version'];
@@ -321,7 +321,7 @@ class Core_Command extends WP_CLI_Command {
 	 */
 	public function is_installed( $_, $assoc_args ) {
 
-		if ( Utils\get_flag_value $assoc_args, 'network' ) ) {
+		if ( Utils\get_flag_value( $assoc_args, 'network' ) ) {
 			if ( is_blog_installed() && is_multisite() ) {
 				WP_CLI::halt( 0 );
 			} else {
@@ -561,7 +561,7 @@ class Core_Command extends WP_CLI_Command {
 			return false;
 		}
 
-		if ( true === Utils\get_flag_value $assoc_args, 'skip-email' ) ) {
+		if ( true === Utils\get_flag_value( $assoc_args, 'skip-email' ) ) {
 			if ( ! function_exists( 'wp_new_blog_notification' ) ) {
 				function wp_new_blog_notification() {
 					// Silence is golden
@@ -686,7 +686,7 @@ define( 'BLOG_ID_CURRENT_SITE', 1 );
 EOT;
 
 			$wp_config_path = Utils\locate_wp_config();
-			if ( true === Utils\get_flag_value $assoc_args, 'skip-config' ) ) {
+			if ( true === Utils\get_flag_value( $assoc_args, 'skip-config' ) ) {
 				WP_CLI::log( "Addition of multisite constants to 'wp-config.php' skipped. You need to add them manually:" . PHP_EOL . $ms_config );
 			} elseif ( is_writable( $wp_config_path ) && self::modify_wp_config( $ms_config ) ) {
 				WP_CLI::log( "Added multisite constants to 'wp-config.php'." );
@@ -811,7 +811,7 @@ EOT;
 		$details = self::get_wp_details();
 
 		// @codingStandardsIgnoreStart
-		if ( Utils\get_flag_value $assoc_args, 'extra' ) ) {
+		if ( Utils\get_flag_value( $assoc_args, 'extra' ) ) {
 			if ( preg_match( '/(\d)(\d+)-/', $details['tinymce_version'], $match ) ) {
 				$human_readable_tiny_mce = $match[1] . '.' . $match[2];
 			} else {
@@ -1019,7 +1019,7 @@ EOT;
 
 			// ZIP path or URL is given
 			$upgrader = 'WP_CLI\\NonDestructiveCoreUpgrader';
-			$version  = Utils\get_flag_value $assoc_args, 'version' );
+			$version  = Utils\get_flag_value( $assoc_args, 'version' );
 
 			$update = (object) array(
 				'response' => 'upgrade',
@@ -1041,7 +1041,7 @@ EOT;
 			wp_version_check();
 			$from_api = get_site_transient( 'update_core' );
 
-			if ( Utils\get_flag_value $assoc_args, 'minor' ) ) {
+			if ( Utils\get_flag_value( $assoc_args, 'minor' ) ) {
 				foreach ( $from_api->updates as $offer ) {
 					$sem_ver = Utils\get_named_sem_ver( $offer->version, $wp_version );
 					if ( ! $sem_ver || 'patch' !== $sem_ver ) {
@@ -1061,11 +1061,11 @@ EOT;
 			}
 		} elseif ( \WP_CLI\Utils\wp_version_compare( $assoc_args['version'], '<' )
 			|| 'nightly' === $assoc_args['version']
-			|| Utils\get_flag_value $assoc_args, 'force' ) ) {
+			|| Utils\get_flag_value( $assoc_args, 'force' ) ) {
 
 			// Specific version is given
 			$version = $assoc_args['version'];
-			$locale  = Utils\get_flag_value $assoc_args, 'locale', get_locale() );
+			$locale  = Utils\get_flag_value( $assoc_args, 'locale', get_locale() );
 
 			$new_package = $this->get_download_url( $version, $locale );
 
@@ -1086,7 +1086,7 @@ EOT;
 		}
 
 		if ( ! empty( $update )
-			&& ( $update->version != $wp_version || Utils\get_flag_value $assoc_args, 'force' ) ) ) {
+			&& ( $update->version != $wp_version || Utils\get_flag_value( $assoc_args, 'force' ) ) ) {
 
 			require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
@@ -1117,7 +1117,7 @@ EOT;
 					$to_version = $wp_details['wp_version'];
 				}
 
-				$locale = Utils\get_flag_value $assoc_args, 'locale', get_locale() );
+				$locale = Utils\get_flag_value( $assoc_args, 'locale', get_locale() );
 				$this->cleanup_extra_files( $from_version, $to_version, $locale );
 
 				WP_CLI::success( 'WordPress updated successfully.' );
@@ -1311,7 +1311,7 @@ EOT;
 		}
 
 		foreach ( array( 'major', 'minor' ) as $type ) {
-			if ( true === Utils\get_flag_value $assoc_args, $type ) ) {
+			if ( true === Utils\get_flag_value( $assoc_args, $type ) ) {
 				return ! empty( $updates[ $type ] ) ? array( $updates[ $type ] ) : false;
 			}
 		}
