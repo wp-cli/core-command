@@ -631,7 +631,7 @@ class Core_Command extends WP_CLI_Command {
 		return true;
 	}
 
-	private function ( $assoc_args ) {
+	private function multisite_convert( $assoc_args ) {
 		global $wpdb;
 
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
