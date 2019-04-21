@@ -1184,7 +1184,7 @@ EOT;
 					$cmd .= ' --dry-run';
 				}
 				$process = WP_CLI::runcommand( $cmd, array( 'return' => 'all' ) );
-				if ( 0 === (int) $process->return_code ) {
+				if ( '0' === $process->return_code ) {
 					// See if we can parse the stdout
 					if ( preg_match( '#Success: (.+)#', $process->stdout, $matches ) ) {
 						$message = rtrim( $matches[1], '.' );
