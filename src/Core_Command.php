@@ -1115,7 +1115,7 @@ EOT;
 
 			if ( is_wp_error( $result ) ) {
 				$msg = WP_CLI::error_to_string( $result );
-				if ( 'up_to_date' != $result->get_error_code() ) {
+				if ( 'up_to_date' !== $result->get_error_code() ) {
 					WP_CLI::error( $msg );
 				} else {
 					WP_CLI::success( $msg );
@@ -1160,7 +1160,7 @@ EOT;
 	 *
 	 * @subcommand update-db
 	 */
-	function update_db( $_, $assoc_args ) {
+	public function update_db( $_, $assoc_args ) {
 		global $wpdb, $wp_db_version, $wp_current_db_version;
 
 		$network = Utils\get_flag_value( $assoc_args, 'network' );
@@ -1183,7 +1183,8 @@ EOT;
 				),
 			);
 			$it            = new \WP_CLI\Iterators\Table( $iterator_args );
-			$success       = $total = 0;
+			$success       = 0;
+			$total         = 0;
 			$site_ids      = array();
 			foreach ( $it as $blog ) {
 				$total++;
@@ -1194,7 +1195,7 @@ EOT;
 					$cmd .= ' --dry-run';
 				}
 				$process = WP_CLI::runcommand( $cmd, array( 'return' => 'all' ) );
-				if ( 0 == $process->return_code ) {
+				if ( 0 === (int) $process->return_code ) {
 					// See if we can parse the stdout
 					if ( preg_match( '#Success: (.+)#', $process->stdout, $matches ) ) {
 						$message = rtrim( $matches[1], '.' );
@@ -1208,7 +1209,7 @@ EOT;
 					WP_CLI::warning( "Database failed to upgrade on {$url}" );
 				}
 			}
-			if ( ! $dry_run && $total && $success == $total ) {
+			if ( ! $dry_run && $total && $success === $total ) {
 				foreach ( array_unique( $site_ids ) as $site_id ) {
 					update_metadata( 'site', $site_id, 'wpmu_upgrade_site', $wp_db_version );
 				}
@@ -1217,7 +1218,7 @@ EOT;
 		} else {
 			require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 			$wp_current_db_version = __get_option( 'db_version' );
-			if ( $wp_db_version != $wp_current_db_version ) {
+			if ( $wp_db_version !== $wp_current_db_version ) {
 				if ( $dry_run ) {
 					WP_CLI::success( "WordPress database will be upgraded from db version {$wp_current_db_version} to {$wp_db_version}." );
 				} else {
@@ -1378,7 +1379,7 @@ EOT;
 		register_shutdown_function(
 			function () use ( $new_zip_file ) {
 				if ( file_exists( $new_zip_file ) ) {
-					  unlink( $new_zip_file );
+					unlink( $new_zip_file );
 				}
 			}
 		);
