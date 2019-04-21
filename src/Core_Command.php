@@ -283,7 +283,7 @@ class Core_Command extends WP_CLI_Command {
 	}
 
 	private function get_download_offer( $locale ) {
-		$out = self::read( 'https://api.wordpress.org/core/version-check/1.6/?locale=' . $locale);
+		$out = self::read( 'https://api.wordpress.org/core/version-check/1.6/?locale=' . $locale );
 		$out = unserialize( $out );
 
 		$offer = $out['offers'][0];
@@ -722,12 +722,12 @@ EOT;
 		$current_site->domain    = $domain;
 		$current_site->path      = $path;
 		$current_site->site_name = ucfirst( $domain );
-		$blog_data = array(
-				'site_id'    => $network_id,
-				'domain'     => $domain,
-				'path'       => $path,
-				'registered' => current_time( 'mysql' ),
-			);
+		$blog_data               = array(
+			'site_id'    => $network_id,
+			'domain'     => $domain,
+			'path'       => $path,
+			'registered' => current_time( 'mysql' ),
+		);
 		$wpdb->insert( $wpdb->blogs, $blog_data );
 		$current_site->blog_id = $wpdb->insert_id;
 		$blog_id               = $wpdb->insert_id;
