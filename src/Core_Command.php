@@ -230,7 +230,7 @@ class Core_Command extends WP_CLI_Command {
 			$response = Utils\http_request( 'GET', $download_url, null, $headers, $options );
 			if ( 404 === (int) $response->status_code ) {
 				WP_CLI::error( 'Release not found. Double-check locale or version.' );
-			} elseif ( 20 !== substr( (int) $response->status_code, 0, 2 ) ) {
+			} elseif ( 20 !== (int) substr( $response->status_code, 0, 2 ) ) {
 				WP_CLI::error( "Couldn't access download URL (HTTP code {$response->status_code})." );
 			}
 
