@@ -8,7 +8,7 @@ namespace WP_CLI;
  * @package wp-cli
  */
 class NonDestructiveCoreUpgrader extends CoreUpgrader {
-	private function unpack_package( $package, $delete_package = false ) {
+	public function unpack_package( $package, $delete_package = false ) {
 		return parent::unpack_package( $package, $delete_package );
 	}
 }
