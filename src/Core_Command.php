@@ -587,7 +587,8 @@ class Core_Command extends WP_CLI_Command {
 			'admin_email'    => '',
 			'admin_password' => '',
 		];
-		extract( wp_parse_args( $assoc_args, $defaults ), EXTR_SKIP );
+
+		$args = wp_parse_args( $assoc_args, $defaults );
 
 		// Support prompting for the `--url=<url>`,
 		// which is normally a runtime argument
@@ -596,26 +597,33 @@ class Core_Command extends WP_CLI_Command {
 		}
 
 		$public   = true;
-		$password = empty( $admin_password ) ? wp_generate_password( 18 ) : $admin_password;
+		$password = empty( $args['admin_password'] )
+			? wp_generate_password( 18 )
+			: $args['admin_password'];
 
-		// @codingStandardsIgnoreStart
-		if ( !is_email( $admin_email ) ) {
-			WP_CLI::error( "The '{$admin_email}' email address is invalid." );
+		if ( ! is_email( $args['admin_email'] ) ) {
+			WP_CLI::error( "The '{$args['admin_email']}' email address is invalid." );
 		}
 
-		$result = wp_install( $title, $admin_user, $admin_email, $public, '', $password );
+		$result = wp_install(
+			$args['title'],
+			$args['admin_user'],
+			$args['admin_email'],
+			$public,
+			'',
+			$password
+		);
 
 		if ( is_wp_error( $result ) ) {
 			$reason = WP_CLI::error_to_string($result);
 			WP_CLI::error( "Installation failed ({$reason})." );
 		}
-		// @codingStandardsIgnoreEnd
 
 		if ( ! empty( $GLOBALS['wpdb']->last_error ) ) {
 			WP_CLI::error( 'Installation produced database errors, and may have partially or completely failed.' );
 		}
 
-		if ( empty( $admin_password ) ) {
+		if ( empty( $args['admin_password'] ) ) {
 			WP_CLI::log( "Admin password: {$result['password']}" );
 		}
 
