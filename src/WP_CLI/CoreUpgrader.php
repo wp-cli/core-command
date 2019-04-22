@@ -2,14 +2,19 @@
 
 namespace WP_CLI;
 
+use Exception;
+use Requests_Response;
 use WP_CLI;
+use WP_Error;
+use Core_Upgrader as DefaultCoreUpgrader;
+use WP_Filesystem_Base;
 
 /**
- * A Core Upgrader class that caches the download, and uses cached if available
+ * A Core Upgrader class that caches the download, and uses cached if available.
  *
  * @package wp-cli
  */
-class CoreUpgrader extends \Core_Upgrader {
+class CoreUpgrader extends DefaultCoreUpgrader {
 
 	/**
 	 * Caches the download, and uses cached if available.
@@ -42,13 +47,13 @@ class CoreUpgrader extends \Core_Upgrader {
 		}
 
 		if ( empty( $package ) ) {
-			return new \WP_Error( 'no_package', $this->strings['no_package'] );
+			return new WP_Error( 'no_package', $this->strings['no_package'] );
 		}
 
 		$filename = pathinfo( $package, PATHINFO_FILENAME );
 		$ext      = pathinfo( $package, PATHINFO_EXTENSION );
 
-		$temp = \WP_CLI\Utils\get_temp_dir() . uniqid( 'wp_' ) . '.' . $ext;
+		$temp = Utils\get_temp_dir() . uniqid( 'wp_' ) . '.' . $ext;
 		register_shutdown_function(
 			function () use ( $temp ) {
 				if ( file_exists( $temp ) ) {
@@ -64,37 +69,40 @@ class CoreUpgrader extends \Core_Upgrader {
 
 		if ( $cache_file && false === stripos( $package, 'https://wordpress.org/nightly-builds/' )
 			&& false === stripos( $package, 'http://wordpress.org/nightly-builds/' ) ) {
-			WP_CLI::log( "Using cached file '$cache_file'..." );
+			WP_CLI::log( "Using cached file '{$cache_file}'..." );
 			copy( $cache_file, $temp );
 			return $temp;
-		} else {
-			/*
-			 * Download to a temporary file because piping from cURL to tar is flaky
-			 * on MinGW (and probably in other environments too).
-			 */
-			$headers = array( 'Accept' => 'application/json' );
-			$options = array(
-				'timeout'       => 600,  // 10 minutes ought to be enough for everybody.
-				'filename'      => $temp,
-				'halt_on_error' => false,
-			);
-
-			$this->skin->feedback( 'downloading_package', $package );
-
-			/** @var \Requests_Response|null $req */
-			try {
-				$req = Utils\http_request( 'GET', $package, null, $headers, $options );
-			} catch ( \Exception $e ) {
-				return new \WP_Error( 'download_failed', $e->getMessage() );
-			}
-			if ( ! is_null( $req ) && 200 !== (int) $req->status_code ) {
-				return new \WP_Error( 'download_failed', $this->strings['download_failed'] );
-			}
-			if ( false === stripos( $package, 'https://wordpress.org/nightly-builds/' ) ) {
-				$cache->import( $cache_key, $temp );
-			}
-			return $temp;
 		}
+
+		/*
+		 * Download to a temporary file because piping from cURL to tar is flaky
+		 * on MinGW (and probably in other environments too).
+		 */
+		$headers = [ 'Accept' => 'application/json' ];
+		$options = [
+			'timeout'       => 600,  // 10 minutes ought to be enough for everybody.
+			'filename'      => $temp,
+			'halt_on_error' => false,
+		];
+
+		$this->skin->feedback( 'downloading_package', $package );
+
+		/** @var Requests_Response|null $req */
+		try {
+			$response = Utils\http_request( 'GET', $package, null, $headers, $options );
+		} catch ( Exception $e ) {
+			return new WP_Error( 'download_failed', $e->getMessage() );
+		}
+
+		if ( ! is_null( $response ) && 200 !== (int) $response->status_code ) {
+			return new WP_Error( 'download_failed', $this->strings['download_failed'] );
+		}
+
+		if ( false === stripos( $package, 'https://wordpress.org/nightly-builds/' ) ) {
+			$cache->import( $cache_key, $temp );
+		}
+
+		return $temp;
 	}
 
 	/**
@@ -118,8 +126,8 @@ class CoreUpgrader extends \Core_Upgrader {
 	 * }
 	 * @return null|false|WP_Error False or WP_Error on failure, null on success.
 	 */
-	public function upgrade( $current, $args = array() ) {
-		set_error_handler( array( __CLASS__, 'error_handler' ), E_USER_WARNING | E_USER_NOTICE );
+	public function upgrade( $current, $args = [] ) {
+		set_error_handler( [ __CLASS__, 'error_handler' ], E_USER_WARNING | E_USER_NOTICE );
 
 		$result = parent::upgrade( $current, $args );
 
