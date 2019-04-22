@@ -56,10 +56,10 @@ class CoreUpgrader extends DefaultCoreUpgrader {
 			return new WP_Error( 'no_package', $this->strings['no_package'] );
 		}
 
-		$filename = pathinfo( $package, PATHINFO_FILENAME );
-		$ext      = pathinfo( $package, PATHINFO_EXTENSION );
+		$filename  = pathinfo( $package, PATHINFO_FILENAME );
+		$extension = pathinfo( $package, PATHINFO_EXTENSION );
 
-		$temp = Utils\get_temp_dir() . uniqid( 'wp_' ) . '.' . $ext;
+		$temp = Utils\get_temp_dir() . uniqid( 'wp_' ) . ".{$extension}";
 		register_shutdown_function(
 			function () use ( $temp ) {
 				if ( file_exists( $temp ) ) {
@@ -69,8 +69,8 @@ class CoreUpgrader extends DefaultCoreUpgrader {
 		);
 
 		$cache      = WP_CLI::get_cache();
-		$update     = $GLOBALS['wp_cli_update_obj'];
-		$cache_key  = "core/{$filename}-{$update->locale}.{$ext}";
+		$update     = $GLOBALS['wpcli_core_update_obj'];
+		$cache_key  = "core/{$filename}-{$update->locale}.{$extension}";
 		$cache_file = $cache->has( $cache_key );
 
 		if ( $cache_file && false === stripos( $package, 'https://wordpress.org/nightly-builds/' )
