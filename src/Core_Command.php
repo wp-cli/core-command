@@ -170,8 +170,8 @@ class Core_Command extends WP_CLI_Command {
 			if ( ! $offer ) {
 				WP_CLI::error( "The requested locale ({$locale}) was not found." );
 			}
-			$version      = $offer['current'];
-			$download_url = $offer['download'];
+			$version      = $offer->current;
+			$download_url = $offer->download;
 			if ( ! $skip_content ) {
 				$download_url = str_replace( '.zip', '.tar.gz', $download_url );
 			}
@@ -292,12 +292,14 @@ class Core_Command extends WP_CLI_Command {
 	}
 
 	private function get_download_offer( $locale ) {
-		$out = self::read( 'https://api.wordpress.org/core/version-check/1.6/?locale=' . $locale );
-		$out = unserialize( $out );
+		$out = self::read( 'https://api.wordpress.org/core/version-check/1.7/?locale=' . $locale );
+		$out = function_exists( 'wp_json_decode' )
+			? wp_json_decode( $out )
+			: json_decode( $out );
 
-		$offer = $out['offers'][0];
+		$offer = $out->offers[0];
 
-		if ( $offer['locale'] !== $locale ) {
+		if ( $offer->locale !== $locale ) {
 			return false;
 		}
 
