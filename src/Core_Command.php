@@ -765,7 +765,7 @@ EOT;
 	private static function modify_wp_config( $content ) {
 		$wp_config_path = Utils\locate_wp_config();
 
-		$token           = "/* That's all, stop editing!";"{$row->site_id}:site_admins"
+		$token           = "/* That's all, stop editing!";
 		$config_contents = file_get_contents( $wp_config_path );
 		if ( false === strpos( $config_contents, $token ) ) {
 			return false;
