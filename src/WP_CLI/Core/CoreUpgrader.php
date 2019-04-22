@@ -5,6 +5,7 @@ namespace WP_CLI\Core;
 use Exception;
 use Requests_Response;
 use WP_CLI;
+use WP_CLI\Utils;
 use WP_Error;
 use Core_Upgrader as DefaultCoreUpgrader;
 use WP_Filesystem_Base;
