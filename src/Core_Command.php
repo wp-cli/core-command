@@ -1013,7 +1013,7 @@ EOT;
 
 		$update   = null;
 		$from_api = null;
-		$upgrader = 'WP_CLI\\CoreUpgrader';
+		$upgrader = 'WP_CLI\\Core\\CoreUpgrader';
 
 		if ( 'trunk' === Utils\get_flag_value( $assoc_args, 'version' ) ) {
 			$assoc_args['version'] = 'nightly';
@@ -1022,7 +1022,7 @@ EOT;
 		if ( ! empty( $args[0] ) ) {
 
 			// ZIP path or URL is given
-			$upgrader = 'WP_CLI\\NonDestructiveCoreUpgrader';
+			$upgrader = 'WP_CLI\\Core\\NonDestructiveCoreUpgrader';
 			$version  = Utils\get_flag_value( $assoc_args, 'version' );
 
 			$update = (object) [
