@@ -1263,8 +1263,9 @@ EOT;
 		}
 
 		$locale_subdomain = 'en_US' === $locale ? '' : substr( $locale, 0, 2 ) . '.';
+		$locale_suffix    = 'en_US' === $locale ? '' : "-{$locale}";
 
-		return "https://{$locale_subdomain}wordpress.org/wordpress-{$version}-{$locale}.{$file_type}";
+		return "https://{$locale_subdomain}wordpress.org/wordpress-{$version}{$locale_suffix}.{$file_type}";
 	}
 
 	/**
