@@ -1,6 +1,6 @@
 <?php
 
-namespace WP_CLI;
+namespace WP_CLI\Core;
 
 use Exception;
 use Requests_Response;
@@ -36,7 +36,13 @@ class CoreUpgrader extends DefaultCoreUpgrader {
 		 * @param string  $package The package file name.
 		 * @param object  $this    The WP_Upgrader instance.
 		 */
-		$reply = apply_filters( 'upgrader_pre_download', false, $package, $this );
+		$reply = apply_filters(
+			// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Override existing hook from Core.
+			'upgrader_pre_download',
+			false,
+			$package,
+			$this
+		);
 		if ( false !== $reply ) {
 			return $reply;
 		}
