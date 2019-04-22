@@ -920,11 +920,7 @@ EOT;
 
 		$value = substr( $code, $start, $end - $start );
 
-		if ( $value[0] = "'" ) {
-			return trim( $value, "'" );
-		} else {
-			return intval( $value );
-		}
+		return trim( $value, "'" );
 	}
 
 	/**
