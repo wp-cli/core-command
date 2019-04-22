@@ -1,9 +1,9 @@
 <?php
 
-use \Composer\Semver\Comparator;
-use \WP_CLI\Extractor;
+use Composer\Semver\Comparator;
+use WP_CLI\Extractor;
 use WP_CLI\Iterators\Table as TableIterator;
-use \WP_CLI\Utils;
+use WP_CLI\Utils;
 use WP_CLI\Formatter;
 
 /**
@@ -79,7 +79,7 @@ class Core_Command extends WP_CLI_Command {
 			$updates   = array_reverse( $updates );
 			$formatter = new Formatter(
 				$assoc_args,
-				array( 'version', 'update_type', 'package_url' )
+				[ 'version', 'update_type', 'package_url' ]
 			);
 			$formatter->display_items( $updates );
 		} elseif ( empty( $assoc_args['format'] ) || 'table' === $assoc_args['format'] ) {
@@ -155,7 +155,7 @@ class Core_Command extends WP_CLI_Command {
 
 		if ( isset( $assoc_args['version'] ) && 'latest' !== $assoc_args['version'] ) {
 			$version = $assoc_args['version'];
-			if ( in_array( strtolower( $version ), array( 'trunk', 'nightly' ), true ) ) {
+			if ( in_array( strtolower( $version ), [ 'trunk', 'nightly' ], true ) ) {
 				$version = 'nightly';
 			}
 
@@ -230,11 +230,11 @@ class Core_Command extends WP_CLI_Command {
 				}
 			);
 
-			$headers = array( 'Accept' => 'application/json' );
-			$options = array(
+			$headers = [ 'Accept' => 'application/json' ];
+			$options = [
 				'timeout'  => 600,  // 10 minutes ought to be enough for everybody
 				'filename' => $temp,
-			);
+			];
 
 			$response = Utils\http_request( 'GET', $download_url, null, $headers, $options );
 			if ( 404 === (int) $response->status_code ) {
@@ -281,8 +281,8 @@ class Core_Command extends WP_CLI_Command {
 	}
 
 	private static function read( $url ) {
-		$headers  = array( 'Accept' => 'application/json' );
-		$response = Utils\http_request( 'GET', $url, null, $headers, array( 'timeout' => 30 ) );
+		$headers  = [ 'Accept' => 'application/json' ];
+		$response = Utils\http_request( 'GET', $url, null, $headers, [ 'timeout' => 30 ] );
 		if ( 200 === $response->status_code ) {
 			return $response->body;
 		} else {
@@ -512,12 +512,12 @@ class Core_Command extends WP_CLI_Command {
 		$assoc_args['title'] = sprintf( _x( '%s Sites', 'Default network name' ), $assoc_args['title'] );
 
 		// Overwrite runtime args, to avoid mismatches.
-		$consts_to_args = array(
+		$consts_to_args = [
 			'SUBDOMAIN_INSTALL'    => 'subdomains',
 			'PATH_CURRENT_SITE'    => 'base',
 			'SITE_ID_CURRENT_SITE' => 'site_id',
 			'BLOG_ID_CURRENT_SITE' => 'blog_id',
-		);
+		];
 
 		foreach ( $consts_to_args as $const => $arg ) {
 			if ( defined( $const ) ) {
@@ -549,12 +549,12 @@ class Core_Command extends WP_CLI_Command {
 	}
 
 	private static function set_multisite_defaults( $assoc_args ) {
-		$defaults = array(
+		$defaults = [
 			'subdomains' => false,
 			'base'       => '/',
 			'site_id'    => 1,
 			'blog_id'    => 1,
-		);
+		];
 
 		return array_merge( $defaults, $assoc_args );
 	}
@@ -581,12 +581,12 @@ class Core_Command extends WP_CLI_Command {
 
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
-		$defaults = array(
+		$defaults = [
 			'title'          => '',
 			'admin_user'     => '',
 			'admin_email'    => '',
 			'admin_password' => '',
-		);
+		];
 		extract( wp_parse_args( $assoc_args, $defaults ), EXTR_SKIP );
 
 		// Support prompting for the `--url=<url>`,
@@ -708,7 +708,7 @@ EOT;
 
 				$wpdb->delete(
 					$wpdb->sitemeta,
-					array( 'meta_id' => $row->meta_id )
+					[ 'meta_id' => $row->meta_id ]
 				);
 			}
 		}
@@ -725,12 +725,12 @@ EOT;
 		$current_site->domain    = $domain;
 		$current_site->path      = $path;
 		$current_site->site_name = ucfirst( $domain );
-		$blog_data               = array(
+		$blog_data               = [
 			'site_id'    => $network_id,
 			'domain'     => $domain,
 			'path'       => $path,
 			'registered' => current_time( 'mysql' ),
-		);
+		];
 		$wpdb->insert( $wpdb->blogs, $blog_data );
 		$current_site->blog_id = $wpdb->insert_id;
 		$blog_id               = $wpdb->insert_id;
@@ -748,8 +748,8 @@ EOT;
 
 	// copied from populate_network()
 	private static function add_site_admins( $site_user ) {
-		$site_admins = array( $site_user->user_login );
-		$users       = get_users( array( 'fields' => array( 'ID', 'user_login' ) ) );
+		$site_admins = [ $site_user->user_login ];
+		$users       = get_users( [ 'fields' => [ 'ID', 'user_login' ] ] );
 		if ( $users ) {
 			foreach ( $users as $user ) {
 				if ( is_super_admin( $user->ID )
@@ -815,7 +815,7 @@ EOT;
 	 *
 	 * @when before_wp_load
 	 */
-	public function version( $args = array(), $assoc_args = array() ) {
+	public function version( $args = [], $assoc_args = [] ) {
 		$details = self::get_wp_details();
 
 		if ( Utils\get_flag_value( $assoc_args, 'extra' ) ) {
@@ -825,7 +825,7 @@ EOT;
 
 			echo Utils\mustache_render(
 				self::get_template_path( 'versions.mustache' ),
-				array(
+				[
 					'wp-version'    => $details['wp_version'],
 					'db-version'    => $details['wp_db_version'],
 					'local-package' => empty( $details['wp_local_package'] )
@@ -834,7 +834,7 @@ EOT;
 					'mce-version'   => $human_readable_tiny_mce
 						? "{$human_readable_tiny_mce} ({$details['tinymce_version']})"
 						: $details['tinymce_version']
-				)
+				]
 			);
 		} else {
 			WP_CLI::line( $details['wp_version'] );
@@ -863,8 +863,8 @@ EOT;
 
 		$version_content = file_get_contents( $versions_path, null, null, 6, 2048 );
 
-		$vars   = array( 'wp_version', 'wp_db_version', 'tinymce_version', 'wp_local_package' );
-		$result = array();
+		$vars   = [ 'wp_version', 'wp_db_version', 'tinymce_version', 'wp_local_package' ];
+		$result = [];
 
 		foreach ( $vars as $var_name ) {
 			$result[ $var_name ] = self::find_var( $var_name, $version_content );
@@ -1025,7 +1025,7 @@ EOT;
 			$upgrader = 'WP_CLI\\NonDestructiveCoreUpgrader';
 			$version  = Utils\get_flag_value( $assoc_args, 'version' );
 
-			$update = (object) array(
+			$update = (object) [
 				'response' => 'upgrade',
 				'current'  => $version,
 				'download' => $args[0],
@@ -1037,7 +1037,7 @@ EOT;
 				],
 				'version'  => $version,
 				'locale'   => null,
-			);
+			];
 
 		} elseif ( empty( $assoc_args['version'] ) ) {
 
@@ -1073,7 +1073,7 @@ EOT;
 
 			$new_package = $this->get_download_url( $version, $locale );
 
-			$update = (object) array(
+			$update = (object) [
 				'response' => 'upgrade',
 				'current'  => $assoc_args['version'],
 				'download' => $new_package,
@@ -1085,7 +1085,7 @@ EOT;
 				],
 				'version'  => $version,
 				'locale'   => $locale,
-			);
+			];
 
 		}
 
@@ -1264,15 +1264,15 @@ EOT;
 		wp_version_check();
 		$from_api = get_site_transient( 'update_core' );
 		if ( ! $from_api ) {
-			return array();
+			return [];
 		}
 
 		$compare_version = str_replace( '-src', '', $GLOBALS['wp_version'] );
 
-		$updates = array(
+		$updates = [
 			'major' => false,
 			'minor' => false,
-		);
+		];
 		foreach ( $from_api->updates as $offer ) {
 
 			$update_type = Utils\get_named_sem_ver( $offer->version, $compare_version );
@@ -1291,11 +1291,11 @@ EOT;
 				continue;
 			}
 
-			$updates[ $update_type ] = array(
+			$updates[ $update_type ] = [
 				'version'     => $offer->version,
 				'update_type' => $update_type,
 				'package_url' => ! empty( $offer->packages->partial ) ? $offer->packages->partial : $offer->packages->full,
-			);
+			];
 		}
 
 		foreach ( $updates as $type => $value ) {
@@ -1307,7 +1307,7 @@ EOT;
 		foreach ( [ 'major', 'minor' ] as $type ) {
 			if ( true === Utils\get_flag_value( $assoc_args, $type ) ) {
 				return ! empty( $updates[ $type ] )
-					? array( $updates[ $type ] )
+					? [ $updates[ $type ] ]
 					: false;
 			}
 		}
