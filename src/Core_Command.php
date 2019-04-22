@@ -2,6 +2,7 @@
 
 use \Composer\Semver\Comparator;
 use \WP_CLI\Extractor;
+use WP_CLI\Iterators\Table as TableIterator;
 use \WP_CLI\Utils;
 use WP_CLI\Formatter;
 
@@ -123,27 +124,30 @@ class Core_Command extends WP_CLI_Command {
 	 */
 	public function download( $args, $assoc_args ) {
 
-		$download_dir      = ! empty( $assoc_args['path'] ) ? ( rtrim( $assoc_args['path'], '/\\' ) . '/' ) : ABSPATH;
+		$download_dir = ! empty( $assoc_args['path'] )
+			? ( rtrim( $assoc_args['path'], '/\\' ) . '/' )
+			: ABSPATH;
+
 		$wordpress_present = is_readable( $download_dir . 'wp-load.php' );
 
-		if ( ! Utils\get_flag_value( $assoc_args, 'force' ) && $wordpress_present ) {
+		if ( $wordpress_present && ! Utils\get_flag_value( $assoc_args, 'force' ) ) {
 			WP_CLI::error( 'WordPress files seem to already be present here.' );
 		}
 
 		if ( ! is_dir( $download_dir ) ) {
 			if ( ! is_writable( dirname( $download_dir ) ) ) {
-				WP_CLI::error( sprintf( "Insufficient permission to create directory '%s'.", $download_dir ) );
+				WP_CLI::error( "Insufficient permission to create directory '{$download_dir}'." );
 			}
 
-			WP_CLI::log( sprintf( "Creating directory '%s'.", $download_dir ) );
+			WP_CLI::log( "Creating directory '{$download_dir}'." );
 			if ( ! @mkdir( $download_dir, 0777, true /*recursive*/ ) ) {
 				$error = error_get_last();
-				WP_CLI::error( sprintf( "Failed to create directory '%s': %s.", $download_dir, $error['message'] ) );
+				WP_CLI::error( "Failed to create directory '{$download_dir}': {$error['message']}." );
 			}
 		}
 
 		if ( ! is_writable( $download_dir ) ) {
-			WP_CLI::error( sprintf( "'%s' is not writable by current user.", $download_dir ) );
+			WP_CLI::error( "'{$download_dir}' is not writable by current user." );
 		}
 
 		$locale       = Utils\get_flag_value( $assoc_args, 'locale', 'en_US' );
@@ -151,16 +155,20 @@ class Core_Command extends WP_CLI_Command {
 
 		if ( isset( $assoc_args['version'] ) && 'latest' !== $assoc_args['version'] ) {
 			$version = $assoc_args['version'];
-			$version = ( in_array( strtolower( $version ), array( 'trunk', 'nightly' ), true ) ? 'nightly' : $version );
-			// nightly builds are only available in .zip format
-			$ext = ( 'nightly' === $version ? 'zip' : 'tar.gz' );
-			// Skip content requires ZIP.
-			$ext          = ( $skip_content ) ? 'zip' : $ext;
-			$download_url = $this->get_download_url( $version, $locale, $ext );
+			if ( in_array( strtolower( $version ), array( 'trunk', 'nightly' ), true ) ) {
+				$version = 'nightly';
+			}
+
+			// Nightly builds and skip content are only available in .zip format.
+			$extension = ( 'nightly' === $version || $skip_content )
+				? 'zip'
+				: 'tar.gz';
+
+			$download_url = $this->get_download_url( $version, $locale, $extension );
 		} else {
 			$offer = $this->get_download_offer( $locale );
 			if ( ! $offer ) {
-				WP_CLI::error( "The requested locale ($locale) was not found." );
+				WP_CLI::error( "The requested locale ({$locale}) was not found." );
 			}
 			$version      = $offer['current'];
 			$download_url = $offer['download'];
@@ -179,7 +187,7 @@ class Core_Command extends WP_CLI_Command {
 			$from_version = $wp_details['wp_version'];
 		}
 
-		WP_CLI::log( sprintf( 'Downloading WordPress %s (%s)...', $version, $locale ) );
+		WP_CLI::log( "Downloading WordPress {$version} ({$locale})..." );
 
 		$path_parts = pathinfo( $download_url );
 		$extension  = 'tar.gz';
@@ -200,11 +208,11 @@ class Core_Command extends WP_CLI_Command {
 
 		$bad_cache = false;
 		if ( $cache_file ) {
-			WP_CLI::log( "Using cached file '$cache_file'..." );
+			WP_CLI::log( "Using cached file '{$cache_file}'..." );
 			$skip_content_cache_file = $skip_content ? self::strip_content_dir( $cache_file ) : null;
 			try {
-				Extractor::extract( $skip_content_cache_file ? $skip_content_cache_file : $cache_file, $download_dir );
-			} catch ( Exception $e ) {
+				Extractor::extract( $skip_content_cache_file ?: $cache_file, $download_dir );
+			} catch ( Exception $exception ) {
 				WP_CLI::warning( 'Extraction failed, downloading a new copy...' );
 				$bad_cache = true;
 			}
@@ -213,7 +221,7 @@ class Core_Command extends WP_CLI_Command {
 		if ( ! $cache_file || $bad_cache ) {
 			// We need to use a temporary file because piping from cURL to tar is flaky
 			// on MinGW (and probably in other environments too).
-			$temp = \WP_CLI\Utils\get_temp_dir() . uniqid( 'wp_' ) . ".{$extension}";
+			$temp = Utils\get_temp_dir() . uniqid( 'wp_' ) . ".{$extension}";
 			register_shutdown_function(
 				function () use ( $temp ) {
 					if ( file_exists( $temp ) ) {
@@ -255,9 +263,9 @@ class Core_Command extends WP_CLI_Command {
 			$skip_content_temp = $skip_content ? self::strip_content_dir( $temp ) : null;
 
 			try {
-				Extractor::extract( $skip_content_temp ? $skip_content_temp : $temp, $download_dir );
-			} catch ( Exception $e ) {
-				WP_CLI::error( "Couldn't extract WordPress archive. " . $e->getMessage() );
+				Extractor::extract( $skip_content_temp ?: $temp, $download_dir );
+			} catch ( Exception $exception ) {
+				WP_CLI::error( "Couldn't extract WordPress archive. {$exception->getMessage()}" );
 			}
 
 			if ( 'nightly' !== $version ) {
@@ -319,7 +327,7 @@ class Core_Command extends WP_CLI_Command {
 	 *
 	 * @subcommand is-installed
 	 */
-	public function is_installed( $_, $assoc_args ) {
+	public function is_installed( $args, $assoc_args ) {
 
 		if ( Utils\get_flag_value( $assoc_args, 'network' ) ) {
 			if ( is_blog_installed() && is_multisite() ) {
@@ -381,7 +389,7 @@ class Core_Command extends WP_CLI_Command {
 	 *     $ wp core install --url=example.com --title=Example --admin_user=supervisor --admin_email=info@example.com --prompt=admin_password < admin_password.txt
 	 */
 	public function install( $args, $assoc_args ) {
-		if ( $this->install_( $assoc_args ) ) {
+		if ( $this->do_install( $assoc_args ) ) {
 			WP_CLI::success( 'WordPress installed successfully.' );
 		} else {
 			WP_CLI::log( 'WordPress is already installed.' );
@@ -498,7 +506,7 @@ class Core_Command extends WP_CLI_Command {
 	 * @subcommand multisite-install
 	 */
 	public function multisite_install( $args, $assoc_args ) {
-		if ( $this->install_( $assoc_args ) ) {
+		if ( $this->do_install( $assoc_args ) ) {
 			WP_CLI::log( 'Created single site database tables.' );
 		} else {
 			WP_CLI::log( 'Single site database tables already present.' );
@@ -556,7 +564,7 @@ class Core_Command extends WP_CLI_Command {
 		return array_merge( $defaults, $assoc_args );
 	}
 
-	private function install_( $assoc_args ) {
+	private function do_install( $assoc_args ) {
 		if ( is_blog_installed() ) {
 			return false;
 		}
@@ -603,7 +611,8 @@ class Core_Command extends WP_CLI_Command {
 		$result = wp_install( $title, $admin_user, $admin_email, $public, '', $password );
 
 		if ( is_wp_error( $result ) ) {
-			WP_CLI::error( 'Installation failed (' . WP_CLI::error_to_string($result) . ').' );
+			$reason = WP_CLI::error_to_string($result);
+			WP_CLI::error( "Installation failed ({$reason})." );
 		}
 		// @codingStandardsIgnoreEnd
 
@@ -687,11 +696,11 @@ EOT;
 
 			$wp_config_path = Utils\locate_wp_config();
 			if ( true === Utils\get_flag_value( $assoc_args, 'skip-config' ) ) {
-				WP_CLI::log( "Addition of multisite constants to 'wp-config.php' skipped. You need to add them manually:" . PHP_EOL . $ms_config );
+				WP_CLI::log( "Addition of multisite constants to 'wp-config.php' skipped. You need to add them manually:\n{$ms_config}" );
 			} elseif ( is_writable( $wp_config_path ) && self::modify_wp_config( $ms_config ) ) {
 				WP_CLI::log( "Added multisite constants to 'wp-config.php'." );
 			} else {
-				WP_CLI::warning( "Multisite constants could not be written to 'wp-config.php'. You may need to add them manually:" . PHP_EOL . $ms_config );
+				WP_CLI::warning( "Multisite constants could not be written to 'wp-config.php'. You may need to add them manually:\n{$ms_config}" );
 			}
 		} else {
 			/* Multisite constants are defined, therefore we already have an empty site_admins site meta.
@@ -700,10 +709,9 @@ EOT;
 			$rows = $wpdb->get_results( "SELECT meta_id, site_id FROM {$wpdb->sitemeta} WHERE meta_key = 'site_admins' AND meta_value = ''" );
 
 			foreach ( $rows as $row ) {
-				$cache_key = sprintf( '%d:site_admins', $row->site_id );
-				wp_cache_delete( $cache_key, 'site-options' );
+				wp_cache_delete( "{$row->site_id}:site_admins", 'site-options' );
 
-				$result = $wpdb->delete(
+				$wpdb->delete(
 					$wpdb->sitemeta,
 					array( 'meta_id' => $row->meta_id )
 				);
@@ -749,7 +757,8 @@ EOT;
 		$users       = get_users( array( 'fields' => array( 'ID', 'user_login' ) ) );
 		if ( $users ) {
 			foreach ( $users as $user ) {
-				if ( is_super_admin( $user->ID ) && ! in_array( $user->user_login, $site_admins, true ) ) {
+				if ( is_super_admin( $user->ID )
+					&& ! in_array( $user->user_login, $site_admins, true ) ) {
 					$site_admins[] = $user->user_login;
 				}
 			}
@@ -761,7 +770,7 @@ EOT;
 	private static function modify_wp_config( $content ) {
 		$wp_config_path = Utils\locate_wp_config();
 
-		$token           = "/* That's all, stop editing!";
+		$token           = "/* That's all, stop editing!";"{$row->site_id}:site_admins"
 		$config_contents = file_get_contents( $wp_config_path );
 		if ( false === strpos( $config_contents, $token ) ) {
 			return false;
@@ -769,9 +778,13 @@ EOT;
 
 		list( $before, $after ) = explode( $token, $config_contents );
 
-		$content = PHP_EOL . PHP_EOL . trim( $content ) . PHP_EOL . PHP_EOL;
+		$content = trim( $content );
 
-		file_put_contents( $wp_config_path, $before . $content . $token . $after );
+		file_put_contents(
+			$wp_config_path,
+			"{$before}\n\n{$content}\n\n{$token}{$after}"
+		);
+
 		return true;
 	}
 
@@ -810,30 +823,27 @@ EOT;
 	public function version( $args = array(), $assoc_args = array() ) {
 		$details = self::get_wp_details();
 
-		// @codingStandardsIgnoreStart
 		if ( Utils\get_flag_value( $assoc_args, 'extra' ) ) {
-			if ( preg_match( '/(\d)(\d+)-/', $details['tinymce_version'], $match ) ) {
-				$human_readable_tiny_mce = $match[1] . '.' . $match[2];
-			} else {
-				$human_readable_tiny_mce = '';
-			}
+			$match                   = [];
+			$found_version           = preg_match( '/(\d)(\d+)-/', $details['tinymce_version'], $match );
+			$human_readable_tiny_mce = $found_version ? "{$match[1]}.{$match[2]}" : '';
 
-			echo \WP_CLI\Utils\mustache_render( self::get_template_path( 'versions.mustache' ), array(
-				'wp-version'    => $details['wp_version'],
-				'db-version'    => $details['wp_db_version'],
-				'local-package' => ( empty( $details['wp_local_package'] ) ?
-					'en_US'
-					: $details['wp_local_package']
-				),
-				'mce-version'   => ( $human_readable_tiny_mce ?
-					"$human_readable_tiny_mce ({$details['tinymce_version']})"
-					: $details['tinymce_version']
+			echo Utils\mustache_render(
+				self::get_template_path( 'versions.mustache' ),
+				array(
+					'wp-version'    => $details['wp_version'],
+					'db-version'    => $details['wp_db_version'],
+					'local-package' => empty( $details['wp_local_package'] )
+						? 'en_US'
+						: $details['wp_local_package'],
+					'mce-version'   => $human_readable_tiny_mce
+						? "{$human_readable_tiny_mce} ({$details['tinymce_version']})"
+						: $details['tinymce_version']
 				)
-			) );
+			);
 		} else {
 			WP_CLI::line( $details['wp_version'] );
 		}
-		// @codingStandardsIgnoreEnd
 	}
 
 	/**
@@ -921,26 +931,25 @@ EOT;
 	 * @return string|array String message on failure. An array of checksums on success.
 	 */
 	private static function get_core_checksums( $version, $locale ) {
-		$url = 'https://api.wordpress.org/core/checksums/1.0/?' . http_build_query( compact( 'version', 'locale' ), null, '&' );
+		$query = http_build_query( compact( 'version', 'locale' ), null, '&' );
+		$url   = "https://api.wordpress.org/core/checksums/1.0/?{$query}";
 
-		$options = array(
-			'timeout' => 30,
-		);
+		$options  = [ 'timeout' => 30 ];
+		$headers  = [ 'Accept' => 'application/json' ];
 
-		$headers  = array(
-			'Accept' => 'application/json',
-		);
 		$response = Utils\http_request( 'GET', $url, null, $headers, $options );
 
 		if ( ! $response->success || 200 !== (int) $response->status_code ) {
-			return sprintf( "Checksum request '%s' failed (HTTP %d).", $url, $response->status_code );
+			return "Checksum request '{$url}' failed (HTTP {$response->status_code}).";
 		}
 
 		$body = trim( $response->body );
 		$body = json_decode( $body, true );
 
-		if ( ! is_array( $body ) || ! isset( $body['checksums'] ) || ! is_array( $body['checksums'] ) ) {
-			return sprintf( 'Checksums not available for WordPress %s/%s.', $version, $locale );
+		if ( ! is_array( $body )
+			|| ! isset( $body['checksums'] )
+			|| ! is_array( $body['checksums'] ) ) {
+			return "Checksums not available for WordPress {$version}/{$locale}.";
 		}
 
 		return $body['checksums'];
@@ -1025,12 +1034,12 @@ EOT;
 				'response' => 'upgrade',
 				'current'  => $version,
 				'download' => $args[0],
-				'packages' => (object) array(
+				'packages' => (object) [
 					'partial'     => null,
 					'new_bundled' => null,
 					'no_content'  => null,
 					'full'        => $args[0],
-				),
+				],
 				'version'  => $version,
 				'locale'   => null,
 			);
@@ -1073,12 +1082,12 @@ EOT;
 				'response' => 'upgrade',
 				'current'  => $assoc_args['version'],
 				'download' => $new_package,
-				'packages' => (object) array(
+				'packages' => (object) [
 					'partial'     => null,
 					'new_bundled' => null,
 					'no_content'  => null,
 					'full'        => $new_package,
-				),
+				],
 				'version'  => $version,
 				'locale'   => $locale,
 			);
@@ -1086,7 +1095,8 @@ EOT;
 		}
 
 		if ( ! empty( $update )
-			&& ( $update->version !== $wp_version || Utils\get_flag_value( $assoc_args, 'force' ) ) ) {
+			&& ( $update->version !== $wp_version
+			|| Utils\get_flag_value( $assoc_args, 'force' ) ) ) {
 
 			require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
@@ -1103,11 +1113,11 @@ EOT;
 			unset( $GLOBALS['wp_cli_update_obj'] );
 
 			if ( is_wp_error( $result ) ) {
-				$msg = WP_CLI::error_to_string( $result );
+				$message = WP_CLI::error_to_string( $result );
 				if ( 'up_to_date' !== $result->get_error_code() ) {
-					WP_CLI::error( $msg );
+					WP_CLI::error( $message );
 				} else {
-					WP_CLI::success( $msg );
+					WP_CLI::success( $message );
 				}
 			} else {
 
@@ -1149,7 +1159,7 @@ EOT;
 	 *
 	 * @subcommand update-db
 	 */
-	public function update_db( $_, $assoc_args ) {
+	public function update_db( $args, $assoc_args ) {
 		global $wpdb, $wp_db_version, $wp_current_db_version;
 
 		$network = Utils\get_flag_value( $assoc_args, 'network' );
@@ -1163,18 +1173,18 @@ EOT;
 		}
 
 		if ( $network ) {
-			$iterator_args = array(
+			$iterator_args = [
 				'table' => $wpdb->blogs,
-				'where' => array(
+				'where' => [
 					'spam'     => 0,
 					'deleted'  => 0,
 					'archived' => 0,
-				),
-			);
-			$it            = new \WP_CLI\Iterators\Table( $iterator_args );
+				],
+			];
+			$it            = new TableIterator( $iterator_args );
 			$success       = 0;
 			$total         = 0;
-			$site_ids      = array();
+			$site_ids      = [];
 			foreach ( $it as $blog ) {
 				$total++;
 				$site_ids[] = $blog->site_id;
@@ -1183,7 +1193,7 @@ EOT;
 				if ( $dry_run ) {
 					$cmd .= ' --dry-run';
 				}
-				$process = WP_CLI::runcommand( $cmd, array( 'return' => 'all' ) );
+				$process = WP_CLI::runcommand( $cmd, [ 'return' => 'all' ] );
 				if ( '0' === $process->return_code ) {
 					// See if we can parse the stdout
 					if ( preg_match( '#Success: (.+)#', $process->stdout, $matches ) ) {
@@ -1203,7 +1213,7 @@ EOT;
 					update_metadata( 'site', $site_id, 'wpmu_upgrade_site', $wp_db_version );
 				}
 			}
-			WP_CLI::success( sprintf( 'WordPress database upgraded on %d/%d sites.', $success, $total ) );
+			WP_CLI::success( "WordPress database upgraded on {$success}/{$total} sites." );
 		} else {
 			require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 			$wp_current_db_version = __get_option( 'db_version' );
@@ -1247,20 +1257,9 @@ EOT;
 			}
 		}
 
-		if ( 'en_US' === $locale ) {
-			$url = 'https://wordpress.org/wordpress-' . $version . '.' . $file_type;
+		$locale_subdomain = 'en_US' === $locale ? '' : substr( $locale, 0, 2 );
 
-			return $url;
-		} else {
-			$url = sprintf(
-				'https://%s.wordpress.org/wordpress-%s-%s.' . $file_type,
-				substr( $locale, 0, 2 ),
-				$version,
-				$locale
-			);
-
-			return $url;
-		}
+		return "https://{$locale_subdomain}.wordpress.org/wordpress-{$version}-{$locale}.{$file_type}";
 	}
 
 	/**
@@ -1310,9 +1309,11 @@ EOT;
 			}
 		}
 
-		foreach ( array( 'major', 'minor' ) as $type ) {
+		foreach ( [ 'major', 'minor' ] as $type ) {
 			if ( true === Utils\get_flag_value( $assoc_args, $type ) ) {
-				return ! empty( $updates[ $type ] ) ? array( $updates[ $type ] ) : false;
+				return ! empty( $updates[ $type ] )
+					? array( $updates[ $type ] )
+					: false;
 			}
 		}
 		return array_values( $updates );
@@ -1324,14 +1325,14 @@ EOT;
 			return;
 		}
 
-		$old_checksums = self::get_core_checksums( $version_from, $locale ? $locale : 'en_US' );
+		$old_checksums = self::get_core_checksums( $version_from, $locale ?: 'en_US' );
 		if ( ! is_array( $old_checksums ) ) {
-			WP_CLI::warning( $old_checksums . ' Please cleanup files manually.' );
+			WP_CLI::warning( "{$old_checksums} Please cleanup files manually." );
 			return;
 		}
-		$new_checksums = self::get_core_checksums( $version_to, $locale ? $locale : 'en_US' );
+		$new_checksums = self::get_core_checksums( $version_to, $locale ?: 'en_US' );
 		if ( ! is_array( $new_checksums ) ) {
-			WP_CLI::warning( $new_checksums . ' Please cleanup files manually.' );
+			WP_CLI::warning( "{$new_checksums} Please cleanup files manually." );
 			return;
 		}
 
@@ -1350,7 +1351,7 @@ EOT;
 
 				if ( file_exists( ABSPATH . $file ) ) {
 					unlink( ABSPATH . $file );
-					WP_CLI::log( 'File removed: ' . $file );
+					WP_CLI::log( "File removed: {$file}" );
 					$count++;
 				}
 			}
@@ -1364,7 +1365,7 @@ EOT;
 	}
 
 	private static function strip_content_dir( $zip_file ) {
-		$new_zip_file = \WP_CLI\Utils\get_temp_dir() . uniqid( 'wp_' ) . '.zip';
+		$new_zip_file = Utils\get_temp_dir() . uniqid( 'wp_' ) . '.zip';
 		register_shutdown_function(
 			function () use ( $new_zip_file ) {
 				if ( file_exists( $new_zip_file ) ) {
