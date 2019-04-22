@@ -729,6 +729,7 @@ EOT;
 		$subdomain_install, $site_user ) {
 		global $wpdb, $current_site, $wp_rewrite;
 
+		// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- This is meant to replace Core functionality.
 		$current_site            = new stdClass();
 		$current_site->domain    = $domain;
 		$current_site->path      = $path;
