@@ -328,18 +328,13 @@ class Core_Command extends WP_CLI_Command {
 	 * @subcommand is-installed
 	 */
 	public function is_installed( $args, $assoc_args ) {
-
-		if ( Utils\get_flag_value( $assoc_args, 'network' ) ) {
-			if ( is_blog_installed() && is_multisite() ) {
-				WP_CLI::halt( 0 );
-			} else {
-				WP_CLI::halt( 1 );
-			}
-		} elseif ( is_blog_installed() ) {
+		if ( is_blog_installed()
+			&& ( ! Utils\get_flag_value( $assoc_args, 'network' )
+				|| is_multisite() ) ) {
 			WP_CLI::halt( 0 );
-		} else {
-			WP_CLI::halt( 1 );
 		}
+
+		WP_CLI::halt( 1 );
 	}
 
 	/**
