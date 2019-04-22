@@ -1111,9 +1111,9 @@ EOT;
 
 			$from_version = $wp_version;
 
-			$GLOBALS['wp_cli_update_obj'] = $update;
-			$result                       = Utils\get_upgrader( $upgrader )->upgrade( $update );
-			unset( $GLOBALS['wp_cli_update_obj'] );
+			$GLOBALS['wpcli_core_update_obj'] = $update;
+			$result                           = Utils\get_upgrader( $upgrader )->upgrade( $update );
+			unset( $GLOBALS['wpcli_core_update_obj'] );
 
 			if ( is_wp_error( $result ) ) {
 				$message = WP_CLI::error_to_string( $result );
