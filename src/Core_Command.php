@@ -160,7 +160,7 @@ class Core_Command extends WP_CLI_Command {
 			}
 
 			// Nightly builds and skip content are only available in .zip format.
-			$extension = ( 'nightly' === $version || $skip_content )
+			$extension = ( ( 'nightly' === $version ) || $skip_content )
 				? 'zip'
 				: 'tar.gz';
 
@@ -237,6 +237,7 @@ class Core_Command extends WP_CLI_Command {
 			];
 
 			$response = Utils\http_request( 'GET', $download_url, null, $headers, $options );
+			var_dump( $download_url );
 			if ( 404 === (int) $response->status_code ) {
 				WP_CLI::error( 'Release not found. Double-check locale or version.' );
 			} elseif ( 20 !== (int) substr( $response->status_code, 0, 2 ) ) {
@@ -827,27 +828,28 @@ EOT;
 	public function version( $args = [], $assoc_args = [] ) {
 		$details = self::get_wp_details();
 
-		if ( Utils\get_flag_value( $assoc_args, 'extra' ) ) {
-			$match                   = [];
-			$found_version           = preg_match( '/(\d)(\d+)-/', $details['tinymce_version'], $match );
-			$human_readable_tiny_mce = $found_version ? "{$match[1]}.{$match[2]}" : '';
-
-			echo Utils\mustache_render(
-				self::get_template_path( 'versions.mustache' ),
-				[
-					'wp-version'    => $details['wp_version'],
-					'db-version'    => $details['wp_db_version'],
-					'local-package' => empty( $details['wp_local_package'] )
-						? 'en_US'
-						: $details['wp_local_package'],
-					'mce-version'   => $human_readable_tiny_mce
-						? "{$human_readable_tiny_mce} ({$details['tinymce_version']})"
-						: $details['tinymce_version'],
-				]
-			);
-		} else {
+		if ( ! Utils\get_flag_value( $assoc_args, 'extra' ) ) {
 			WP_CLI::line( $details['wp_version'] );
+			return;
 		}
+
+		$match                   = [];
+		$found_version           = preg_match( '/(\d)(\d+)-/', $details['tinymce_version'], $match );
+		$human_readable_tiny_mce = $found_version ? "{$match[1]}.{$match[2]}" : '';
+
+		echo Utils\mustache_render(
+			self::get_template_path( 'versions.mustache' ),
+			[
+				'wp-version'    => $details['wp_version'],
+				'db-version'    => $details['wp_db_version'],
+				'local-package' => empty( $details['wp_local_package'] )
+					? 'en_US'
+					: $details['wp_local_package'],
+				'mce-version'   => $human_readable_tiny_mce
+					? "{$human_readable_tiny_mce} ({$details['tinymce_version']})"
+					: $details['tinymce_version'],
+			]
+		);
 	}
 
 	/**
@@ -920,7 +922,7 @@ EOT;
 
 		$value = substr( $code, $start, $end - $start );
 
-		return trim( $value, "'" );
+		return trim( $value, " '" );
 	}
 
 	/**
@@ -1194,7 +1196,7 @@ EOT;
 					$cmd .= ' --dry-run';
 				}
 				$process = WP_CLI::runcommand( $cmd, [ 'return' => 'all' ] );
-				if ( '0' === $process->return_code ) {
+				if ( 0 === (int) $process->return_code ) {
 					// See if we can parse the stdout
 					if ( preg_match( '#Success: (.+)#', $process->stdout, $matches ) ) {
 						$message = rtrim( $matches[1], '.' );
@@ -1217,7 +1219,7 @@ EOT;
 		} else {
 			require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 			// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Replacing WP Core behavior is the goal here.
-			$wp_current_db_version = __get_option( 'db_version' );
+			$wp_current_db_version = (int) __get_option( 'db_version' );
 			if ( $wp_db_version !== $wp_current_db_version ) {
 				if ( $dry_run ) {
 					WP_CLI::success( "WordPress database will be upgraded from db version {$wp_current_db_version} to {$wp_db_version}." );
@@ -1258,9 +1260,9 @@ EOT;
 			}
 		}
 
-		$locale_subdomain = 'en_US' === $locale ? '' : substr( $locale, 0, 2 );
+		$locale_subdomain = 'en_US' === $locale ? '' : substr( $locale, 0, 2 ) . '.';
 
-		return "https://{$locale_subdomain}.wordpress.org/wordpress-{$version}-{$locale}.{$file_type}";
+		return "https://{$locale_subdomain}wordpress.org/wordpress-{$version}-{$locale}.{$file_type}";
 	}
 
 	/**
