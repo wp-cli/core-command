@@ -615,7 +615,7 @@ class Core_Command extends WP_CLI_Command {
 		);
 
 		if ( is_wp_error( $result ) ) {
-			$reason = WP_CLI::error_to_string($result);
+			$reason = WP_CLI::error_to_string( $result );
 			WP_CLI::error( "Installation failed ({$reason})." );
 		}
 
@@ -841,7 +841,7 @@ EOT;
 						: $details['wp_local_package'],
 					'mce-version'   => $human_readable_tiny_mce
 						? "{$human_readable_tiny_mce} ({$details['tinymce_version']})"
-						: $details['tinymce_version']
+						: $details['tinymce_version'],
 				]
 			);
 		} else {
@@ -937,8 +937,8 @@ EOT;
 		$query = http_build_query( compact( 'version', 'locale' ), null, '&' );
 		$url   = "https://api.wordpress.org/core/checksums/1.0/?{$query}";
 
-		$options  = [ 'timeout' => 30 ];
-		$headers  = [ 'Accept' => 'application/json' ];
+		$options = [ 'timeout' => 30 ];
+		$headers = [ 'Accept' => 'application/json' ];
 
 		$response = Utils\http_request( 'GET', $url, null, $headers, $options );
 
