@@ -1380,6 +1380,7 @@ EOT;
 		$zip = new ZipArchive();
 		$res = $zip->open( $new_zip_file );
 		if ( true === $res ) {
+			// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
 			for ( $i = 0; $i < $zip->numFiles; $i++ ) {
 				$info = $zip->statIndex( $i );
 				if ( false !== stripos( $info['name'], 'wp-content/' ) ) {
