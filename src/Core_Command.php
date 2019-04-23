@@ -339,8 +339,8 @@ class Core_Command extends WP_CLI_Command {
 	 *
 	 * Note: if you've installed WordPress in a subdirectory, then you'll need
 	 * to `wp option update siteurl` after `wp core install`. For instance, if
-	 * WordPress is installed in the `/wp` directory and your domain is wp.dev,
-	 * then you'll need to run `wp option update siteurl http://wp.dev/wp` for
+	 * WordPress is installed in the `/wp` directory and your domain is example.com,
+	 * then you'll need to run `wp option update siteurl http://example.com/wp` for
 	 * your WordPress installation to function properly.
 	 *
 	 * Note: When using custom user tables (e.g. `CUSTOM_USER_TABLE`), the admin
