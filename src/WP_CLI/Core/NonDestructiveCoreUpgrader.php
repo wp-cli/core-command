@@ -1,6 +1,6 @@
 <?php
 
-namespace WP_CLI;
+namespace WP_CLI\Core;
 
 /**
  * A Core Upgrader class that leaves packages intact by default.
@@ -8,7 +8,8 @@ namespace WP_CLI;
  * @package wp-cli
  */
 class NonDestructiveCoreUpgrader extends CoreUpgrader {
-	function unpack_package($package, $delete_package = false) {
+	// phpcs:ignore Generic.CodeAnalysis.UselessOverridingMethod.Found -- Provide default value.
+	public function unpack_package( $package, $delete_package = false ) {
 		return parent::unpack_package( $package, $delete_package );
 	}
 }
