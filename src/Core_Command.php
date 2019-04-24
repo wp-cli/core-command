@@ -660,6 +660,8 @@ class Core_Command extends WP_CLI_Command {
 			$assoc_args['subdomains']
 		);
 
+		$site_id = $wpdb->get_var("SELECT id FROM $wpdb->site");
+
 		if ( true === $result ) {
 			WP_CLI::log( 'Set up multisite database tables.' );
 		} elseif ( is_wp_error( $result ) ) {
@@ -691,7 +693,7 @@ define( 'SUBDOMAIN_INSTALL', {$subdomain_export} );
 \$base = '{$assoc_args['base']}';
 define( 'DOMAIN_CURRENT_SITE', '{$domain}' );
 define( 'PATH_CURRENT_SITE', '{$assoc_args['base']}' );
-define( 'SITE_ID_CURRENT_SITE', 1 );
+define( 'SITE_ID_CURRENT_SITE', '{$site_id}' );
 define( 'BLOG_ID_CURRENT_SITE', 1 );
 EOT;
 
