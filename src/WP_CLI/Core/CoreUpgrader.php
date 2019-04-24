@@ -24,7 +24,7 @@ class CoreUpgrader extends DefaultCoreUpgrader {
 	 *
 	 * @param string $package          The URI of the package. If this is the full path to an
 	 *                                 existing local file, it will be returned untouched.
-	 * @param bool   $check_signatures Whether to validate file signatures. Default false.
+	 * @param bool   $check_signatures Whether to validate file signatures. Default true.
 	 * @return string|WP_Error The full path to the downloaded package file, or a WP_Error object.
 	 */
 	public function download_package( $package, $check_signatures = true ) {
