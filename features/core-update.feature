@@ -208,6 +208,7 @@ Feature: Update WordPress core
       wordpress-4.2.4-partial-1-en_US.zip
       """
 
+  @less-than-php-7.3
   Scenario: Make sure files are cleaned up
     Given a WP install
     When I run `wp core update --version=4.4 --force`
@@ -241,6 +242,7 @@ Feature: Update WordPress core
     When I run `wp post create --post_title='Test post' --porcelain`
     Then STDOUT should be a number
 
+  @less-than-php-7.3
   Scenario: Minor update on an unlocalized WordPress release
     Given a WP install
     And an empty cache
