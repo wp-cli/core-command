@@ -574,12 +574,7 @@ class Core_Command extends WP_CLI_Command {
 				}
 			}
 			// WP 4.9.0 - skip "Notice of Admin Email Change" email as well (https://core.trac.wordpress.org/ticket/39117).
-			add_filter(
-				'send_site_admin_email_change_email',
-				function() {
-					return false;
-				}
-			);
+			add_filter( 'send_site_admin_email_change_email', '__return_false' );
 		}
 
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
