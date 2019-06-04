@@ -1216,7 +1216,7 @@ EOT;
 		} else {
 			require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 			// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Replacing WP Core behavior is the goal here.
-			$wp_current_db_version = (int) __get_option( 'db_version' );
+			$wp_current_db_version = (int) get_option( 'db_version' );
 			if ( $wp_db_version !== $wp_current_db_version ) {
 				if ( $dry_run ) {
 					WP_CLI::success( "WordPress database will be upgraded from db version {$wp_current_db_version} to {$wp_db_version}." );
