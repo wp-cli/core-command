@@ -290,7 +290,6 @@ Feature: Manage WordPress installation
      """
     And the wp-settings.php file should exist
 
-  @require-php-5.6
   Scenario: Don't download WordPress when files are already present
     Given an empty directory
     And WP files
@@ -302,6 +301,7 @@ Feature: Manage WordPress installation
       """
     And the return code should be 1
 
+  @require-php-5.6
   Scenario: Install WordPress in a subdirectory
     Given an empty directory
     And a wp-config.php file:
