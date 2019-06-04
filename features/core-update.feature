@@ -121,6 +121,7 @@ Feature: Update WordPress core
       Downloading
       """
 
+  @require-php-5.6
   Scenario: Don't run update when up-to-date
     Given a WP install
     And I run `wp core update`
