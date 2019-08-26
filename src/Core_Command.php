@@ -1473,9 +1473,9 @@ EOT;
 			$version_constraint = $this->get_version_data( $args[0] );
 
 			if ( ! empty( $version_constraint['patch'] )
-			     || 0 === $version_constraint['patch']
-			     || ! empty( $version_constraint['pre_release'] )
-			     || ! empty( $version_constraint['build'] ) ) {
+				|| 0 === $version_constraint['patch']
+				|| ! empty( $version_constraint['pre_release'] )
+				|| ! empty( $version_constraint['build'] ) ) {
 				WP_CLI::error(
 					'Only major or minor versions are supported as constraints.'
 				);
@@ -1548,10 +1548,12 @@ EOT;
 		$response = Utils\http_request( 'GET', $url );
 
 		if ( strncmp( (string) $response->status_code, '2', 1 ) ) {
-			WP_CLI::error( sprintf(
-				'Could not retrieve releases from the wordpress.org API server (HTTP code %d)',
-				$response->status_code
-			) );
+			WP_CLI::error(
+				sprintf(
+					'Could not retrieve releases from the wordpress.org API server (HTTP code %d)',
+					$response->status_code
+				)
+			);
 		}
 
 		$releases = json_decode( $response->body, true );
@@ -1597,14 +1599,14 @@ EOT;
 	private function filter_by_version_constraint( array $release, $major, $minor ) {
 		$release_version = $this->get_version_data( $release['version'] );
 
-		if ( $major !== null
-		     && $release_version['major'] !== $major ) {
+		if ( null !== $major
+			&& $release_version['major'] !== $major ) {
 			return false;
 		}
 
-		if ( $minor !== null
-		     && $release_version['major'] === $major
-		     && $release_version['minor'] !== $minor ) {
+		if ( null !== $minor
+			&& $release_version['major'] === $major
+			&& $release_version['minor'] !== $minor ) {
 			return false;
 		}
 
@@ -1619,13 +1621,15 @@ EOT;
 	 * @throws \WP_CLI\ExitException If the version string could not be parsed.
 	 */
 	public function get_version_data( $version ) {
-		$semverRegex = '/^v?(\d+)(?:\.(\d+))?(?:\.(\d+))?(?:-([0-9A-Z-.]+))?(?:\+([0-9A-Z-.]+)?)?$/i';
+		$semver_regex = '/^v?(\d+)(?:\.(\d+))?(?:\.(\d+))?(?:-([0-9A-Z-.]+))?(?:\+([0-9A-Z-.]+)?)?$/i';
 
-		if ( ! preg_match( $semverRegex, $version, $matches ) ) {
-			WP_CLI::error( sprintf(
-				'Unable to parse version string data (%s).',
-				$version
-			) );
+		if ( ! preg_match( $semver_regex, $version, $matches ) ) {
+			WP_CLI::error(
+				sprintf(
+					'Unable to parse version string data (%s).',
+					$version
+				)
+			);
 		}
 
 		return [
