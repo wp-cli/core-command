@@ -301,6 +301,7 @@ Feature: Manage WordPress installation
       """
     And the return code should be 1
 
+  @require-php-5.6
   Scenario: Install WordPress in a subdirectory
     Given an empty directory
     And a wp-config.php file:
@@ -347,7 +348,7 @@ Feature: Manage WordPress installation
 
     When I run `wp db create`
     # extra/no-mail.php not present as mu-plugin so skip sending email else will fail on Travis with "sh: 1: -t: not found"
-    And I run `wp core install --url=wp.dev --title="WP Dev" --admin_user=wpcli --admin_password=wpcli --admin_email=wpcli@example.com --skip-email`
+    And I run `wp core install --url=example.com --title="WP Example" --admin_user=wpcli --admin_password=wpcli --admin_email=wpcli@example.com --skip-email`
     Then STDOUT should contain:
       """
       Success: WordPress installed successfully.
@@ -356,13 +357,13 @@ Feature: Manage WordPress installation
     When I run `wp option get home`
     Then STDOUT should be:
       """
-      http://wp.dev
+      http://example.com
       """
 
     When I run `wp option get siteurl`
     Then STDOUT should be:
       """
-      http://wp.dev
+      http://example.com
       """
 
   Scenario: Warn when multisite constants can't be inserted into wp-config
