@@ -660,7 +660,8 @@ class Core_Command extends WP_CLI_Command {
 			$assoc_args['subdomains']
 		);
 
-		$site_id = $wpdb->get_var("SELECT id FROM $wpdb->site");
+		$site_id = $wpdb->get_var( "SELECT id FROM $wpdb->site" );
+		$site_id = ( null === $site_id ) ? 1 : (int) $site_id;
 
 		if ( true === $result ) {
 			WP_CLI::log( 'Set up multisite database tables.' );
