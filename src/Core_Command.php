@@ -694,7 +694,7 @@ define( 'SUBDOMAIN_INSTALL', {$subdomain_export} );
 \$base = '{$assoc_args['base']}';
 define( 'DOMAIN_CURRENT_SITE', '{$domain}' );
 define( 'PATH_CURRENT_SITE', '{$assoc_args['base']}' );
-define( 'SITE_ID_CURRENT_SITE', '{$site_id}' );
+define( 'SITE_ID_CURRENT_SITE', $site_id );
 define( 'BLOG_ID_CURRENT_SITE', 1 );
 EOT;
 
