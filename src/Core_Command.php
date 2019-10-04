@@ -393,6 +393,9 @@ class Core_Command extends WP_CLI_Command {
 	 * --admin_email=<email>
 	 * : The email address for the admin user.
 	 *
+	 * [--locale=<locale>]
+	 * : The locale/language for the installation (e.g. `de_DE`). Default is empty.
+	 *
 	 * [--skip-email]
 	 * : Don't send an email notification to the new admin user.
 	 *
@@ -605,6 +608,10 @@ class Core_Command extends WP_CLI_Command {
 			'admin_password' => '',
 		];
 
+		if ( \WP_CLI\Utils\wp_version_compare( '4.0', '>' ) ) {
+			$defaults['locale'] = '';
+		}
+
 		$args = wp_parse_args( $assoc_args, $defaults );
 
 		// Support prompting for the `--url=<url>`,
@@ -628,7 +635,8 @@ class Core_Command extends WP_CLI_Command {
 			$args['admin_email'],
 			$public,
 			'',
-			$password
+			$password,
+			$args['locale']
 		);
 
 		if ( is_wp_error( $result ) ) {
