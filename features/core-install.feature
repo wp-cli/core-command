@@ -171,6 +171,26 @@ Feature: Install WordPress core
       """
     And the return code should be 0
 
+  Scenario: Install WordPress with locale set to de_DE
+    Given an empty directory
+    And WP files
+    And wp-config.php
+    And a database
+
+    # Old versions of WP can generate wpdb database errors if the WP tables don't exist, so STDERR may or may not be empty
+    When I run `wp core install --url=example.org --title=Test --admin_user=testadmin --admin_email=testadmin@example.com --admin_password=newpassword --locale=de_DE`
+    Then STDOUT should contain:
+      """
+      Success: WordPress installed successfully.
+      """
+    And the return code should be 0
+
+    When I run `wp taxonomy list`
+    Then STDOUT should contain:
+      """
+      Kategorien
+      """
+
   Scenario: Install WordPress multisite without specifying the password
     Given an empty directory
     And WP files
