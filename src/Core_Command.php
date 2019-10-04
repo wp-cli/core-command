@@ -629,15 +629,26 @@ class Core_Command extends WP_CLI_Command {
 			WP_CLI::error( "The '{$args['admin_email']}' email address is invalid." );
 		}
 
-		$result = wp_install(
-			$args['title'],
-			$args['admin_user'],
-			$args['admin_email'],
-			$public,
-			'',
-			$password,
-			$args['locale']
-		);
+		if ( \WP_CLI\Utils\wp_version_compare( '4.0', '>=' ) ) {
+			$result = wp_install(
+				$args['title'],
+				$args['admin_user'],
+				$args['admin_email'],
+				$public,
+				'',
+				$password,
+				$args['locale']
+			);
+		} else {
+			$result = wp_install(
+				$args['title'],
+				$args['admin_user'],
+				$args['admin_email'],
+				$public,
+				'',
+				$password
+			);
+		}
 
 		if ( is_wp_error( $result ) ) {
 			$reason = WP_CLI::error_to_string( $result );
