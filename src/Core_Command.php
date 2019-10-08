@@ -432,7 +432,7 @@ class Core_Command extends WP_CLI_Command {
 	 */
 	public function multisite_convert( $args, $assoc_args ) {
 		if ( is_multisite() ) {
-			WP_CLI::error( 'This already is a multisite install.' );
+			WP_CLI::error( 'This already is a multisite installation.' );
 		}
 
 		$assoc_args = self::set_multisite_defaults( $assoc_args );
@@ -867,7 +867,7 @@ EOT;
 
 		if ( ! is_readable( $versions_path ) ) {
 			WP_CLI::error(
-				"This does not seem to be a WordPress install.\n" .
+				"This does not seem to be a WordPress installation.\n" .
 				'Pass --path=`path/to/wordpress` or run `wp core download`.'
 			);
 		}
