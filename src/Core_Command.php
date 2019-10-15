@@ -97,6 +97,9 @@ class Core_Command extends WP_CLI_Command {
 	 *
 	 * ## OPTIONS
 	 *
+	 * [<download-url>]
+	 * : Download directly from a provided URL instead of fetching the URL from the wordpress.org servers.
+	 *
 	 * [--path=<path>]
 	 * : Specify the path in which to install WordPress. Defaults to current
 	 * directory.
@@ -104,11 +107,8 @@ class Core_Command extends WP_CLI_Command {
 	 * [--locale=<locale>]
 	 * : Select which language you want to download.
 	 *
-	 * [<download-url>]
-	 * : Download directly from a provided URL instead of fetching the URL from the wordpress.org servers.
-	 *
 	 * [--version=<version>]
-	 * : Select which version you want to download. Accepts a version number, 'latest' or 'nightly', or a URL.
+	 * : Select which version you want to download. Accepts a version number, 'latest' or 'nightly'.
 	 *
 	 * [--skip-content]
 	 * : Download WP without the default themes and plugins.
@@ -155,8 +155,18 @@ class Core_Command extends WP_CLI_Command {
 
 		$locale       = Utils\get_flag_value( $assoc_args, 'locale', 'en_US' );
 		$skip_content = Utils\get_flag_value( $assoc_args, 'skip-content' );
+		$from_url     = false;
 
-		if ( isset( $assoc_args['version'] ) && 'latest' !== $assoc_args['version'] ) {
+		if ( ! empty( $args[0] ) ) {
+			// URL is given
+			$version      = null;
+			$from_url     = true;
+			$download_url = $args[0];
+			if ( $skip_content || 'en_US' !== $locale ) {
+				WP_CLI::error( 'Skip content and locale options are not available for URL downloads.' );
+			}
+
+		} elseif ( isset( $assoc_args['version'] ) && 'latest' !== $assoc_args['version'] ) {
 			$version = $assoc_args['version'];
 			if ( in_array( strtolower( $version ), [ 'trunk', 'nightly' ], true ) ) {
 				$version = 'nightly';
@@ -167,13 +177,7 @@ class Core_Command extends WP_CLI_Command {
 				? 'zip'
 				: 'tar.gz';
 
-			if ( preg_match( '#^https?:#', $version ) ) {
-				// Already given a URL; we don't know the version.
-				$download_url = $version;
-				$version      = null;
-			} else {
-				$download_url = $this->get_download_url( $version, $locale, $extension );
-			}
+			$download_url = $this->get_download_url( $version, $locale, $extension );
 		} else {
 			$offer = $this->get_download_offer( $locale );
 			if ( ! $offer ) {
@@ -196,10 +200,10 @@ class Core_Command extends WP_CLI_Command {
 			$from_version = $wp_details['wp_version'];
 		}
 
-		if ( $version ) {
-			WP_CLI::log( "Downloading WordPress {$version} ({$locale})..." );
-		} else {
+		if ( $from_url ) {
 			WP_CLI::log( "Downloading from {$download_url} ..." );
+		} else {
+			WP_CLI::log( "Downloading WordPress {$version} ({$locale})..." );
 		}
 
 		$path_parts = pathinfo( $download_url );
@@ -214,16 +218,13 @@ class Core_Command extends WP_CLI_Command {
 		if ( $skip_content && 'zip' !== $extension ) {
 			WP_CLI::error( 'Skip content is only available for ZIP files.' );
 		}
-		if ( ( $skip_content || 'en_US' !== $locale ) && ! $version ) {
-			WP_CLI::error( 'Skip content and locale options are not available for URL downloads.' );
-		}
 
 		$cache = WP_CLI::get_cache();
-		if ( $version ) {
+		if ( $from_url ) {
+			$cache_file = null;
+		} else {
 			$cache_key  = "core/wordpress-{$version}-{$locale}.{$extension}";
 			$cache_file = $cache->has( $cache_key );
-		} else {
-			$cache_file = null;
 		}
 
 		$bad_cache = false;
@@ -291,7 +292,7 @@ class Core_Command extends WP_CLI_Command {
 
 			// Do not use the cache for nightly builds or for downloaded URLs
 			// (the URL could be something like "latest.zip" or "nightly.zip").
-			if ( $version && 'nightly' !== $version ) {
+			if ( ! $from_url && 'nightly' !== $version ) {
 				$cache->import( $cache_key, $temp );
 			}
 		}
