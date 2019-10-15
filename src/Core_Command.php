@@ -211,7 +211,7 @@ class Core_Command extends WP_CLI_Command {
 		if ( $skip_content && 'zip' !== $extension ) {
 			WP_CLI::error( 'Skip content is only available for ZIP files.' );
 		}
-		if ( ( $skip_content || $locale !== 'en_US' ) && ! $version ) {
+		if ( ( $skip_content || 'en_US' !== $locale ) && ! $version ) {
 			WP_CLI::error( 'Skip content and locale options are not available for URL downloads.' );
 		}
 
