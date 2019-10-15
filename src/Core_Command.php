@@ -162,6 +162,9 @@ class Core_Command extends WP_CLI_Command {
 			$version      = null;
 			$from_url     = true;
 			$download_url = $args[0];
+			if ( isset( $assoc_args['version'] ) ) {
+				WP_CLI::error( 'Version option is not available for URL downloads.' );
+			}
 			if ( $skip_content || 'en_US' !== $locale ) {
 				WP_CLI::error( 'Skip content and locale options are not available for URL downloads.' );
 			}
