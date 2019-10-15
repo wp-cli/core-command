@@ -104,6 +104,9 @@ class Core_Command extends WP_CLI_Command {
 	 * [--locale=<locale>]
 	 * : Select which language you want to download.
 	 *
+	 * [<download-url>]
+	 * : Download directly from a provided URL instead of fetching the URL from the wordpress.org servers.
+	 *
 	 * [--version=<version>]
 	 * : Select which version you want to download. Accepts a version number, 'latest' or 'nightly', or a URL.
 	 *
