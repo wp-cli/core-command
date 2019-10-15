@@ -340,7 +340,7 @@ Feature: Download WordPress
   Scenario: Core download without the wp-content dir should work non US locale
     Given an empty directory
 
-    When I run `wp core download --skip-content --locale=nl_NL`
+    When I run `wp core download --skip-content --version=4.9.11 --locale=nl_NL`
     Then STDOUT should contain:
       """
       Success: WordPress downloaded.
