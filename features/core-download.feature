@@ -66,7 +66,7 @@ Feature: Download WordPress
     Given an empty directory
     And an empty cache
 
-    When I run `wp core download --version=https://wordpress.org/wordpress-4.9.12.zip`
+    When I run `wp core download https://wordpress.org/wordpress-4.9.12.zip`
     Then the wp-settings.php file should exist
     And the {SUITE_CACHE_DIR}/core directory should not exist
     And STDOUT should contain:
