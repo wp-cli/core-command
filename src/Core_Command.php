@@ -161,7 +161,6 @@ class Core_Command extends WP_CLI_Command {
 
 		if ( $from_url ) {
 			$version      = null;
-			$from_url     = true;
 			$download_url = $args[0];
 			if ( isset( $assoc_args['version'] ) ) {
 				WP_CLI::error( 'Version option is not available for URL downloads.' );
