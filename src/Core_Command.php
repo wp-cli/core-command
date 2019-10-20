@@ -160,7 +160,6 @@ class Core_Command extends WP_CLI_Command {
 		$from_url             = ! empty( $download_url );
 
 		if ( $from_url ) {
-			// URL is given
 			$version      = null;
 			$from_url     = true;
 			$download_url = $args[0];
