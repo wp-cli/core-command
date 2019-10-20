@@ -268,7 +268,7 @@ class Core_Command extends WP_CLI_Command {
 
 			if ( 'nightly' !== $version ) {
 				$md5_response = Utils\http_request( 'GET', $download_url . '.md5' );
-				if ( 200 === $md5_response->status_code ) {
+				if ( $md5_response->status_code >= 200 && $md5_response->status_code < 300 ) {
 					$md5_file = md5_file( $temp );
 
 					if ( $md5_file === $md5_response->body ) {
