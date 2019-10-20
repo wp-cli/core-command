@@ -155,7 +155,9 @@ class Core_Command extends WP_CLI_Command {
 
 		$locale       = Utils\get_flag_value( $assoc_args, 'locale', 'en_US' );
 		$skip_content = Utils\get_flag_value( $assoc_args, 'skip-content' );
-		$from_url     = false;
+
+		list( $download_url ) = $args;
+		$from_url             = ! empty( $download_url );
 
 		if ( ! empty( $args[0] ) ) {
 			// URL is given
