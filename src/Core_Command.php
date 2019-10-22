@@ -97,6 +97,9 @@ class Core_Command extends WP_CLI_Command {
 	 *
 	 * ## OPTIONS
 	 *
+	 * [<download-url>]
+	 * : Download directly from a provided URL instead of fetching the URL from the wordpress.org servers.
+	 *
 	 * [--path=<path>]
 	 * : Specify the path in which to install WordPress. Defaults to current
 	 * directory.
@@ -105,7 +108,7 @@ class Core_Command extends WP_CLI_Command {
 	 * : Select which language you want to download.
 	 *
 	 * [--version=<version>]
-	 * : Select which version you want to download. Accepts a version number, 'latest' or 'nightly'
+	 * : Select which version you want to download. Accepts a version number, 'latest' or 'nightly'.
 	 *
 	 * [--skip-content]
 	 * : Download WP without the default themes and plugins.
@@ -153,7 +156,18 @@ class Core_Command extends WP_CLI_Command {
 		$locale       = Utils\get_flag_value( $assoc_args, 'locale', 'en_US' );
 		$skip_content = Utils\get_flag_value( $assoc_args, 'skip-content' );
 
-		if ( isset( $assoc_args['version'] ) && 'latest' !== $assoc_args['version'] ) {
+		$download_url = array_shift( $args );
+		$from_url     = ! empty( $download_url );
+
+		if ( $from_url ) {
+			$version = null;
+			if ( isset( $assoc_args['version'] ) ) {
+				WP_CLI::error( 'Version option is not available for URL downloads.' );
+			}
+			if ( $skip_content || 'en_US' !== $locale ) {
+				WP_CLI::error( 'Skip content and locale options are not available for URL downloads.' );
+			}
+		} elseif ( isset( $assoc_args['version'] ) && 'latest' !== $assoc_args['version'] ) {
 			$version = $assoc_args['version'];
 			if ( in_array( strtolower( $version ), [ 'trunk', 'nightly' ], true ) ) {
 				$version = 'nightly';
@@ -187,7 +201,11 @@ class Core_Command extends WP_CLI_Command {
 			$from_version = $wp_details['wp_version'];
 		}
 
-		WP_CLI::log( "Downloading WordPress {$version} ({$locale})..." );
+		if ( $from_url ) {
+			WP_CLI::log( "Downloading from {$download_url} ..." );
+		} else {
+			WP_CLI::log( "Downloading WordPress {$version} ({$locale})..." );
+		}
 
 		$path_parts = pathinfo( $download_url );
 		$extension  = 'tar.gz';
@@ -202,9 +220,13 @@ class Core_Command extends WP_CLI_Command {
 			WP_CLI::error( 'Skip content is only available for ZIP files.' );
 		}
 
-		$cache      = WP_CLI::get_cache();
-		$cache_key  = "core/wordpress-{$version}-{$locale}.{$extension}";
-		$cache_file = $cache->has( $cache_key );
+		$cache = WP_CLI::get_cache();
+		if ( $from_url ) {
+			$cache_file = null;
+		} else {
+			$cache_key  = "core/wordpress-{$version}-{$locale}.{$extension}";
+			$cache_file = $cache->has( $cache_key );
+		}
 
 		$bad_cache = false;
 		if ( $cache_file ) {
@@ -246,16 +268,16 @@ class Core_Command extends WP_CLI_Command {
 
 			if ( 'nightly' !== $version ) {
 				$md5_response = Utils\http_request( 'GET', $download_url . '.md5' );
-				if ( 20 !== (int) substr( $md5_response->status_code, 0, 2 ) ) {
-					WP_CLI::error( "Couldn't access md5 hash for release (HTTP code {$response->status_code})." );
-				}
+				if ( $md5_response->status_code >= 200 && $md5_response->status_code < 300 ) {
+					$md5_file = md5_file( $temp );
 
-				$md5_file = md5_file( $temp );
-
-				if ( $md5_file === $md5_response->body ) {
-					WP_CLI::log( 'md5 hash verified: ' . $md5_file );
+					if ( $md5_file === $md5_response->body ) {
+						WP_CLI::log( 'md5 hash verified: ' . $md5_file );
+					} else {
+						WP_CLI::error( "md5 hash for download ({$md5_file}) is different than the release hash ({$md5_response->body})." );
+					}
 				} else {
-					WP_CLI::error( "md5 hash for download ({$md5_file}) is different than the release hash ({$md5_response->body})." );
+					WP_CLI::warning( "Couldn't access md5 hash for release ({$download_url}.md5, HTTP code {$md5_response->status_code})." );
 				}
 			} else {
 				WP_CLI::warning( 'md5 hash checks are not available for nightly downloads.' );
@@ -269,7 +291,9 @@ class Core_Command extends WP_CLI_Command {
 				WP_CLI::error( "Couldn't extract WordPress archive. {$exception->getMessage()}" );
 			}
 
-			if ( 'nightly' !== $version ) {
+			// Do not use the cache for nightly builds or for downloaded URLs
+			// (the URL could be something like "latest.zip" or "nightly.zip").
+			if ( ! $from_url && 'nightly' !== $version ) {
 				$cache->import( $cache_key, $temp );
 			}
 		}
