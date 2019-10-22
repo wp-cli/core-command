@@ -62,6 +62,20 @@ Feature: Download WordPress
       """
     And the return code should be 1
 
+  Scenario: Core download from a URL
+    Given an empty directory
+    And an empty cache
+
+    When I run `wp core download https://wordpress.org/wordpress-4.9.12.zip`
+    Then the wp-settings.php file should exist
+    And the {SUITE_CACHE_DIR}/core directory should not exist
+    And STDOUT should contain:
+      """
+      Downloading from https://wordpress.org/wordpress-4.9.12.zip ...
+      md5 hash verified: 702c94bc3aa8a37091f9fb075d57d847
+      Success: WordPress downloaded.
+      """
+
   Scenario: Verify release hash when downloading new version
     Given an empty directory
     And an empty cache
