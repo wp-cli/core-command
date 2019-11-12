@@ -90,7 +90,7 @@ or success message when up to date.
 Downloads core WordPress files.
 
 ~~~
-wp core download [--path=<path>] [--locale=<locale>] [--version=<version>] [--skip-content] [--force]
+wp core download [<download-url>] [--path=<path>] [--locale=<locale>] [--version=<version>] [--skip-content] [--force]
 ~~~
 
 Downloads and extracts WordPress core files to the specified path. Uses
@@ -100,6 +100,9 @@ Subsequent uses of command will use the local cache if it still exists.
 
 **OPTIONS**
 
+	[<download-url>]
+		Download directly from a provided URL instead of fetching the URL from the wordpress.org servers.
+
 	[--path=<path>]
 		Specify the path in which to install WordPress. Defaults to current
 		directory.
@@ -108,7 +111,7 @@ Subsequent uses of command will use the local cache if it still exists.
 		Select which language you want to download.
 
 	[--version=<version>]
-		Select which version you want to download. Accepts a version number, 'latest' or 'nightly'
+		Select which version you want to download. Accepts a version number, 'latest' or 'nightly'.
 
 	[--skip-content]
 		Download WP without the default themes and plugins.
