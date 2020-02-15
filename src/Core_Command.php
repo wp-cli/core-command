@@ -348,7 +348,7 @@ class Core_Command extends WP_CLI_Command {
 	 *     1
 	 *
 	 *     # Bash script for checking whether WordPress is installed or not
-	 *     if ! $(wp core is-installed); then
+	 *     if ! wp core is-installed; then
 	 *         wp core install
 	 *     fi
 	 *
