@@ -368,6 +368,7 @@ Feature: Download WordPress
       """
       Success: WordPress downloaded.
       """
+    And the wp-includes directory should exist
     And the wp-content/plugins directory should not exist
 
   Scenario: Core download without the wp-content/themes dir should work non US locale
@@ -398,4 +399,5 @@ Feature: Download WordPress
       """
       Success: WordPress downloaded.
       """
+    And the wp-includes directory should exist
     And the wp-content/themes directory should not exist
