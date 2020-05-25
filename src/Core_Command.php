@@ -394,7 +394,7 @@ class Core_Command extends WP_CLI_Command {
 	 * : The email address for the admin user.
 	 *
 	 * [--locale=<locale>]
-	 * : The locale/language for the installation (e.g. `de_DE`). Default is empty.
+	 * : The locale/language for the installation (e.g. `de_DE`). Default is `en_US`.
 	 *
 	 * [--skip-email]
 	 * : Don't send an email notification to the new admin user.
@@ -608,7 +608,7 @@ class Core_Command extends WP_CLI_Command {
 			'admin_password' => '',
 		];
 
-		if ( \WP_CLI\Utils\wp_version_compare( '4.0', '>=' ) ) {
+		if ( Utils\wp_version_compare( '4.0', '>=' ) ) {
 			$defaults['locale'] = '';
 		}
 
@@ -629,7 +629,7 @@ class Core_Command extends WP_CLI_Command {
 			WP_CLI::error( "The '{$args['admin_email']}' email address is invalid." );
 		}
 
-		if ( \WP_CLI\Utils\wp_version_compare( '4.0', '>=' ) ) {
+		if ( Utils\wp_version_compare( '4.0', '>=' ) ) {
 			$result = wp_install(
 				$args['title'],
 				$args['admin_user'],
