@@ -32,7 +32,7 @@ Feature: Update core's database
     When I run `wp option get db_version`
     Then STDOUT should be:
       """
-      29630
+      45805
       """
 
   Scenario: Update db across network
