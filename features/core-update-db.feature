@@ -2,8 +2,8 @@ Feature: Update core's database
 
   Scenario: Update db on a single site
     Given a WP install
-    And I run `wp core download --version=4.1 --force`
-    And I run `wp option update db_version 29630`
+    And I run `wp core download --version=5.4 --force`
+    And I run `wp option update db_version 45805`
 
     When I run `wp core update-db`
     Then STDOUT should contain:
@@ -19,8 +19,8 @@ Feature: Update core's database
 
   Scenario: Dry run update db on a single site
     Given a WP install
-    And I run `wp core download --version=4.1 --force`
-    And I run `wp option update db_version 29630`
+    And I run `wp core download --version=5.4 --force`
+    And I run `wp option update db_version 45805`
 
     When I run `wp core update-db --dry-run`
     Then STDOUT should be:
@@ -37,9 +37,9 @@ Feature: Update core's database
 
   Scenario: Update db across network
     Given a WP multisite install
-    And I run `wp core download --version=4.1 --force`
-    And I run `wp option update db_version 29630`
-    And I run `wp site option update wpmu_upgrade_site 29630`
+    And I run `wp core download --version=5.4 --force`
+    And I run `wp option update db_version 45805`
+    And I run `wp site option update wpmu_upgrade_site 45805`
     And I run `wp site create --slug=foo`
     And I run `wp site create --slug=bar`
     And I run `wp site create --slug=burrito --porcelain`
@@ -69,9 +69,9 @@ Feature: Update core's database
 
   Scenario: Update db across network, dry run
     Given a WP multisite install
-    And I run `wp core download --version=4.1 --force`
-    And I run `wp option update db_version 29630`
-    And I run `wp site option update wpmu_upgrade_site 29630`
+    And I run `wp core download --version=5.4 --force`
+    And I run `wp option update db_version 45805`
+    And I run `wp site option update wpmu_upgrade_site 45805`
     And I run `wp site create --slug=foo`
     And I run `wp site create --slug=bar`
     And I run `wp site create --slug=burrito --porcelain`
