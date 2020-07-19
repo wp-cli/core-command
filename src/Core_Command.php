@@ -132,7 +132,7 @@ class Core_Command extends WP_CLI_Command {
 			: ABSPATH;
 
 		//look for any files or folders with wp- prefix
-		$wordpress_present = (count(glob($download_dir . 'wp-*')) > 0) ? true : false; 
+		$wordpress_present = ( count( glob( $download_dir . 'wp-*' ) ) > 0 ) ? true : false;
 
 		if ( $wordpress_present && ! Utils\get_flag_value( $assoc_args, 'force' ) ) {
 			WP_CLI::error( 'WordPress files seem to already be present here.' );
