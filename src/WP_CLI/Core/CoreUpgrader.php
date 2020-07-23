@@ -28,7 +28,7 @@ class CoreUpgrader extends DefaultCoreUpgrader {
 	 * @param array  $hook_extra       Extra arguments to pass to the filter hooks. Default empty array.
 	 * @return string|WP_Error The full path to the downloaded package file, or a WP_Error object.
 	 */
-	public function download_package( $package, $check_signatures = true, $hook_extra = array() ) {
+	public function download_package( $package, $check_signatures = true, $hook_extra = [] ) {
 
 		/**
 		 * Filter whether to return the package.
