@@ -132,7 +132,6 @@ class Core_Command extends WP_CLI_Command {
 			: ABSPATH;
 
 		//look for files to check if wordpress exists or not
-		$wordpress_present = ( count( glob( $download_dir . 'wp-*' ) ) > 0 ) ? true : false;
 		$wordpress_present = is_readable( $download_dir . 'wp-load.php' ) 
 			|| is_readable( $download_dir . 'wp-mail.php' )
 			|| is_readable( $download_dir . 'wp-cron.php' )
