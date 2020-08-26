@@ -44,7 +44,8 @@ class CoreUpgrader extends DefaultCoreUpgrader {
 			'upgrader_pre_download',
 			false,
 			$package,
-			$this
+			$this,
+			$hook_extra
 		);
 		if ( false !== $reply ) {
 			return $reply;
