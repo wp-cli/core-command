@@ -79,7 +79,7 @@ Feature: Update WordPress core
       """
     And STDERR should contain:
       """
-      Notice: Undefined variable: base
+      Undefined variable
       """
     And the return code should be 0
 
