@@ -38,7 +38,8 @@ Feature: Update WordPress core
     When I run `wp core download --version=3.7.9 --force`
     Then STDOUT should not be empty
 
-    When I run `wp core update --minor`
+    # WP core throws notice for PHP 8+.
+    When I try `wp core update --minor`
     Then STDOUT should contain:
       """
       Updating to version {WP_VERSION-3.7-latest}
@@ -78,7 +79,7 @@ Feature: Update WordPress core
       """
     And STDERR should contain:
       """
-      Notice: Undefined variable: base
+      Undefined variable
       """
     And the return code should be 0
 
@@ -276,7 +277,7 @@ Feature: Update WordPress core
       Warning: Checksums not available for WordPress {WP_VERSION-4.0-latest}/es_ES. Please cleanup files manually.
       """
     And the return code should be 0
-    
+
   @require-php-5.6
   Scenario Outline: Use `--version=(nightly|trunk)` to update to the latest nightly version
     Given a WP install
