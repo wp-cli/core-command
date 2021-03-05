@@ -312,13 +312,13 @@ Feature: Manage WordPress installation
       define('DB_NAME', 'wp_cli_test');
 
       /** MySQL database username */
-      define('DB_USER', 'wp_cli_test');
+      define('DB_USER', '{DB_USER}');
 
       /** MySQL database password */
-      define('DB_PASSWORD', 'password1');
+      define('DB_PASSWORD', '{DB_PASSWORD}');
 
       /** MySQL hostname */
-      define('DB_HOST', '127.0.0.1');
+      define('DB_HOST', '{DB_HOST}');
 
       /** Database Charset to use in creating database tables. */
       define('DB_CHARSET', 'utf8');

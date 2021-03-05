@@ -51,7 +51,8 @@ Feature: Check for more recent versions
       """
     And the return code should be 0
 
-    When I run `wp core check-update --minor`
+    # WP core throws notice for PHP 8+.
+    When I try `wp core check-update --minor`
     Then STDOUT should be a table containing rows:
       | version                 | update_type | package_url                                                                             |
       | {WP_VERSION-4.0-latest} | minor       | https://downloads.wordpress.org/release/wordpress-{WP_VERSION-4.0-latest}-partial-0.zip |
