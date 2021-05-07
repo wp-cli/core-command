@@ -1079,7 +1079,6 @@ EOT;
 		global $wp_version;
 
 		$update   = null;
-		$from_api = null;
 		$upgrader = 'WP_CLI\\Core\\CoreUpgrader';
 
 		if ( 'trunk' === Utils\get_flag_value( $assoc_args, 'version' ) ) {
@@ -1169,9 +1168,10 @@ EOT;
 			}
 
 			$from_version = $wp_version;
+			$insecure     = (bool) Utils\get_flag_value( $assoc_args, 'insecure', false );
 
 			$GLOBALS['wpcli_core_update_obj'] = $update;
-			$result                           = Utils\get_upgrader( $upgrader )->upgrade( $update );
+			$result                           = Utils\get_upgrader( $upgrader, $insecure )->upgrade( $update );
 			unset( $GLOBALS['wpcli_core_update_obj'] );
 
 			if ( is_wp_error( $result ) ) {
@@ -1189,8 +1189,7 @@ EOT;
 					$to_version = $wp_details['wp_version'];
 				}
 
-				$locale   = (string) Utils\get_flag_value( $assoc_args, 'locale', get_locale() );
-				$insecure = (bool) Utils\get_flag_value( $assoc_args, 'insecure', false );
+				$locale = (string) Utils\get_flag_value( $assoc_args, 'locale', get_locale() );
 				$this->cleanup_extra_files( $from_version, $to_version, $locale, $insecure );
 
 				WP_CLI::success( 'WordPress updated successfully.' );

@@ -18,6 +18,23 @@ use WP_Filesystem_Base;
 class CoreUpgrader extends DefaultCoreUpgrader {
 
 	/**
+	 * Whether to retry without certificate validation on TLS handshake failure.
+	 *
+	 * @var bool
+	 */
+	private $insecure;
+
+	/**
+	 * CoreUpgrader constructor.
+	 *
+	 * @param WP_Upgrader_Skin|null $skin
+	 */
+	public function __construct( $skin = null, $insecure = false ) {
+		$this->insecure = $insecure;
+		parent::__construct( $skin );
+	}
+
+	/**
 	 * Caches the download, and uses cached if available.
 	 *
 	 * @access public
@@ -93,6 +110,7 @@ class CoreUpgrader extends DefaultCoreUpgrader {
 			'timeout'       => 600,  // 10 minutes ought to be enough for everybody.
 			'filename'      => $temp,
 			'halt_on_error' => false,
+			'insecure'      => $this->insecure,
 		];
 
 		$this->skin->feedback( 'downloading_package', $package );
