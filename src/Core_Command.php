@@ -1,6 +1,7 @@
 <?php
 
 use Composer\Semver\Comparator;
+use WP_CLI\ExitException;
 use WP_CLI\Extractor;
 use WP_CLI\Iterators\Table as TableIterator;
 use WP_CLI\Utils;
@@ -116,6 +117,9 @@ class Core_Command extends WP_CLI_Command {
 	 * [--force]
 	 * : Overwrites existing files, if present.
 	 *
+	 * [--insecure]
+	 * : Retry download without certificate validation if TLS handshake fails. Note: This makes the request vulnerable to a MITM attack.
+	 *
 	 * ## EXAMPLES
 	 *
 	 *     $ wp core download --locale=nl_NL
@@ -153,8 +157,9 @@ class Core_Command extends WP_CLI_Command {
 			WP_CLI::error( "'{$download_dir}' is not writable by current user." );
 		}
 
-		$locale       = Utils\get_flag_value( $assoc_args, 'locale', 'en_US' );
-		$skip_content = Utils\get_flag_value( $assoc_args, 'skip-content' );
+		$locale       = (string) Utils\get_flag_value( $assoc_args, 'locale', 'en_US' );
+		$skip_content = (bool) Utils\get_flag_value( $assoc_args, 'skip-content', false );
+		$insecure     = (bool) Utils\get_flag_value( $assoc_args, 'insecure', false );
 
 		$download_url = array_shift( $args );
 		$from_url     = ! empty( $download_url );
@@ -180,7 +185,7 @@ class Core_Command extends WP_CLI_Command {
 
 			$download_url = $this->get_download_url( $version, $locale, $extension );
 		} else {
-			$offer = $this->get_download_offer( $locale );
+			$offer = $this->get_download_offer( $locale, $insecure );
 			if ( ! $offer ) {
 				WP_CLI::error( "The requested locale ({$locale}) was not found." );
 			}
@@ -256,6 +261,7 @@ class Core_Command extends WP_CLI_Command {
 			$options = [
 				'timeout'  => 600,  // 10 minutes ought to be enough for everybody
 				'filename' => $temp,
+				'insecure' => $insecure,
 			];
 
 			$response = Utils\http_request( 'GET', $download_url, null, $headers, $options );
@@ -267,7 +273,8 @@ class Core_Command extends WP_CLI_Command {
 			}
 
 			if ( 'nightly' !== $version ) {
-				$md5_response = Utils\http_request( 'GET', $download_url . '.md5' );
+				unset( $options['filename'] );
+				$md5_response = Utils\http_request( 'GET', $download_url . '.md5', null, [], $options );
 				if ( $md5_response->status_code >= 200 && $md5_response->status_code < 300 ) {
 					$md5_file = md5_file( $temp );
 
@@ -299,24 +306,46 @@ class Core_Command extends WP_CLI_Command {
 		}
 
 		if ( $wordpress_present ) {
-			$this->cleanup_extra_files( $from_version, $version, $locale );
+			$this->cleanup_extra_files( $from_version, $version, $locale, $insecure );
 		}
 
 		WP_CLI::success( 'WordPress downloaded.' );
 	}
 
-	private static function read( $url ) {
-		$headers  = [ 'Accept' => 'application/json' ];
-		$response = Utils\http_request( 'GET', $url, null, $headers, [ 'timeout' => 30 ] );
-		if ( 200 === $response->status_code ) {
-			return $response->body;
-		} else {
+	/**
+	 * Read content from one of the WordPress.org API endpoints.
+	 *
+	 * @param string $url      URL of the WordPress.org API endpoint to use.
+	 * @param bool   $insecure Whether to retry without certificate validation on TLS handshake failure.
+	 * @return string String with a set of PHP define() statements to define the salts.
+	 * @throws ExitException If the remote request failed.
+	 */
+	private static function read( $url, $insecure ) {
+		$headers = [ 'Accept' => 'application/json' ];
+		$options = [
+			'timeout'  => 30,
+			'insecure' => $insecure,
+		];
+
+		$response = Utils\http_request( 'GET', $url, null, $headers, $options );
+
+		if ( 200 !== $response->status_code ) {
 			WP_CLI::error( "Couldn't fetch response from {$url} (HTTP code {$response->status_code})." );
 		}
+
+		return $response->body;
 	}
 
-	private function get_download_offer( $locale ) {
-		$out = self::read( 'https://api.wordpress.org/core/version-check/1.7/?locale=' . $locale );
+	/**
+	 * Get a download offer from the WordPress.org API.
+	 *
+	 * @param string $locale   Locale to request an offer from.
+	 * @param bool   $insecure Whether to retry without certificate validation on TLS handshake failure.
+	 * @return stdClass|false Offer object, or false if none was returned.
+	 * @throws ExitException If the remote request failed.
+	 */
+	private function get_download_offer( $locale, $insecure ) {
+		$out = self::read( 'https://api.wordpress.org/core/version-check/1.7/?locale=' . $locale, $insecure );
 		$out = function_exists( 'wp_json_decode' )
 			? wp_json_decode( $out )
 			: json_decode( $out );
@@ -952,16 +981,20 @@ EOT;
 	/**
 	 * Security copy of the core function with Requests - Gets the checksums for the given version of WordPress.
 	 *
-	 * @param string $version Version string to query.
-	 * @param string $locale  Locale to query.
+	 * @param string $version  Version string to query.
+	 * @param string $locale   Locale to query.
+	 * @param bool   $insecure Whether to retry without certificate validation on TLS handshake failure.
 	 * @return string|array String message on failure. An array of checksums on success.
 	 */
-	private static function get_core_checksums( $version, $locale ) {
+	private static function get_core_checksums( $version, $locale, $insecure ) {
 		$query = http_build_query( compact( 'version', 'locale' ), null, '&' );
 		$url   = "https://api.wordpress.org/core/checksums/1.0/?{$query}";
 
-		$options = [ 'timeout' => 30 ];
 		$headers = [ 'Accept' => 'application/json' ];
+		$options = [
+			'timeout'  => 30,
+			'insecure' => $insecure,
+		];
 
 		$response = Utils\http_request( 'GET', $url, null, $headers, $options );
 
@@ -1006,6 +1039,9 @@ EOT;
 	 *
 	 * [--locale=<locale>]
 	 * : Select which language you want to download.
+	 *
+	 * [--insecure]
+	 * : Retry download without certificate validation if TLS handshake fails. Note: This makes the request vulnerable to a MITM attack.
 	 *
 	 * ## EXAMPLES
 	 *
@@ -1094,7 +1130,7 @@ EOT;
 					list( $update ) = $from_api->updates;
 				}
 			}
-		} elseif ( \WP_CLI\Utils\wp_version_compare( $assoc_args['version'], '<' )
+		} elseif ( Utils\wp_version_compare( $assoc_args['version'], '<' )
 			|| 'nightly' === $assoc_args['version']
 			|| Utils\get_flag_value( $assoc_args, 'force' ) ) {
 
@@ -1153,8 +1189,9 @@ EOT;
 					$to_version = $wp_details['wp_version'];
 				}
 
-				$locale = Utils\get_flag_value( $assoc_args, 'locale', get_locale() );
-				$this->cleanup_extra_files( $from_version, $to_version, $locale );
+				$locale   = (string) Utils\get_flag_value( $assoc_args, 'locale', get_locale() );
+				$insecure = (bool) Utils\get_flag_value( $assoc_args, 'insecure', false );
+				$this->cleanup_extra_files( $from_version, $to_version, $locale, $insecure );
 
 				WP_CLI::success( 'WordPress updated successfully.' );
 			}
@@ -1347,18 +1384,26 @@ EOT;
 		return array_values( $updates );
 	}
 
-	private function cleanup_extra_files( $version_from, $version_to, $locale ) {
+	/**
+	 * Clean up extra files.
+	 *
+	 * @param string $version_from Starting version that the installation was updated from.
+	 * @param string $version_to   Target version that the installation is updated to.
+	 * @param string $locale       Locale of the installation.
+	 * @param bool   $insecure     Whether to retry without certificate validation on TLS handshake failure.
+	 */
+	private function cleanup_extra_files( $version_from, $version_to, $locale, $insecure ) {
 		if ( ! $version_from || ! $version_to ) {
 			WP_CLI::warning( 'Failed to find WordPress version. Please cleanup files manually.' );
 			return;
 		}
 
-		$old_checksums = self::get_core_checksums( $version_from, $locale ?: 'en_US' );
+		$old_checksums = self::get_core_checksums( $version_from, $locale ?: 'en_US', $insecure );
 		if ( ! is_array( $old_checksums ) ) {
 			WP_CLI::warning( "{$old_checksums} Please cleanup files manually." );
 			return;
 		}
-		$new_checksums = self::get_core_checksums( $version_to, $locale ?: 'en_US' );
+		$new_checksums = self::get_core_checksums( $version_to, $locale ?: 'en_US', $insecure );
 		if ( ! is_array( $new_checksums ) ) {
 			WP_CLI::warning( "{$new_checksums} Please cleanup files manually." );
 			return;
