@@ -1,7 +1,6 @@
 <?php
 
 use Composer\Semver\Comparator;
-use WP_CLI\ExitException;
 use WP_CLI\Extractor;
 use WP_CLI\Iterators\Table as TableIterator;
 use WP_CLI\Utils;
@@ -195,8 +194,8 @@ class Core_Command extends WP_CLI_Command {
 			if ( ! $offer ) {
 				WP_CLI::error( "The requested locale ({$locale}) was not found." );
 			}
-			$version      = $offer->current;
-			$download_url = $offer->download;
+			$version      = $offer['current'];
+			$download_url = $offer['download'];
 			if ( ! $skip_content ) {
 				$download_url = str_replace( '.zip', '.tar.gz', $download_url );
 			}
