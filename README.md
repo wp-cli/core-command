@@ -3,7 +3,7 @@ wp-cli/core-command
 
 Downloads, installs, updates, and manages a WordPress installation.
 
-[![Build Status](https://travis-ci.org/wp-cli/core-command.svg?branch=master)](https://travis-ci.org/wp-cli/core-command)
+
 
 Quick links: [Using](#using) | [Installing](#installing) | [Contributing](#contributing) | [Support](#support)
 
@@ -204,7 +204,7 @@ to communicate whether WordPress is installed.
     1
 
     # Bash script for checking whether WordPress is installed or not
-    if ! $(wp core is-installed); then
+    if ! wp core is-installed; then
         wp core install
     fi
 
