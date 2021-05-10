@@ -90,7 +90,7 @@ or success message when up to date.
 Downloads core WordPress files.
 
 ~~~
-wp core download [<download-url>] [--path=<path>] [--locale=<locale>] [--version=<version>] [--skip-content] [--force]
+wp core download [<download-url>] [--path=<path>] [--locale=<locale>] [--version=<version>] [--skip-content] [--force] [--insecure]
 ~~~
 
 Downloads and extracts WordPress core files to the specified path. Uses
@@ -118,6 +118,9 @@ Subsequent uses of command will use the local cache if it still exists.
 
 	[--force]
 		Overwrites existing files, if present.
+
+	[--insecure]
+		Retry download without certificate validation if TLS handshake fails. Note: This makes the request vulnerable to a MITM attack.
 
 **EXAMPLES**
 
@@ -317,7 +320,7 @@ file with the appropriate multisite rewrite rules.
 Updates WordPress to a newer version.
 
 ~~~
-wp core update [<zip>] [--minor] [--version=<version>] [--force] [--locale=<locale>]
+wp core update [<zip>] [--minor] [--version=<version>] [--force] [--locale=<locale>] [--insecure]
 ~~~
 
 Defaults to updating WordPress to the latest version.
@@ -342,6 +345,9 @@ update isn't actually running.
 
 	[--locale=<locale>]
 		Select which language you want to download.
+
+	[--insecure]
+		Retry download without certificate validation if TLS handshake fails. Note: This makes the request vulnerable to a MITM attack.
 
 **EXAMPLES**
 
