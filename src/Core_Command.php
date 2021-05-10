@@ -6,6 +6,7 @@ use WP_CLI\Extractor;
 use WP_CLI\Iterators\Table as TableIterator;
 use WP_CLI\Utils;
 use WP_CLI\Formatter;
+use WP_CLI\WpOrgApi;
 
 /**
  * Downloads, installs, updates, and manages a WordPress installation.
@@ -185,7 +186,12 @@ class Core_Command extends WP_CLI_Command {
 
 			$download_url = $this->get_download_url( $version, $locale, $extension );
 		} else {
-			$offer = $this->get_download_offer( $locale, $insecure );
+			try {
+				$offer = ( new WpOrgApi( [ 'insecure' => $insecure ] ) )
+					->get_core_download_offer( $locale );
+			} catch ( Exception $exception ) {
+				WP_CLI::error( $exception );
+			}
 			if ( ! $offer ) {
 				WP_CLI::error( "The requested locale ({$locale}) was not found." );
 			}
@@ -310,53 +316,6 @@ class Core_Command extends WP_CLI_Command {
 		}
 
 		WP_CLI::success( 'WordPress downloaded.' );
-	}
-
-	/**
-	 * Read content from one of the WordPress.org API endpoints.
-	 *
-	 * @param string $url      URL of the WordPress.org API endpoint to use.
-	 * @param bool   $insecure Whether to retry without certificate validation on TLS handshake failure.
-	 * @return string String with a set of PHP define() statements to define the salts.
-	 * @throws ExitException If the remote request failed.
-	 */
-	private static function read( $url, $insecure ) {
-		$headers = [ 'Accept' => 'application/json' ];
-		$options = [
-			'timeout'  => 30,
-			'insecure' => $insecure,
-		];
-
-		$response = Utils\http_request( 'GET', $url, null, $headers, $options );
-
-		if ( 200 !== $response->status_code ) {
-			WP_CLI::error( "Couldn't fetch response from {$url} (HTTP code {$response->status_code})." );
-		}
-
-		return $response->body;
-	}
-
-	/**
-	 * Get a download offer from the WordPress.org API.
-	 *
-	 * @param string $locale   Locale to request an offer from.
-	 * @param bool   $insecure Whether to retry without certificate validation on TLS handshake failure.
-	 * @return stdClass|false Offer object, or false if none was returned.
-	 * @throws ExitException If the remote request failed.
-	 */
-	private function get_download_offer( $locale, $insecure ) {
-		$out = self::read( 'https://api.wordpress.org/core/version-check/1.7/?locale=' . $locale, $insecure );
-		$out = function_exists( 'wp_json_decode' )
-			? wp_json_decode( $out )
-			: json_decode( $out );
-
-		$offer = $out->offers[0];
-
-		if ( $offer->locale !== $locale ) {
-			return false;
-		}
-
-		return $offer;
 	}
 
 	/**
