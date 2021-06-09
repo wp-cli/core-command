@@ -34,6 +34,8 @@ labels:
     color: c5def5
   - name: command:core-multisite-install
     color: c5def5
+  - name: command:core-release
+    color: c5def5
   - name: command:core-update
     color: c5def5
   - name: command:core-update-db
