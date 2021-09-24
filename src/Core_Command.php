@@ -1039,6 +1039,11 @@ EOT;
 		$update   = null;
 		$upgrader = 'WP_CLI\\Core\\CoreUpgrader';
 
+		// Do not automatically check translations updates after updating Core.
+		add_action( 'upgrader_process_complete', function() {
+			remove_action( 'upgrader_process_complete', array( 'Language_Pack_Upgrader', 'async_upgrade' ), 20 );
+		}, 1 );
+
 		if ( 'trunk' === Utils\get_flag_value( $assoc_args, 'version' ) ) {
 			$assoc_args['version'] = 'nightly';
 		}
