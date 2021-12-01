@@ -1372,7 +1372,13 @@ EOT;
 			return;
 		}
 
-		$files_to_remove = array_diff( array_keys( $old_checksums ), array_keys( $new_checksums ) );
+		// Compare the files from the old version and the new version in a case-insensitive manner,
+		// to prevent files being incorrectly deleted on systems with case-insensitive filesystems
+		// when core changes the case of filenames.
+		$files_to_remove = array_diff(
+			array_map( 'strtolower', array_keys( $old_checksums ) ),
+			array_map( 'strtolower', array_keys( $new_checksums ) )
+		);
 
 		if ( ! empty( $files_to_remove ) ) {
 			WP_CLI::log( 'Cleaning up files...' );
