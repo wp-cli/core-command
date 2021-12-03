@@ -213,6 +213,7 @@ Feature: Update WordPress core
   @less-than-php-7.3
   Scenario: Make sure files are cleaned up
     Given a WP install
+    And I run `wp theme activate twentytwenty`
     When I run `wp core update --version=4.4 --force`
     Then the wp-includes/rest-api.php file should exist
     Then the wp-includes/class-wp-comment.php file should exist
