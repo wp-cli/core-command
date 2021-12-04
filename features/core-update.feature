@@ -246,14 +246,14 @@ Feature: Update WordPress core
       """
 
     When I run `wp core update --version=5.9-beta1 --force`
-	Then the wp-includes/Requests/Transport/cURL.php file should not exist
-	Then the wp-includes/Requests/Exception/Transport/cURL.php file should not exist
-	Then the wp-includes/Requests/Exception/HTTP/502.php file should not exist
-	Then the wp-includes/Requests/IRI.php file should not exist
-	Then the wp-includes/Requests/Transport/Curl.php file should exist
-	Then the wp-includes/Requests/Exception/Transport/Curl.php file should exist
-	Then the wp-includes/Requests/Exception/Http/Status502.php file should exist
-	Then the wp-includes/Requests/Iri.php file should exist
+    Then the wp-includes/Requests/Transport/cURL.php file should not exist
+    Then the wp-includes/Requests/Exception/Transport/cURL.php file should not exist
+    Then the wp-includes/Requests/Exception/HTTP/502.php file should not exist
+    Then the wp-includes/Requests/IRI.php file should not exist
+    Then the wp-includes/Requests/Transport/Curl.php file should exist
+    Then the wp-includes/Requests/Exception/Transport/Curl.php file should exist
+    Then the wp-includes/Requests/Exception/Http/Status502.php file should exist
+    Then the wp-includes/Requests/Iri.php file should exist
     Then STDOUT should contain:
       """
       File removed: wp-includes/Requests/Transport/fsockopen.php
