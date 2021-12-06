@@ -202,7 +202,8 @@ Feature: Update WordPress core
       Success: WordPress updated successfully.
       """
 
-    When I run `wp core verify-checksums`
+    # Allow for warnings to be produced.
+    When I try `wp core verify-checksums`
     Then STDOUT should be:
       """
       Success: WordPress installation verifies against checksums.
