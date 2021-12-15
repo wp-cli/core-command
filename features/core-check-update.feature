@@ -2,7 +2,7 @@ Feature: Check for more recent versions
 
   Scenario: Check for update via Version Check API
     Given a WP install
-    And I run `wp theme install twentytwenty --activate`
+    And I try `wp theme install twentytwenty --activate`
 
     When I run `wp core download --version=4.4 --force`
     Then STDOUT should not be empty
