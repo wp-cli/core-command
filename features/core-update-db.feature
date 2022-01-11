@@ -2,6 +2,7 @@ Feature: Update core's database
 
   Scenario: Update db on a single site
     Given a WP install
+    And I try `wp theme install twentytwenty --activate`
     And I run `wp core download --version=5.4 --force`
     And I run `wp option update db_version 45805`
 
@@ -19,6 +20,7 @@ Feature: Update core's database
 
   Scenario: Dry run update db on a single site
     Given a WP install
+    And I try `wp theme install twentytwenty --activate`
     And I run `wp core download --version=5.4 --force`
     And I run `wp option update db_version 45805`
 
