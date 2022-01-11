@@ -64,6 +64,7 @@ Feature: Update WordPress core
 
   Scenario: Update to the latest minor release (PHP 7.1 compatible with WP >= 3.9)
     Given a WP install
+    And I try `wp theme install twentytwenty --activate`
 
     When I run `wp core download --version=3.9.9 --force`
     Then STDOUT should not be empty
