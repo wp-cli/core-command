@@ -1213,10 +1213,13 @@ EOT;
 				if ( $dry_run ) {
 					$cmd .= ' --dry-run';
 				}
-				$process = WP_CLI::runcommand( $cmd, [
-					'return' => 'all',
-					'exit_error' => false,
-				] );
+				$process = WP_CLI::runcommand(
+					$cmd,
+					[
+						'return'     => 'all',
+						'exit_error' => false,
+					]
+				);
 				if ( 0 === (int) $process->return_code ) {
 					// See if we can parse the stdout
 					if ( preg_match( '#Success: (.+)#', $process->stdout, $matches ) ) {

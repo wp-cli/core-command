@@ -2,6 +2,7 @@ Feature: Update WordPress core
 
   Scenario: Update from a ZIP file
     Given a WP install
+    And I try `wp theme install twentytwenty --activate`
 
     When I run `wp core download --version=3.9 --force`
     Then STDOUT should not be empty
@@ -34,6 +35,7 @@ Feature: Update WordPress core
   @less-than-php-7
   Scenario: Update to the latest minor release
     Given a WP install
+    And I try `wp theme install twentytwenty --activate`
 
     When I run `wp core download --version=3.7.9 --force`
     Then STDOUT should not be empty
@@ -63,6 +65,7 @@ Feature: Update WordPress core
 
   Scenario: Update to the latest minor release (PHP 7.1 compatible with WP >= 3.9)
     Given a WP install
+    And I try `wp theme install twentytwenty --activate`
 
     When I run `wp core download --version=3.9.9 --force`
     Then STDOUT should not be empty
@@ -97,6 +100,7 @@ Feature: Update WordPress core
 
   Scenario: Core update from cache
     Given a WP install
+    And I try `wp theme install twentytwenty --activate`
     And an empty cache
 
     When I run `wp core update --version=3.9.1 --force`
@@ -145,6 +149,7 @@ Feature: Update WordPress core
 
   Scenario: Ensure cached partial upgrades aren't used in full upgrade
     Given a WP install
+    And I try `wp theme install twentytwenty --activate`
     And an empty cache
     And a wp-content/mu-plugins/upgrade-override.php file:
       """
@@ -213,6 +218,7 @@ Feature: Update WordPress core
   @less-than-php-7.3
   Scenario: Make sure files are cleaned up
     Given a WP install
+    And I try `wp theme install twentytwenty --activate`
     When I run `wp core update --version=4.4 --force`
     Then the wp-includes/rest-api.php file should exist
     Then the wp-includes/class-wp-comment.php file should exist
@@ -247,6 +253,7 @@ Feature: Update WordPress core
   @less-than-php-7.3
   Scenario: Minor update on an unlocalized WordPress release
     Given a WP install
+    And I try `wp theme install twentytwenty --activate`
     And an empty cache
 
     # If current WP_VERSION is nightly, trunk or old then from checksums might not exist, so STDERR may or may not be empty.
