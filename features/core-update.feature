@@ -246,6 +246,25 @@ Feature: Update WordPress core
       File removed: wp-content
       """
 
+    When I run `wp option add str_opt 'bar'`
+    Then STDOUT should not be empty
+    When I run `wp post create --post_title='Test post' --porcelain`
+    Then STDOUT should be a number
+
+  Scenario: Make sure files are cleaned up with mixed case
+    Given a WP install
+    And I try `wp theme install twentytwenty --activate`
+
+    When I run `wp core update --version=5.8 --force`
+    Then the wp-includes/Requests/Transport/cURL.php file should exist
+    Then the wp-includes/Requests/Exception/Transport/cURL.php file should exist
+    Then the wp-includes/Requests/Exception/HTTP/502.php file should exist
+    Then the wp-includes/Requests/IRI.php file should exist
+    Then the wp-includes/Requests/Transport/Curl.php file should not exist
+    Then the wp-includes/Requests/Exception/Transport/Curl.php file should not exist
+    Then the wp-includes/Requests/Exception/Http/Status502.php file should not exist
+    Then the wp-includes/Requests/Iri.php file should not exist
+
     When I run `wp core update --version=5.9-beta1 --force`
     Then the wp-includes/Requests/Transport/cURL.php file should not exist
     Then the wp-includes/Requests/Exception/Transport/cURL.php file should not exist
