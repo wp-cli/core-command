@@ -212,13 +212,6 @@ Feature: Manage WordPress installation
 
   Scenario: Install multisite from scratch, with MULTISITE already set in wp-config.php
     Given a WP multisite install
-    And a disable_default_scripts.php file:
-      """
-      <?php
-      WP_CLI::add_wp_hook( 'init', static function () {
-        remove_action( 'wp_default_scripts', 'wp_default_scripts' );
-      } );
-      """
     And I run `wp db reset --yes`
 
     When I try `wp core is-installed`
@@ -229,7 +222,7 @@ Feature: Manage WordPress installation
       WordPress database error Table
       """
 
-    When I run `wp core multisite-install --title=Test --admin_user=wpcli --admin_email=admin@example.com --admin_password=1 --require=disable_default_scripts.php`
+    When I run `wp core multisite-install --title=Test --admin_user=wpcli --admin_email=admin@example.com --admin_password=1`
     Then STDOUT should not be empty
 
     When I run `wp eval 'echo $GLOBALS["current_site"]->domain;'`
