@@ -1424,10 +1424,10 @@ EOT;
 				if ( fileinode( $old_realpath ) === fileinode( $new_realpath ) ) {
 					// Check deeper because even realpath or glob might not return the actual case.
 					if ( ! in_array( $expected_basename, scandir( dirname( $new_realpath ) ), true ) ) {
-						WP_CLI::debug( "Renaming file '{$old_filepath_to_check}' => '{$expected}'", 'core' );
+						WP_CLI::debug( "Renaming file '{$old_filepath_to_check}' => '{$new_filepath}'", 'core' );
 
 						rename( ABSPATH . $old_filepath_to_check, ABSPATH . $old_filepath_to_check . '.tmp' );
-						rename( ABSPATH . $old_filepath_to_check . '.tmp', ABSPATH . $expected );
+						rename( ABSPATH . $old_filepath_to_check . '.tmp', ABSPATH . $new_filepath );
 					}
 				} else {
 					// On Unix with both files: Delete the incorrectly cased file.
