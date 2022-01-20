@@ -1403,15 +1403,17 @@ EOT;
 			// We are now left with only the files that are similar from old to new except for their case.
 
 			$old_basename      = basename( $old_realpath );
-			$expected_basename = basename( $new_filepaths[ $lowercase_old_filepath_to_check ] );
-			$new_realpath      = realpath( ABSPATH . $new_filepaths[ $lowercase_old_filepath_to_check ] );
+			$new_filepath      = $new_filepaths[ $lowercase_old_filepath_to_check ];
+			$expected_basename = basename( $new_filepath );
+			$new_realpath      = realpath( ABSPATH . $new_filepath );
 			$new_basename      = basename( $new_realpath );
 
 			// On Windows or Unix with only the incorrectly cased file.
 			if ( $new_basename !== $expected_basename ) {
-				// Rename the file.
+				WP_CLI::debug( "Renaming file '{$old_filepath_to_check}' => '{$new_filepath}'", 'core' );
+
 				rename( ABSPATH . $old_filepath_to_check, ABSPATH . $old_filepath_to_check . '.tmp' );
-				rename( ABSPATH . $old_filepath_to_check . '.tmp', ABSPATH . $new_filepaths[ $lowercase_old_filepath_to_check ] );
+				rename( ABSPATH . $old_filepath_to_check . '.tmp', ABSPATH . $new_filepath );
 
 				continue;
 			}
@@ -1422,7 +1424,8 @@ EOT;
 				if ( fileinode( $old_realpath ) === fileinode( $new_realpath ) ) {
 					// Check deeper because even realpath or glob might not return the actual case.
 					if ( ! in_array( $expected_basename, scandir( dirname( $new_realpath ) ), true ) ) {
-						// Rename the file.
+						WP_CLI::debug( "Renaming file '{$old_filepath_to_check}' => '{$expected}'", 'core' );
+
 						rename( ABSPATH . $old_filepath_to_check, ABSPATH . $old_filepath_to_check . '.tmp' );
 						rename( ABSPATH . $old_filepath_to_check . '.tmp', ABSPATH . $expected );
 					}
