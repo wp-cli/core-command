@@ -202,7 +202,8 @@ Feature: Update WordPress core
       Success: WordPress updated successfully.
       """
 
-    When I run `wp core verify-checksums`
+    # Allow for warnings to be produced.
+    When I try `wp core verify-checksums`
     Then STDOUT should be:
       """
       Success: WordPress installation verifies against checksums.
@@ -243,6 +244,81 @@ Feature: Update WordPress core
     And STDOUT should not contain:
       """
       File removed: wp-content
+      """
+
+    When I run `wp option add str_opt 'bar'`
+    Then STDOUT should not be empty
+    When I run `wp post create --post_title='Test post' --porcelain`
+    Then STDOUT should be a number
+
+  Scenario: Make sure files are cleaned up with mixed case
+    Given a WP install
+    And I try `wp theme install twentytwenty --activate`
+
+    When I run `wp core update --version=5.8 --force`
+    Then the wp-includes/Requests/Transport/cURL.php file should exist
+    Then the wp-includes/Requests/Exception/Transport/cURL.php file should exist
+    Then the wp-includes/Requests/Exception/HTTP/502.php file should exist
+    Then the wp-includes/Requests/IRI.php file should exist
+    Then the wp-includes/Requests/Transport/Curl.php file should not exist
+    Then the wp-includes/Requests/Exception/Transport/Curl.php file should not exist
+    Then the wp-includes/Requests/Exception/Http/Status502.php file should not exist
+    Then the wp-includes/Requests/Iri.php file should not exist
+
+    When I run `wp core update --version=5.9-beta1 --force`
+    Then the wp-includes/Requests/Transport/cURL.php file should not exist
+    Then the wp-includes/Requests/Exception/Transport/cURL.php file should not exist
+    Then the wp-includes/Requests/Exception/HTTP/502.php file should not exist
+    Then the wp-includes/Requests/IRI.php file should not exist
+    Then the wp-includes/Requests/Transport/Curl.php file should exist
+    Then the wp-includes/Requests/Exception/Transport/Curl.php file should exist
+    Then the wp-includes/Requests/Exception/Http/Status502.php file should exist
+    Then the wp-includes/Requests/Iri.php file should exist
+    Then STDOUT should contain:
+      """
+      File removed: wp-includes/Requests/Transport/fsockopen.php
+      File removed: wp-includes/Requests/Transport/cURL.php
+      File removed: wp-includes/Requests/Hooker.php
+      File removed: wp-includes/Requests/IPv6.php
+      File removed: wp-includes/Requests/Exception/Transport/cURL.php
+      File removed: wp-includes/Requests/Exception/HTTP.php
+      File removed: wp-includes/Requests/Exception/HTTP/502.php
+      File removed: wp-includes/Requests/Exception/HTTP/Unknown.php
+      File removed: wp-includes/Requests/Exception/HTTP/412.php
+      File removed: wp-includes/Requests/Exception/HTTP/408.php
+      File removed: wp-includes/Requests/Exception/HTTP/431.php
+      File removed: wp-includes/Requests/Exception/HTTP/501.php
+      File removed: wp-includes/Requests/Exception/HTTP/500.php
+      File removed: wp-includes/Requests/Exception/HTTP/407.php
+      File removed: wp-includes/Requests/Exception/HTTP/416.php
+      File removed: wp-includes/Requests/Exception/HTTP/428.php
+      File removed: wp-includes/Requests/Exception/HTTP/406.php
+      File removed: wp-includes/Requests/Exception/HTTP/504.php
+      File removed: wp-includes/Requests/Exception/HTTP/411.php
+      File removed: wp-includes/Requests/Exception/HTTP/414.php
+      File removed: wp-includes/Requests/Exception/HTTP/511.php
+      File removed: wp-includes/Requests/Exception/HTTP/410.php
+      File removed: wp-includes/Requests/Exception/HTTP/403.php
+      File removed: wp-includes/Requests/Exception/HTTP/400.php
+      File removed: wp-includes/Requests/Exception/HTTP/505.php
+      File removed: wp-includes/Requests/Exception/HTTP/413.php
+      File removed: wp-includes/Requests/Exception/HTTP/404.php
+      File removed: wp-includes/Requests/Exception/HTTP/306.php
+      File removed: wp-includes/Requests/Exception/HTTP/304.php
+      File removed: wp-includes/Requests/Exception/HTTP/405.php
+      File removed: wp-includes/Requests/Exception/HTTP/429.php
+      File removed: wp-includes/Requests/Exception/HTTP/417.php
+      File removed: wp-includes/Requests/Exception/HTTP/409.php
+      File removed: wp-includes/Requests/Exception/HTTP/402.php
+      File removed: wp-includes/Requests/Exception/HTTP/418.php
+      File removed: wp-includes/Requests/Exception/HTTP/305.php
+      File removed: wp-includes/Requests/Exception/HTTP/415.php
+      File removed: wp-includes/Requests/Exception/HTTP/401.php
+      File removed: wp-includes/Requests/Exception/HTTP/503.php
+      File removed: wp-includes/Requests/IRI.php
+      File removed: wp-includes/Requests/IDNAEncoder.php
+      File removed: wp-includes/Requests/SSL.php
+      File removed: wp-includes/Requests/Proxy/HTTP.php
       """
 
     When I run `wp option add str_opt 'bar'`
