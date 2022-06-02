@@ -244,14 +244,14 @@ class Core_Command extends WP_CLI_Command {
 		if ( $cache_file ) {
 			WP_CLI::log( "Using cached file '{$cache_file}'..." );
 			$skip_content_cache_file = $skip_content ? self::strip_content_dir( $cache_file ) : null;
-			$extract = (bool) Utils\get_flag_value($assoc_args, 'extract', true);
+			$extract                 = (bool) Utils\get_flag_value( $assoc_args, 'extract', true );
 
 			if ( $extract ) {
 				try {
-					Extractor::extract($skip_content_cache_file ?: $cache_file, $download_dir);
+					Extractor::extract( $skip_content_cache_file ?: $cache_file, $download_dir );
 
-				} catch (Exception $exception) {
-					WP_CLI::warning('Extraction failed, downloading a new copy...');
+				} catch ( Exception $exception ) {
+					WP_CLI::warning( 'Extraction failed, downloading a new copy...' );
 					$bad_cache = true;
 				}
 			}
@@ -303,13 +303,13 @@ class Core_Command extends WP_CLI_Command {
 			}
 
 			$skip_content_temp = $skip_content ? self::strip_content_dir( $temp ) : null;
-			$extract = (bool) Utils\get_flag_value($assoc_args, 'extract', true);
+			$extract           = (bool) Utils\get_flag_value( $assoc_args, 'extract', true );
 
 			if ( $extract ) {
 				try {
-					Extractor::extract($skip_content_temp ?: $temp, $download_dir);
-				} catch (Exception $exception) {
-					WP_CLI::error("Couldn't extract WordPress archive. {$exception->getMessage()}");
+					Extractor::extract( $skip_content_temp ?: $temp, $download_dir );
+				} catch ( Exception $exception ) {
+					WP_CLI::error( "Couldn't extract WordPress archive. {$exception->getMessage()}" );
 				}
 			}
 
