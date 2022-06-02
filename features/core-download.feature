@@ -372,3 +372,15 @@ Feature: Download WordPress
       """
     And the wp-includes directory should exist
     And the wp-content directory should not exist
+
+  Scenario: Core download with extract parameter should unzip the download file
+    Given an empty directory
+
+    When I run `wp core download --extract`
+    Then the wp-content directory should exist
+
+  Scenario: Core download with no-extract should not unzip the download file
+    Given an empty directory
+
+    When I run `wp core download --no-extract`
+    Then the wp-content directory should not exist
