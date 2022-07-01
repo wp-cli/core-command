@@ -227,7 +227,7 @@ to wp-config.php.
 For those using WordPress with Apache, remember to update the `.htaccess`
 file with the appropriate multisite rewrite rules.
 
-[Review the multisite documentation](https://codex.wordpress.org/Create_A_Network)
+[Review the multisite documentation](https://wordpress.org/support/article/create-a-network/)
 for more details about how multisite works.
 
 **OPTIONS**
