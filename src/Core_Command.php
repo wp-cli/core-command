@@ -303,8 +303,6 @@ class Core_Command extends WP_CLI_Command {
 			}
 
 			$skip_content_temp = $skip_content ? self::strip_content_dir( $temp ) : null;
-			$extract           = (bool) Utils\get_flag_value( $assoc_args, 'extract', true );
-
 			if ( $extract ) {
 				try {
 					Extractor::extract( $skip_content_temp ?: $temp, $download_dir );
