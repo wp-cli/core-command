@@ -241,6 +241,8 @@ class Core_Command extends WP_CLI_Command {
 		}
 
 		$bad_cache = false;
+		$extract   = (bool) Utils\get_flag_value( $assoc_args, 'extract', true );
+
 		if ( $cache_file ) {
 			WP_CLI::log( "Using cached file '{$cache_file}'..." );
 			$skip_content_cache_file = $skip_content ? self::strip_content_dir( $cache_file ) : null;
