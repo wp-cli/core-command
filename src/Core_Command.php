@@ -121,7 +121,7 @@ class Core_Command extends WP_CLI_Command {
 	 * : Retry download without certificate validation if TLS handshake fails. Note: This makes the request vulnerable to a MITM attack.
 	 *
 	 * [--extract]
-	 * : Opting out extraction of downloaded file.
+	 * : Whether to extract the downloaded file. Defaults to true.
 	 *
 	 * ## EXAMPLES
 	 *
