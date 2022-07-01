@@ -608,7 +608,16 @@ class Core_Command extends WP_CLI_Command {
 			'admin_password' => '',
 		];
 
-		if ( Utils\wp_version_compare( '4.0', '>=' ) ) {
+		if ( Utils\wp_version_compare( '4.0', '<' ) ) {
+			if ( array_key_exists( 'locale', $assoc_args ) ) {
+				WP_CLI::warning(
+					sprintf(
+						'The flag --locale=%s is being ignored as it requires WordPress 4.0+.',
+						$assoc_args['locale']
+					)
+				);
+			}
+		} else {
 			$defaults['locale'] = '';
 		}
 
