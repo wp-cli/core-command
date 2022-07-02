@@ -90,7 +90,7 @@ or success message when up to date.
 Downloads core WordPress files.
 
 ~~~
-wp core download [<download-url>] [--path=<path>] [--locale=<locale>] [--version=<version>] [--skip-content] [--force] [--insecure]
+wp core download [<download-url>] [--path=<path>] [--locale=<locale>] [--version=<version>] [--skip-content] [--force] [--insecure] [--extract]
 ~~~
 
 Downloads and extracts WordPress core files to the specified path. Uses
@@ -121,6 +121,9 @@ Subsequent uses of command will use the local cache if it still exists.
 
 	[--insecure]
 		Retry download without certificate validation if TLS handshake fails. Note: This makes the request vulnerable to a MITM attack.
+
+	[--extract]
+		Whether to extract the downloaded file. Defaults to true.
 
 **EXAMPLES**
 
