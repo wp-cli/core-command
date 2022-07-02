@@ -120,6 +120,9 @@ class Core_Command extends WP_CLI_Command {
 	 * [--insecure]
 	 * : Retry download without certificate validation if TLS handshake fails. Note: This makes the request vulnerable to a MITM attack.
 	 *
+	 * [--extract]
+	 * : Whether to extract the downloaded file. Defaults to true.
+	 *
 	 * ## EXAMPLES
 	 *
 	 *     $ wp core download --locale=nl_NL
@@ -130,7 +133,6 @@ class Core_Command extends WP_CLI_Command {
 	 * @when before_wp_load
 	 */
 	public function download( $args, $assoc_args ) {
-
 		$download_dir = ! empty( $assoc_args['path'] )
 			? ( rtrim( $assoc_args['path'], '/\\' ) . '/' )
 			: ABSPATH;
@@ -239,14 +241,19 @@ class Core_Command extends WP_CLI_Command {
 		}
 
 		$bad_cache = false;
+		$extract   = (bool) Utils\get_flag_value( $assoc_args, 'extract', true );
+
 		if ( $cache_file ) {
 			WP_CLI::log( "Using cached file '{$cache_file}'..." );
 			$skip_content_cache_file = $skip_content ? self::strip_content_dir( $cache_file ) : null;
-			try {
-				Extractor::extract( $skip_content_cache_file ?: $cache_file, $download_dir );
-			} catch ( Exception $exception ) {
-				WP_CLI::warning( 'Extraction failed, downloading a new copy...' );
-				$bad_cache = true;
+			if ( $extract ) {
+				try {
+					Extractor::extract( $skip_content_cache_file ?: $cache_file, $download_dir );
+
+				} catch ( Exception $exception ) {
+					WP_CLI::warning( 'Extraction failed, downloading a new copy...' );
+					$bad_cache = true;
+				}
 			}
 		}
 
@@ -296,11 +303,12 @@ class Core_Command extends WP_CLI_Command {
 			}
 
 			$skip_content_temp = $skip_content ? self::strip_content_dir( $temp ) : null;
-
-			try {
-				Extractor::extract( $skip_content_temp ?: $temp, $download_dir );
-			} catch ( Exception $exception ) {
-				WP_CLI::error( "Couldn't extract WordPress archive. {$exception->getMessage()}" );
+			if ( $extract ) {
+				try {
+					Extractor::extract( $skip_content_temp ?: $temp, $download_dir );
+				} catch ( Exception $exception ) {
+					WP_CLI::error( "Couldn't extract WordPress archive. {$exception->getMessage()}" );
+				}
 			}
 
 			// Do not use the cache for nightly builds or for downloaded URLs
