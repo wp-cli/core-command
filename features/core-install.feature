@@ -181,7 +181,7 @@ Feature: Install WordPress core
     Then the wp-settings.php file should exist
     And the {SUITE_CACHE_DIR}/core/wordpress-{VERSION}-de_DE.tar.gz file should exist
 
-    When I run `wp config create --dbname=wp_cli_test --dbuser=wp_cli_test --dbpass=password1 --dbhost=127.0.0.1 --locale=de_DE`
+    When I run `wp config create --dbname={DB_NAME} --dbuser={DB_USER} --dbpass={DB_PASS} --dbhost={DB_HOST} --locale=de_DE`
     Then STDOUT should be:
     """
     Success: Generated 'wp-config.php' file.
@@ -214,7 +214,7 @@ Feature: Install WordPress core
     Then the wp-settings.php file should exist
     And the {SUITE_CACHE_DIR}/core/wordpress-{VERSION}-de_DE.tar.gz file should exist
 
-    When I run `wp config create --dbname=wp_cli_test --dbuser=wp_cli_test --dbpass=password1 --dbhost=127.0.0.1 --locale=de_DE`
+    When I run `wp config create --dbname={DB_NAME} --dbuser={DB_USER} --dbpass={DB_PASS} --dbhost={DB_HOST} --locale=de_DE`
     Then STDOUT should be:
     """
     Success: Generated 'wp-config.php' file.
