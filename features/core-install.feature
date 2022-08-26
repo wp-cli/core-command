@@ -178,7 +178,12 @@ Feature: Install WordPress core
 
     When I run `wp core download --version=3.7 --locale=de_DE`
     And save STDOUT 'Downloading WordPress ([\d\.]+)' as {VERSION}
-    Then the wp-settings.php file should exist
+    And I run `echo {VERSION}`
+    Then STDOUT should contain:
+      """
+      3.7
+      """
+    And the wp-settings.php file should exist
     And the {SUITE_CACHE_DIR}/core/wordpress-{VERSION}-de_DE.tar.gz file should exist
 
     When I run `wp config create --dbname={DB_NAME} --dbuser={DB_USER} --dbpass={DB_PASSWORD} --dbhost={DB_HOST} --locale=de_DE`
@@ -198,6 +203,12 @@ Feature: Install WordPress core
       Success: WordPress installed successfully.
       """
 
+    When I run `wp core version`
+    Then STDOUT should contain:
+      """
+      3.7
+      """
+
     When I run `wp taxonomy list`
     Then STDOUT should contain:
       """
@@ -209,9 +220,14 @@ Feature: Install WordPress core
     And an empty cache
     And a database
 
-    When I run `wp core download --version=4.4.2 --locale=de_DE`
+    When I run `wp core download --version=5.6 --locale=de_DE`
     And save STDOUT 'Downloading WordPress ([\d\.]+)' as {VERSION}
-    Then the wp-settings.php file should exist
+    And I run `echo {VERSION}`
+    Then STDOUT should contain:
+      """
+      5.6
+      """
+    And the wp-settings.php file should exist
     And the {SUITE_CACHE_DIR}/core/wordpress-{VERSION}-de_DE.tar.gz file should exist
 
     When I run `wp config create --dbname={DB_NAME} --dbuser={DB_USER} --dbpass={DB_PASSWORD} --dbhost={DB_HOST} --locale=de_DE`
@@ -225,6 +241,12 @@ Feature: Install WordPress core
     Then STDOUT should contain:
       """
       Success: WordPress installed successfully.
+      """
+
+    When I run `wp core version`
+    Then STDOUT should contain:
+      """
+      5.6
       """
 
     When I run `wp taxonomy list`
