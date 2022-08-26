@@ -212,7 +212,7 @@ Feature: Install WordPress core
     When I run `wp taxonomy list`
     Then STDOUT should contain:
       """
-      categories
+      Kategorien
       """
 
   Scenario: Install WordPress with locale set to de_DE on WP >= 4.0
