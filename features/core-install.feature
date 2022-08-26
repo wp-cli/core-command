@@ -171,6 +171,7 @@ Feature: Install WordPress core
       """
     And the return code should be 0
 
+  @less-than-php-7
   Scenario: Install WordPress with locale set to de_DE on WP < 4.0
     Given an empty directory
     And an empty cache
