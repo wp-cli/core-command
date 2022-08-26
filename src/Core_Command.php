@@ -393,6 +393,9 @@ class Core_Command extends WP_CLI_Command {
 	 * --admin_email=<email>
 	 * : The email address for the admin user.
 	 *
+	 * [--locale=<locale>]
+	 * : The locale/language for the installation (e.g. `de_DE`). Default is `en_US`.
+	 *
 	 * [--skip-email]
 	 * : Don't send an email notification to the new admin user.
 	 *
@@ -605,6 +608,19 @@ class Core_Command extends WP_CLI_Command {
 			'admin_password' => '',
 		];
 
+		if ( Utils\wp_version_compare( '4.0', '<' ) ) {
+			if ( array_key_exists( 'locale', $assoc_args ) ) {
+				WP_CLI::warning(
+					sprintf(
+						'The flag --locale=%s is being ignored as it requires WordPress 4.0+.',
+						$assoc_args['locale']
+					)
+				);
+			}
+		} else {
+			$defaults['locale'] = '';
+		}
+
 		$args = wp_parse_args( $assoc_args, $defaults );
 
 		// Support prompting for the `--url=<url>`,
@@ -622,14 +638,26 @@ class Core_Command extends WP_CLI_Command {
 			WP_CLI::error( "The '{$args['admin_email']}' email address is invalid." );
 		}
 
-		$result = wp_install(
-			$args['title'],
-			$args['admin_user'],
-			$args['admin_email'],
-			$public,
-			'',
-			$password
-		);
+		if ( Utils\wp_version_compare( '4.0', '>=' ) ) {
+			$result = wp_install(
+				$args['title'],
+				$args['admin_user'],
+				$args['admin_email'],
+				$public,
+				'',
+				$password,
+				$args['locale']
+			);
+		} else {
+			$result = wp_install(
+				$args['title'],
+				$args['admin_user'],
+				$args['admin_email'],
+				$public,
+				'',
+				$password
+			);
+		}
 
 		if ( is_wp_error( $result ) ) {
 			$reason = WP_CLI::error_to_string( $result );

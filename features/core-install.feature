@@ -171,6 +171,91 @@ Feature: Install WordPress core
       """
     And the return code should be 0
 
+  @less-than-php-7
+  Scenario: Install WordPress with locale set to de_DE on WP < 4.0
+    Given an empty directory
+    And an empty cache
+    And a database
+
+    When I run `wp core download --version=3.7 --locale=de_DE`
+    And save STDOUT 'Downloading WordPress ([\d\.]+)' as {VERSION}
+    And I run `echo {VERSION}`
+    Then STDOUT should contain:
+      """
+      3.7
+      """
+    And the wp-settings.php file should exist
+    And the {SUITE_CACHE_DIR}/core/wordpress-{VERSION}-de_DE.tar.gz file should exist
+
+    When I run `wp config create --dbname={DB_NAME} --dbuser={DB_USER} --dbpass={DB_PASSWORD} --dbhost={DB_HOST} --locale=de_DE`
+    Then STDOUT should be:
+    """
+    Success: Generated 'wp-config.php' file.
+    """
+
+    # Old versions of WP can generate wpdb database errors if the WP tables don't exist, so STDERR may or may not be empty
+    When I try `wp core install --url=example.org --title=Test --admin_user=testadmin --admin_email=testadmin@example.com --admin_password=newpassword --locale=de_DE --skip-email`
+    Then STDERR should contain:
+      """
+      Warning: The flag --locale=de_DE is being ignored as it requires WordPress 4.0+.
+      """
+    Then STDOUT should contain:
+      """
+      Success: WordPress installed successfully.
+      """
+
+    When I run `wp core version`
+    Then STDOUT should contain:
+      """
+      3.7
+      """
+
+    When I run `wp taxonomy list`
+    Then STDOUT should contain:
+      """
+      Kategorien
+      """
+
+  Scenario: Install WordPress with locale set to de_DE on WP >= 4.0
+    Given an empty directory
+    And an empty cache
+    And a database
+
+    When I run `wp core download --version=5.6 --locale=de_DE`
+    And save STDOUT 'Downloading WordPress ([\d\.]+)' as {VERSION}
+    And I run `echo {VERSION}`
+    Then STDOUT should contain:
+      """
+      5.6
+      """
+    And the wp-settings.php file should exist
+    And the {SUITE_CACHE_DIR}/core/wordpress-{VERSION}-de_DE.tar.gz file should exist
+
+    When I run `wp config create --dbname={DB_NAME} --dbuser={DB_USER} --dbpass={DB_PASSWORD} --dbhost={DB_HOST} --locale=de_DE`
+    Then STDOUT should be:
+    """
+    Success: Generated 'wp-config.php' file.
+    """
+
+    # Old versions of WP can generate wpdb database errors if the WP tables don't exist, so STDERR may or may not be empty
+    When I run `wp core install --url=example.org --title=Test --admin_user=testadmin --admin_email=testadmin@example.com --admin_password=newpassword --locale=de_DE --skip-email`
+    Then STDOUT should contain:
+      """
+      Success: WordPress installed successfully.
+      """
+
+    When I run `wp core version`
+    Then STDOUT should contain:
+      """
+      5.6
+      """
+
+    When I run `wp taxonomy list`
+    Then STDOUT should contain:
+      """
+      Kategorien
+      """
+
   Scenario: Install WordPress multisite without specifying the password
     Given an empty directory
     And WP files
