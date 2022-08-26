@@ -309,7 +309,7 @@ Feature: Manage WordPress installation
       <?php
       // ** MySQL settings ** //
       /** The name of the database for WordPress */
-      define('DB_NAME', 'wp_cli_test');
+      define('DB_NAME', '{DB_NAME}');
 
       /** MySQL database username */
       define('DB_USER', '{DB_USER}');
