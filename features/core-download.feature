@@ -394,17 +394,7 @@ Feature: Download WordPress
       """
     And the wp-includes directory should exist
     And the wp-content/plugins directory should not exist
-
-  Scenario: Core download without the wp-content/themes dir should work if a version is set
-    Given an empty directory
-
-    When I try `wp core download --skip-content --version=4.7`
-    Then STDOUT should contain:
-      """
-      Success: WordPress downloaded.
-      """
-    And the wp-includes directory should exist
-    And the wp-content directory should not exist
+    And the wp-content/themes directory should not exist
 
   Scenario: Core download with extract parameter should unzip the download file
     Given an empty directory
