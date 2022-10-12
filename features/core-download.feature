@@ -396,14 +396,51 @@ Feature: Download WordPress
     And the wp-content/plugins directory should not exist
     And the wp-content/themes directory should not exist
 
+  Scenario: Core download without extract parameter should unzip the download file
+    Given an empty directory
+
+    When I run `wp core download --version=4.5 --locale=de_DE`
+    Then the wp-content directory should exist
+    And the wordpress-4.5-de_DE.tar.gz file should not exist
+
   Scenario: Core download with extract parameter should unzip the download file
     Given an empty directory
 
-    When I run `wp core download --extract`
+    When I run `wp core download --version=4.5 --locale=de_DE --extract`
     Then the wp-content directory should exist
+    And the wordpress-4.5-de_DE.tar.gz file should not exist
+
+  Scenario: Core download with extract parameter should unzip the download file (already cached)
+    Given an empty directory
+
+    When I run `wp core download --version=4.5 --locale=de_DE --extract`
+    And I run `rm -rf *`
+    And I run `wp core download --version=4.5 --locale=de_DE --extract`
+    Then the wp-content directory should exist
+    And the wordpress-4.5-de_DE.tar.gz file should not exist
 
   Scenario: Core download with no-extract should not unzip the download file
     Given an empty directory
 
-    When I run `wp core download --no-extract`
+    When I run `wp core download --version=4.5 --locale=de_DE --no-extract`
     Then the wp-content directory should not exist
+    And the wordpress-4.5-de_DE.tar.gz file should exist
+
+  Scenario: Core download with no-extract should not unzip the download file (already cached)
+    Given an empty directory
+
+    When I run `wp core download --version=4.5 --locale=de_DE --no-extract`
+    And I run `rm -rf wordpress-4.5-de_DE.tar.gz`
+    And I run `wp core download --version=4.5 --locale=de_DE --no-extract`
+    Then the wp-content directory should not exist
+    And the wordpress-4.5-de_DE.tar.gz file should exist
+
+  Scenario: Error when using both --skip-content and --no-extract
+    Given an empty directory
+
+    When I try `wp core download --skip-content --no-extract`
+    Then STDERR should contain:
+      """
+      Error: Cannot use both --skip-content and --no-extract at the same time.
+      """
+    And the return code should be 1
