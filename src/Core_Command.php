@@ -162,6 +162,11 @@ class Core_Command extends WP_CLI_Command {
 		$locale       = (string) Utils\get_flag_value( $assoc_args, 'locale', 'en_US' );
 		$skip_content = (bool) Utils\get_flag_value( $assoc_args, 'skip-content', false );
 		$insecure     = (bool) Utils\get_flag_value( $assoc_args, 'insecure', false );
+		$extract      = (bool) Utils\get_flag_value( $assoc_args, 'extract', true );
+
+		if ( $skip_content && ! $extract ) {
+			WP_CLI::error( 'Cannot use both --skip-content and --no-extract at the same time.' );
+		}
 
 		$download_url = array_shift( $args );
 		$from_url     = ! empty( $download_url );
@@ -223,7 +228,7 @@ class Core_Command extends WP_CLI_Command {
 		$extension  = 'tar.gz';
 		if ( 'zip' === $path_parts['extension'] ) {
 			$extension = 'zip';
-			if ( ! class_exists( 'ZipArchive' ) ) {
+			if ( $extract && ! class_exists( 'ZipArchive' ) ) {
 				WP_CLI::error( 'Extracting a zip file requires ZipArchive.' );
 			}
 		}
@@ -241,7 +246,6 @@ class Core_Command extends WP_CLI_Command {
 		}
 
 		$bad_cache = false;
-		$extract   = (bool) Utils\get_flag_value( $assoc_args, 'extract', true );
 
 		if ( $cache_file ) {
 			WP_CLI::log( "Using cached file '{$cache_file}'..." );
@@ -249,11 +253,12 @@ class Core_Command extends WP_CLI_Command {
 			if ( $extract ) {
 				try {
 					Extractor::extract( $skip_content_cache_file ?: $cache_file, $download_dir );
-
 				} catch ( Exception $exception ) {
 					WP_CLI::warning( 'Extraction failed, downloading a new copy...' );
 					$bad_cache = true;
 				}
+			} else {
+				copy( $cache_file, $download_dir . basename( $cache_file ) );
 			}
 		}
 
@@ -309,6 +314,8 @@ class Core_Command extends WP_CLI_Command {
 				} catch ( Exception $exception ) {
 					WP_CLI::error( "Couldn't extract WordPress archive. {$exception->getMessage()}" );
 				}
+			} else {
+				copy( $temp, $download_dir . basename( $temp ) );
 			}
 
 			// Do not use the cache for nightly builds or for downloaded URLs
