@@ -1524,7 +1524,7 @@ EOT;
 			// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
 			for ( $i = 0; $i < $zip->numFiles; $i++ ) {
 				$info = $zip->statIndex( $i );
-				if ( false !== stripos( $info['name'], 'themes/' ) || false !== stripos( $info['name'], 'plugins/' ) ) {
+				if ( 0 === stripos( $info['name'], 'wordpress/wp-content/themes/' ) || 0 === stripos( $info['name'], 'wordpress/wp-content/plugins/' ) ) {
 					$zip->deleteIndex( $i );
 				}
 			}
