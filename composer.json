@@ -49,9 +49,9 @@
         ]
     },
     "autoload": {
-        "psr-4": {
-            "": "src/"
-        },
+        "classmap": [
+            "src/"
+        ],
         "files": [
             "core-command.php"
         ]
