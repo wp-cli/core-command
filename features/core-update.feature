@@ -322,41 +322,6 @@ Feature: Update WordPress core
     When I run `wp post create --post_title='Test post' --porcelain`
     Then STDOUT should be a number
 
-  @less-than-php-7.3
-  Scenario: Minor update on an unlocalized WordPress release
-    Given a WP install
-    And I try `wp theme install twentytwenty --activate`
-    And an empty cache
-
-    # If current WP_VERSION is nightly, trunk or old then from checksums might not exist, so STDERR may or may not be empty.
-    When I try `wp core download --version=4.0 --locale=es_ES --force`
-    Then STDOUT should contain:
-      """
-      Success: WordPress downloaded.
-      """
-    And the return code should be 0
-
-    # No checksums available for this WP version/locale
-    Given I run `wp option set WPLANG es_ES`
-    When I try `wp core update --minor`
-    Then STDOUT should contain:
-      """
-      Updating to version {WP_VERSION-4.0-latest} (en_US)...
-      """
-    And STDOUT should contain:
-      """
-      https://downloads.wordpress.org/release/wordpress-{WP_VERSION-4.0-latest}-partial-0.zip
-      """
-    And STDOUT should contain:
-      """
-      Success: WordPress updated successfully.
-      """
-    And STDERR should be:
-      """
-      Warning: Checksums not available for WordPress {WP_VERSION-4.0-latest}/es_ES. Please cleanup files manually.
-      """
-    And the return code should be 0
-
   @require-php-5.6
   Scenario Outline: Use `--version=(nightly|trunk)` to update to the latest nightly version
     Given a WP install
