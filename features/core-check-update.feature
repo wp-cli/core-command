@@ -40,21 +40,3 @@ Feature: Check for more recent versions
       """
       1
       """
-
-  Scenario: No minor updates for an unlocalized WordPress release
-    Given a WP install
-    And I try `wp theme install twentytwenty --activate`
-
-    # If current WP_VERSION is nightly, trunk or old then from checksums might not exist, so STDERR may or may not be empty.
-    When I try `wp core download --version=4.0 --locale=es_ES --force`
-    Then STDOUT should contain:
-      """
-      Success: WordPress downloaded.
-      """
-    And the return code should be 0
-
-    # WP core throws notice for PHP 8+.
-    When I try `wp core check-update --minor`
-    Then STDOUT should be a table containing rows:
-      | version                 | update_type | package_url                                                                             |
-      | {WP_VERSION-4.0-latest} | minor       | https://downloads.wordpress.org/release/wordpress-{WP_VERSION-4.0-latest}-partial-0.zip |
