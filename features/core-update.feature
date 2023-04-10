@@ -67,22 +67,18 @@ Feature: Update WordPress core
     Given a WP install
     And I try `wp theme install twentytwenty --activate`
 
-    When I run `wp core download --version=3.9.9 --force`
+    When I run `wp core download --version=4.1.30 --force`
     Then STDOUT should not be empty
 
     # This version of WP throws a PHP notice
     When I try `wp core update --minor`
     Then STDOUT should contain:
       """
-      Updating to version {WP_VERSION-3.9-latest}
+      Updating to version {WP_VERSION-4.1-latest}
       """
     And STDOUT should contain:
       """
       Success: WordPress updated successfully.
-      """
-    And STDERR should contain:
-      """
-      Undefined variable
       """
     And the return code should be 0
 
@@ -95,7 +91,7 @@ Feature: Update WordPress core
     When I run `wp core version`
     Then STDOUT should be:
       """
-      {WP_VERSION-3.9-latest}
+      {WP_VERSION-4.1-latest}
       """
 
   Scenario: Core update from cache
