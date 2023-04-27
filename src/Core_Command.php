@@ -1524,6 +1524,21 @@ EOT;
 			// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
 			for ( $i = 0; $i < $zip->numFiles; $i++ ) {
 				$info = $zip->statIndex( $i );
+				// Strip all files in wp-content/themes and wp-content/plugins
+				// but leave the directories and index.php files intact.
+				if ( in_array(
+					$info['name'],
+					array(
+						'wordpress/wp-content/plugins/',
+						'wordpress/wp-content/plugins/index.php',
+						'wordpress/wp-content/themes/',
+						'wordpress/wp-content/themes/index.php',
+					),
+					true
+				) ) {
+					continue;
+				}
+
 				if ( 0 === stripos( $info['name'], 'wordpress/wp-content/themes/' ) || 0 === stripos( $info['name'], 'wordpress/wp-content/plugins/' ) ) {
 					$zip->deleteIndex( $i );
 				}

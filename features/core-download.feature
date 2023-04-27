@@ -340,7 +340,7 @@ Feature: Download WordPress
     """
     And the return code should be 1
 
-  Scenario: Core download without the wp-content/plugins dir
+  Scenario: Core download without the full wp-content/plugins dir
     Given an empty directory
 
     When I run `wp core download --skip-content`
@@ -349,10 +349,14 @@ Feature: Download WordPress
       Success: WordPress downloaded.
       """
     And the wp-includes directory should exist
-    And the wp-content/plugins directory should not exist
+    And the wp-content/plugins directory should exist
+    And the wp-content/plugins directory should be:
+      """
+      index.php
+      """
     And the wp-includes/js/tinymce/plugins directory should exist
 
-  Scenario: Core download without the wp-content/themes dir
+  Scenario: Core download without the full wp-content/themes dir
     Given an empty directory
 
     When I run `wp core download --skip-content`
@@ -361,10 +365,14 @@ Feature: Download WordPress
       Success: WordPress downloaded.
       """
     And the wp-includes directory should exist
-    And the wp-content/themes directory should not exist
+    And the wp-content/themes directory should exist
+    And the wp-content/themes directory should be:
+       """
+       index.php
+       """
     And the wp-includes/js/tinymce/themes directory should exist
 
-  Scenario: Core download without the wp-content/plugins dir should work non US locale
+  Scenario: Core download without the full wp-content/plugins dir should work non US locale
     Given an empty directory
 
     When I run `wp core download --skip-content --version=4.9.11 --locale=nl_NL`
@@ -373,10 +381,14 @@ Feature: Download WordPress
       Success: WordPress downloaded.
       """
     And the wp-includes directory should exist
-    And the wp-content/plugins directory should not exist
+    And the wp-content/plugins directory should exist
+    And the wp-content/plugins directory should be:
+       """
+       index.php
+       """
     And the wp-includes/js/tinymce/plugins directory should exist
 
-  Scenario: Core download without the wp-content/themes dir should work non US locale
+  Scenario: Core download without the full wp-content/themes dir should work non US locale
     Given an empty directory
 
     When I run `wp core download --skip-content --version=4.9.11 --locale=nl_NL`
@@ -385,10 +397,14 @@ Feature: Download WordPress
       Success: WordPress downloaded.
       """
     And the wp-includes directory should exist
-    And the wp-content/themes directory should not exist
+    And the wp-content/themes directory should exist
+    And the wp-content/themes directory should be:
+       """
+       index.php
+       """
     And the wp-includes/js/tinymce/themes directory should exist
 
-  Scenario: Core download without the wp-content/plugins dir should work if a version is set
+  Scenario: Core download without the full wp-content/plugins dir should work if a version is set
     Given an empty directory
 
     When I try `wp core download --skip-content --version=4.7`
@@ -397,8 +413,16 @@ Feature: Download WordPress
       Success: WordPress downloaded.
       """
     And the wp-includes directory should exist
-    And the wp-content/plugins directory should not exist
-    And the wp-content/themes directory should not exist
+    And the wp-content/plugins directory should exist
+    And the wp-content/plugins directory should be:
+       """
+       index.php
+       """
+    And the wp-content/themes directory should exist
+    And the wp-content/themes directory should be:
+       """
+       index.php
+       """
     And the wp-includes/js/tinymce/themes directory should exist
     And the wp-includes/js/tinymce/plugins directory should exist
 
