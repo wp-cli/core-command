@@ -137,10 +137,13 @@ class Core_Command extends WP_CLI_Command {
 			? ( rtrim( $assoc_args['path'], '/\\' ) . '/' )
 			: ABSPATH;
 
-		$wordpress_present = is_readable( $download_dir . 'wp-load.php' );
+		// To check the entire directory for WordPress files.
+		$wordpress_present = preg_grep( '~^wp-.*\.php$~', scandir( $download_dir ) );
 
-		if ( $wordpress_present && ! Utils\get_flag_value( $assoc_args, 'force' ) ) {
-			WP_CLI::error( 'WordPress files seem to already be present here.' );
+		// Check if files are present and --force is not given as param.
+		// Confirm user to download the WordPress core.
+		if ( is_array( $wordpress_present ) && ! empty( $wordpress_present ) && ! Utils\get_flag_value( $assoc_args, 'force' ) ) {
+			WP_CLI::confirm( 'WordPress files seem to already be present here. Would you like to continue?' );
 		}
 
 		if ( ! is_dir( $download_dir ) ) {
