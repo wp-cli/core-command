@@ -224,7 +224,7 @@ to communicate whether WordPress is installed.
 Transforms an existing single-site installation into a multisite installation.
 
 ~~~
-wp core multisite-convert [--title=<network-title>] [--base=<url-path>] [--subdomains]
+wp core multisite-convert [--title=<network-title>] [--base=<url-path>] [--subdomains] [--skip-config]
 ~~~
 
 Creates the multisite database tables, and adds the multisite constants
@@ -249,6 +249,9 @@ for more details about how multisite works.
 
 	[--subdomains]
 		If passed, the network will use subdomains, instead of subdirectories. Doesn't work with 'localhost'.
+
+	[--skip-config]
+		Don't add multisite constants to wp-config.php.
 
 **EXAMPLES**
 
