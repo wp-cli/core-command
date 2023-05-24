@@ -381,3 +381,12 @@ Feature: Manage WordPress installation
       Warning: Multisite constants could not be written to 'wp-config.php'. You may need to add them manually:
       """
     And the return code should be 0
+
+  Scenario: Convert to WordPress multisite without adding multisite constants to wp-config file
+    Given a WP install
+
+    When I run `wp core multisite-convert --skip-config`
+    Then STDOUT should contain:
+    """
+    Addition of multisite constants to 'wp-config.php' skipped. You need to add them manually:
+    """
