@@ -68,7 +68,10 @@ Feature: Update WordPress core
     And I try `wp theme install twentytwenty --activate`
 
     When I run `wp core download --version=4.1.30 --force`
-    Then STDOUT should not be empty
+    Then STDOUT should contain:
+      """
+      Success: WordPress downloaded.
+      """
 
     # This version of WP throws a PHP notice
     When I try `wp core update --minor`
@@ -260,6 +263,10 @@ Feature: Update WordPress core
     Then the wp-includes/Requests/Exception/Transport/Curl.php file should not exist
     Then the wp-includes/Requests/Exception/Http/Status502.php file should not exist
     Then the wp-includes/Requests/Iri.php file should not exist
+    And STDOUT should contain:
+      """
+      Success: WordPress updated successfully.
+      """
 
     When I run `wp core update --version=5.9-beta1 --force`
     Then the wp-includes/Requests/Transport/cURL.php file should not exist

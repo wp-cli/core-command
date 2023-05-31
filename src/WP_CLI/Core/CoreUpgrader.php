@@ -3,7 +3,6 @@
 namespace WP_CLI\Core;
 
 use Exception;
-use Requests_Response;
 use WP_CLI;
 use WP_CLI\Utils;
 use WP_Error;
@@ -27,7 +26,7 @@ class CoreUpgrader extends DefaultCoreUpgrader {
 	/**
 	 * CoreUpgrader constructor.
 	 *
-	 * @param WP_Upgrader_Skin|null $skin
+	 * @param \WP_Upgrader_Skin|null $skin
 	 */
 	public function __construct( $skin = null, $insecure = false ) {
 		$this->insecure = $insecure;
@@ -115,7 +114,7 @@ class CoreUpgrader extends DefaultCoreUpgrader {
 
 		$this->skin->feedback( 'downloading_package', $package );
 
-		/** @var Requests_Response|null $req */
+		/** @var \Requests_Response|\WpOrg\Requests\Response null $req */
 		try {
 			$response = Utils\http_request( 'GET', $package, null, $headers, $options );
 		} catch ( Exception $e ) {

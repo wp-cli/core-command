@@ -4,14 +4,14 @@ Feature: Check for more recent versions
     Given a WP install
     And I try `wp theme install twentytwenty --activate`
 
-    When I run `wp core download --version=4.4 --force`
+    When I run `wp core download --version=5.8 --force`
     Then STDOUT should not be empty
 
     When I run `wp core check-update`
     Then STDOUT should be a table containing rows:
       | version                 | update_type | package_url                                                                             |
       | {WP_VERSION-latest}     | major       | https://downloads.wordpress.org/release/wordpress-{WP_VERSION-latest}.zip               |
-      | {WP_VERSION-4.4-latest} | minor       | https://downloads.wordpress.org/release/wordpress-{WP_VERSION-4.4-latest}-partial-0.zip |
+      | {WP_VERSION-5.8-latest} | minor       | https://downloads.wordpress.org/release/wordpress-{WP_VERSION-5.8-latest}-partial-0.zip |
 
     When I run `wp core check-update --format=count`
     Then STDOUT should be:
@@ -33,7 +33,7 @@ Feature: Check for more recent versions
     When I run `wp core check-update --minor`
     Then STDOUT should be a table containing rows:
       | version                 | update_type | package_url                                                                             |
-      | {WP_VERSION-4.4-latest} | minor       | https://downloads.wordpress.org/release/wordpress-{WP_VERSION-4.4-latest}-partial-0.zip |
+      | {WP_VERSION-5.8-latest} | minor       | https://downloads.wordpress.org/release/wordpress-{WP_VERSION-5.8-latest}-partial-0.zip |
 
     When I run `wp core check-update --minor --format=count`
     Then STDOUT should be:
