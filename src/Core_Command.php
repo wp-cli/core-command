@@ -358,7 +358,7 @@ class Core_Command extends WP_CLI_Command {
 	 *     # Bash script for checking if WordPress is installed, with fallback
 	 *
 	 *     if wp core is-installed 2>/dev/null; then
-  	 *         # WP is installed. Let's do some things we should only do in a confirmed WP environment.
+	 *         # WP is installed. Let's do some things we should only do in a confirmed WP environment.
 	 *         wp core verify-checksums
 	 *     else
 	 *         # Fallback if WP is not installed.
