@@ -349,7 +349,7 @@ Feature: Update WordPress core
     | trunk      |
     | nightly    |
 
-  @require-php-5.6
+  @require-php-7.0
   Scenario: Installing latest nightly build should skip cache
     Given a WP install
 
