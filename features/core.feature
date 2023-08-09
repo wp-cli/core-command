@@ -301,7 +301,7 @@ Feature: Manage WordPress installation
       """
     And the return code should be 1
 
-  @require-php-5.6
+  @require-php-7.0
   Scenario: Install WordPress in a subdirectory
     Given an empty directory
     And a wp-config.php file:
