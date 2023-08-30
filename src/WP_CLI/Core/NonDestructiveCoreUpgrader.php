@@ -13,4 +13,3 @@ class NonDestructiveCoreUpgrader extends CoreUpgrader {
 		return parent::unpack_package( $package, $delete_package );
 	}
 }
-
