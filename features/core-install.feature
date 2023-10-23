@@ -36,7 +36,7 @@ Feature: Install WordPress core
     When I run `wp --path=second user get testadmin --field=user_pass`
     Then save STDOUT as {ORIGINAL_PASSWORD}
 
-    When I run `wp core config {CORE_CONFIG_SETTINGS} --extra-php < extra-config`
+    When I run `wp config create {CORE_CONFIG_SETTINGS} --skip-check --extra-php < extra-config`
     Then STDOUT should be:
       """
       Success: Generated 'wp-config.php' file.
@@ -107,7 +107,7 @@ Feature: Install WordPress core
       admin
       """
 
-    When I run `wp core config {CORE_CONFIG_SETTINGS} --extra-php < extra-config`
+    When I run `wp config create {CORE_CONFIG_SETTINGS} --skip-check --extra-php < extra-config`
     Then STDOUT should be:
       """
       Success: Generated 'wp-config.php' file.
