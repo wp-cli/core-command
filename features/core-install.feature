@@ -216,6 +216,8 @@ Feature: Install WordPress core
       Kategorien
       """
 
+  # SQLite requires WordPress 6.0+.
+  @require-mysql
   Scenario: Install WordPress with locale set to de_DE on WP >= 4.0
     Given an empty directory
     And an empty cache
@@ -303,7 +305,7 @@ Feature: Install WordPress core
       define( 'BLOG_ID_CURRENT_SITE', 1 );
       """
 
-    When I run `wp core config {CORE_CONFIG_SETTINGS} --extra-php < extra-config`
+    When I run `wp config create {CORE_CONFIG_SETTINGS} --extra-php < extra-config`
     Then STDOUT should be:
       """
       Success: Generated 'wp-config.php' file.

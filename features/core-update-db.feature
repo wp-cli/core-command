@@ -1,5 +1,7 @@
 Feature: Update core's database
 
+  # SQLite requires WordPress 6.0+.
+  @require-mysql
   Scenario: Update db on a single site
     Given a WP install
     And a disable_sidebar_check.php file:
@@ -51,6 +53,8 @@ Feature: Update core's database
       45805
       """
 
+  # SQLite requires WordPress 6.0+.
+  @require-mysql
   Scenario: Update db across network
     Given a WP multisite install
     And a disable_sidebar_check.php file:
@@ -91,6 +95,8 @@ Feature: Update core's database
       {UPDATE_VERSION}
       """
 
+  # SQLite requires WordPress 6.0+.
+  @require-mysql
   Scenario: Update db across network, dry run
     Given a WP multisite install
     And a disable_sidebar_check.php file:
