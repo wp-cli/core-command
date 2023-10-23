@@ -187,7 +187,7 @@ Feature: Install WordPress core
     And the wp-settings.php file should exist
     And the {SUITE_CACHE_DIR}/core/wordpress-{VERSION}-de_DE.tar.gz file should exist
 
-    When I run `wp config create --dbname={DB_NAME} --dbuser={DB_USER} --dbpass={DB_PASSWORD} --dbhost={DB_HOST} --locale=de_DE`
+    When I run `wp config create --dbname={DB_NAME} --dbuser={DB_USER} --dbpass={DB_PASSWORD} --dbhost={DB_HOST} --locale=de_DE --skip-check`
     Then STDOUT should be:
     """
     Success: Generated 'wp-config.php' file.
@@ -231,7 +231,7 @@ Feature: Install WordPress core
     And the wp-settings.php file should exist
     And the {SUITE_CACHE_DIR}/core/wordpress-{VERSION}-de_DE.tar.gz file should exist
 
-    When I run `wp config create --dbname={DB_NAME} --dbuser={DB_USER} --dbpass={DB_PASSWORD} --dbhost={DB_HOST} --locale=de_DE`
+    When I run `wp config create --dbname={DB_NAME} --dbuser={DB_USER} --dbpass={DB_PASSWORD} --dbhost={DB_HOST} --locale=de_DE --skip-check`
     Then STDOUT should be:
     """
     Success: Generated 'wp-config.php' file.
@@ -286,6 +286,7 @@ Feature: Install WordPress core
     Addition of multisite constants to 'wp-config.php' skipped. You need to add them manually:
     """
 
+  @require-mysql
   Scenario: Install WordPress multisite with existing multisite constants in wp-config file
     Given an empty directory
     And WP files
