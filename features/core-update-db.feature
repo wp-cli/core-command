@@ -27,6 +27,8 @@ Feature: Update core's database
       Success: WordPress database already at latest db version 47018.
       """
 
+  # SQLite requires WordPress 6.0+.
+  @require-mysql
   Scenario: Dry run update db on a single site
     Given a WP install
     And a disable_sidebar_check.php file:
