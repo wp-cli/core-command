@@ -1,5 +1,7 @@
 Feature: Check for more recent versions
 
+  # SQLite requires WordPress 6.0+.
+  @require-mysql
   Scenario: Check for update via Version Check API
     Given a WP install
     And I try `wp theme install twentytwenty --activate`
