@@ -220,7 +220,7 @@ Feature: Install WordPress core
       Kategorien
       """
 
-  # # This test downgrades to an older WordPress version, but the SQLite plugin requires 6.0+
+  # This test downgrades to an older WordPress version, but the SQLite plugin requires 6.0+
   @require-mysql
   Scenario: Install WordPress with locale set to de_DE on WP >= 4.0
     Given an empty directory

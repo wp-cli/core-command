@@ -1,6 +1,6 @@
 Feature: Check for more recent versions
 
-  # # This test downgrades to an older WordPress version, but the SQLite plugin requires 6.0+
+  # This test downgrades to an older WordPress version, but the SQLite plugin requires 6.0+
   @require-mysql
   Scenario: Check for update via Version Check API
     Given a WP install
