@@ -1,6 +1,7 @@
 Feature: Install WordPress core
 
   # TODO: Requires investigation for SQLite support.
+  # See https://github.com/wp-cli/core-command/issues/244
   @require-mysql
   Scenario: Two WordPress installs sharing the same user table won't update existing user
     Given an empty directory
@@ -84,6 +85,7 @@ Feature: Install WordPress core
       """
 
   # TODO: Requires investigation for SQLite support.
+  # See https://github.com/wp-cli/core-command/issues/244
   @require-mysql
   Scenario: Two WordPress installs sharing the same user table will create new user
     Given an empty directory
