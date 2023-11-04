@@ -1,5 +1,8 @@
 Feature: Install WordPress core
 
+  # TODO: Requires investigation for SQLite support.
+  # See https://github.com/wp-cli/core-command/issues/244
+  @require-mysql
   Scenario: Two WordPress installs sharing the same user table won't update existing user
     Given an empty directory
     And WP files
@@ -36,7 +39,7 @@ Feature: Install WordPress core
     When I run `wp --path=second user get testadmin --field=user_pass`
     Then save STDOUT as {ORIGINAL_PASSWORD}
 
-    When I run `wp core config {CORE_CONFIG_SETTINGS} --extra-php < extra-config`
+    When I run `wp config create {CORE_CONFIG_SETTINGS} --skip-check --extra-php < extra-config`
     Then STDOUT should be:
       """
       Success: Generated 'wp-config.php' file.
@@ -81,6 +84,9 @@ Feature: Install WordPress core
       wp_users
       """
 
+  # TODO: Requires investigation for SQLite support.
+  # See https://github.com/wp-cli/core-command/issues/244
+  @require-mysql
   Scenario: Two WordPress installs sharing the same user table will create new user
     Given an empty directory
     And WP files
@@ -107,7 +113,7 @@ Feature: Install WordPress core
       admin
       """
 
-    When I run `wp core config {CORE_CONFIG_SETTINGS} --extra-php < extra-config`
+    When I run `wp config create {CORE_CONFIG_SETTINGS} --skip-check --extra-php < extra-config`
     Then STDOUT should be:
       """
       Success: Generated 'wp-config.php' file.
@@ -187,7 +193,7 @@ Feature: Install WordPress core
     And the wp-settings.php file should exist
     And the {SUITE_CACHE_DIR}/core/wordpress-{VERSION}-de_DE.tar.gz file should exist
 
-    When I run `wp config create --dbname={DB_NAME} --dbuser={DB_USER} --dbpass={DB_PASSWORD} --dbhost={DB_HOST} --locale=de_DE`
+    When I run `wp config create --dbname={DB_NAME} --dbuser={DB_USER} --dbpass={DB_PASSWORD} --dbhost={DB_HOST} --locale=de_DE --skip-check`
     Then STDOUT should be:
     """
     Success: Generated 'wp-config.php' file.
@@ -216,6 +222,8 @@ Feature: Install WordPress core
       Kategorien
       """
 
+  # This test downgrades to an older WordPress version, but the SQLite plugin requires 6.0+
+  @require-mysql
   Scenario: Install WordPress with locale set to de_DE on WP >= 4.0
     Given an empty directory
     And an empty cache
@@ -231,7 +239,7 @@ Feature: Install WordPress core
     And the wp-settings.php file should exist
     And the {SUITE_CACHE_DIR}/core/wordpress-{VERSION}-de_DE.tar.gz file should exist
 
-    When I run `wp config create --dbname={DB_NAME} --dbuser={DB_USER} --dbpass={DB_PASSWORD} --dbhost={DB_HOST} --locale=de_DE`
+    When I run `wp config create --dbname={DB_NAME} --dbuser={DB_USER} --dbpass={DB_PASSWORD} --dbhost={DB_HOST} --locale=de_DE --skip-check`
     Then STDOUT should be:
     """
     Success: Generated 'wp-config.php' file.
@@ -286,6 +294,7 @@ Feature: Install WordPress core
     Addition of multisite constants to 'wp-config.php' skipped. You need to add them manually:
     """
 
+  @require-mysql
   Scenario: Install WordPress multisite with existing multisite constants in wp-config file
     Given an empty directory
     And WP files
@@ -302,7 +311,7 @@ Feature: Install WordPress core
       define( 'BLOG_ID_CURRENT_SITE', 1 );
       """
 
-    When I run `wp core config {CORE_CONFIG_SETTINGS} --extra-php < extra-config`
+    When I run `wp config create {CORE_CONFIG_SETTINGS} --extra-php < extra-config`
     Then STDOUT should be:
       """
       Success: Generated 'wp-config.php' file.

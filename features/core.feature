@@ -1,5 +1,8 @@
 Feature: Manage WordPress installation
 
+  # `wp db create` does not yet work on SQLite,
+  # See https://github.com/wp-cli/db-command/issues/234
+  @require-mysql
   Scenario: Database doesn't exist
     Given an empty directory
     And WP files
@@ -210,6 +213,9 @@ Feature: Manage WordPress installation
       1
       """
 
+  # `wp db reset` does not yet work on SQLite,
+  # See https://github.com/wp-cli/db-command/issues/234
+  @require-mysql
   Scenario: Install multisite from scratch, with MULTISITE already set in wp-config.php
     Given a WP multisite install
     And I run `wp db reset --yes`
@@ -244,6 +250,8 @@ Feature: Manage WordPress installation
       """
     And the return code should be 1
 
+  # SQLite compat blocked by https://github.com/wp-cli/wp-cli-tests/pull/188.
+  @require-mysql
   Scenario: Custom wp-content directory
     Given a WP install
     And a custom wp-content directory
@@ -301,7 +309,9 @@ Feature: Manage WordPress installation
       """
     And the return code should be 1
 
-  @require-php-7.0
+  # `wp db create` does not yet work on SQLite,
+  # See https://github.com/wp-cli/db-command/issues/234
+  @require-php-7.0 @require-mysql
   Scenario: Install WordPress in a subdirectory
     Given an empty directory
     And a wp-config.php file:

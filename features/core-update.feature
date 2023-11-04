@@ -1,5 +1,7 @@
 Feature: Update WordPress core
 
+  # This test downgrades to an older WordPress version, but the SQLite plugin requires 6.0+
+  @require-mysql
   Scenario: Update from a ZIP file
     Given a WP install
     And I try `wp theme install twentytwenty --activate`
@@ -63,6 +65,8 @@ Feature: Update WordPress core
       {WP_VERSION-4.1-latest}
       """
 
+  # This test downgrades to an older WordPress version, but the SQLite plugin requires 6.0+
+  @require-mysql
   Scenario: Update to the latest minor release (PHP 7.1 compatible with WP >= 3.9)
     Given a WP install
     And I try `wp theme install twentytwenty --activate`
@@ -97,6 +101,8 @@ Feature: Update WordPress core
       {WP_VERSION-4.1-latest}
       """
 
+  # This test downgrades to an older WordPress version, but the SQLite plugin requires 6.0+
+  @require-mysql
   Scenario: Core update from cache
     Given a WP install
     And I try `wp theme install twentytwenty --activate`
@@ -146,6 +152,8 @@ Feature: Update WordPress core
       Updating
       """
 
+  # This test downgrades to an older WordPress version, but the SQLite plugin requires 6.0+
+  @require-mysql
   Scenario: Ensure cached partial upgrades aren't used in full upgrade
     Given a WP install
     And I try `wp theme install twentytwenty --activate`
@@ -215,7 +223,8 @@ Feature: Update WordPress core
       wordpress-4.2.4-partial-1-en_US.zip
       """
 
-  @less-than-php-7.3
+  # This test downgrades to an older WordPress version, but the SQLite plugin requires 6.0+
+  @less-than-php-7.3 @require-mysql
   Scenario: Make sure files are cleaned up
     Given a WP install
     And I try `wp theme install twentytwenty --activate`
@@ -250,6 +259,8 @@ Feature: Update WordPress core
     When I run `wp post create --post_title='Test post' --porcelain`
     Then STDOUT should be a number
 
+  # This test downgrades to an older WordPress version, but the SQLite plugin requires 6.0+
+  @require-mysql
   Scenario: Make sure files are cleaned up with mixed case
     Given a WP install
     And I try `wp theme install twentytwenty --activate`
