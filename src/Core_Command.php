@@ -44,6 +44,9 @@ class Core_Command extends WP_CLI_Command {
 	 * [--major]
 	 * : Compare only the first part of the version number.
 	 *
+	 * [--force-check]
+	 * : Forces check even if WordPress is up to date.
+	 *
 	 * [--field=<field>]
 	 * : Prints the value of a single field for each update.
 	 *
@@ -61,9 +64,6 @@ class Core_Command extends WP_CLI_Command {
 	 *   - json
 	 *   - yaml
 	 * ---
-	 *
-	 * [--force-check]
-	 * : Forces check even if WordPress is up to date.
 	 *
 	 * ## EXAMPLES
 	 *
