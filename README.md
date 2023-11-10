@@ -57,7 +57,7 @@ or success message when up to date.
 		Compare only the first part of the version number.
 
 	[--force-check]
-		Forces check even if WordPress is up to date.
+		Bypass the transient cache and force a fresh update check.
 
 	[--field=<field>]
 		Prints the value of a single field for each update.
