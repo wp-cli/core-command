@@ -42,7 +42,7 @@ wp core
 Checks for WordPress updates via Version Check API.
 
 ~~~
-wp core check-update [--minor] [--major] [--field=<field>] [--fields=<fields>] [--format=<format>]
+wp core check-update [--minor] [--major] [--force-check] [--field=<field>] [--fields=<fields>] [--format=<format>]
 ~~~
 
 Lists the most recent versions when there are updates available,
@@ -55,6 +55,9 @@ or success message when up to date.
 
 	[--major]
 		Compare only the first part of the version number.
+
+	[--force-check]
+		Bypass the transient cache and force a fresh update check.
 
 	[--field=<field>]
 		Prints the value of a single field for each update.

@@ -44,6 +44,9 @@ class Core_Command extends WP_CLI_Command {
 	 * [--major]
 	 * : Compare only the first part of the version number.
 	 *
+	 * [--force-check]
+	 * : Bypass the transient cache and force a fresh update check.
+	 *
 	 * [--field=<field>]
 	 * : Prints the value of a single field for each update.
 	 *
@@ -1145,7 +1148,7 @@ EOT;
 					return;
 				}
 			} elseif ( ! empty( $from_api->updates ) ) {
-					list( $update ) = $from_api->updates;
+				list( $update ) = $from_api->updates;
 			}
 		} elseif ( Utils\wp_version_compare( $assoc_args['version'], '<' )
 			|| 'nightly' === $assoc_args['version']
@@ -1175,7 +1178,7 @@ EOT;
 
 		if ( ! empty( $update )
 			&& ( $update->version !== $wp_version
-			|| Utils\get_flag_value( $assoc_args, 'force' ) ) ) {
+				|| Utils\get_flag_value( $assoc_args, 'force' ) ) ) {
 
 			require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
@@ -1354,7 +1357,8 @@ EOT;
 	 * Returns update information.
 	 */
 	private function get_updates( $assoc_args ) {
-		wp_version_check();
+		$force_check = Utils\get_flag_value( $assoc_args, 'force-check' );
+		wp_version_check( [], $force_check );
 		$from_api = get_site_transient( 'update_core' );
 		if ( ! $from_api ) {
 			return [];
