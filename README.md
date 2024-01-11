@@ -98,7 +98,7 @@ wp core download [<download-url>] [--path=<path>] [--locale=<locale>] [--version
 
 Downloads and extracts WordPress core files to the specified path. Uses
 current directory when no path is specified. Downloaded build is verified
-to have the correct md5 and then cached to the local filesytem.
+to have the correct md5 and then cached to the local filesystem.
 Subsequent uses of command will use the local cache if it still exists.
 
 **OPTIONS**
