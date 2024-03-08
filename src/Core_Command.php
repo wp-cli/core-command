@@ -5,6 +5,7 @@ use WP_CLI\Extractor;
 use WP_CLI\Iterators\Table as TableIterator;
 use WP_CLI\Utils;
 use WP_CLI\Formatter;
+use WP_CLI\Loggers;
 use WP_CLI\WpOrgApi;
 
 /**
@@ -1064,6 +1065,15 @@ EOT;
 	 * [--locale=<locale>]
 	 * : Select which language you want to download.
 	 *
+	* [--format=<format>]
+	 * : Render output in a particular format.
+	 * ---
+	 * options:
+	 *   - table
+	 *   - csv
+	 *   - json
+	 * ---
+	 *
 	 * [--insecure]
 	 * : Retry download without certificate validation if TLS handshake fails. Note: This makes the request vulnerable to a MITM attack.
 	 *
@@ -1107,6 +1117,11 @@ EOT;
 
 		if ( 'trunk' === Utils\get_flag_value( $assoc_args, 'version' ) ) {
 			$assoc_args['version'] = 'nightly';
+		}
+
+		if ( ! empty( $assoc_args['format'] ) && in_array( $assoc_args['format'], [ 'json', 'csv' ], true ) ) {
+			$logger = new Loggers\Quiet( WP_CLI::get_runner()->in_color() );
+			WP_CLI::set_logger( $logger );
 		}
 
 		if ( ! empty( $args[0] ) ) {
@@ -1213,6 +1228,21 @@ EOT;
 
 				$locale = (string) Utils\get_flag_value( $assoc_args, 'locale', get_locale() );
 				$this->cleanup_extra_files( $from_version, $to_version, $locale, $insecure );
+
+				$data = [
+					[
+						'name'        => 'core',
+						'old_version' => $from_version,
+						'new_version' => $to_version,
+						'status'      => 'Updated',
+					],
+				];
+
+				$format = Utils\get_flag_value( $assoc_args, 'format' );
+
+				if ( ! empty( $format ) ) {
+					Utils\format_items( $format, $data, [ 'name', 'old_version', 'new_version', 'status' ] );
+				}
 
 				WP_CLI::success( 'WordPress updated successfully.' );
 			}
