@@ -77,16 +77,18 @@ class Core_Command extends WP_CLI_Command {
 	 * @subcommand check-update
 	 */
 	public function check_update( $_, $assoc_args ) {
+		$format = Utils\get_flag_value( $assoc_args, 'format', 'table' );
 
 		$updates = $this->get_updates( $assoc_args );
-		if ( $updates ) {
+
+		if ( $updates || 'table' !== $format ) {
 			$updates   = array_reverse( $updates );
 			$formatter = new Formatter(
 				$assoc_args,
 				[ 'version', 'update_type', 'package_url' ]
 			);
 			$formatter->display_items( $updates );
-		} elseif ( empty( $assoc_args['format'] ) || 'table' === $assoc_args['format'] ) {
+		} else {
 			WP_CLI::success( 'WordPress is at the latest version.' );
 		}
 	}
