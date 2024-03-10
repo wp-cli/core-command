@@ -52,7 +52,7 @@ Feature: Check for more recent versions
 
       $obj = new stdClass;
       $obj->updates = [];
-      $obj->last_checked = '1709881133';
+      $obj->last_checked = strtotime( '1 January 2099' );
       $obj->version_checked = $wp_version;
       $obj->translations = [];
       set_site_transient( 'update_core', $obj );
