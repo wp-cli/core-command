@@ -42,3 +42,37 @@ Feature: Check for more recent versions
       """
       1
       """
+
+  Scenario: Check output of check update in different formats (no updates available)
+    Given a WP install
+    And a setup.php file:
+      """
+      <?php
+      global $wp_version;
+
+      $obj = new stdClass;
+      $obj->updates = [];
+      $obj->last_checked = strtotime( '1 January 2099' );
+      $obj->version_checked = $wp_version;
+      $obj->translations = [];
+      set_site_transient( 'update_core', $obj );
+      """
+    And I run `wp eval-file setup.php`
+
+    When I run `wp core check-update`
+    Then STDOUT should be:
+      """
+      Success: WordPress is at the latest version.
+      """
+
+    When I run `wp core check-update --format=json`
+    Then STDOUT should be:
+      """
+      []
+      """
+
+    When I run `wp core check-update --format=yaml`
+    Then STDOUT should be:
+      """
+      ---
+      """
