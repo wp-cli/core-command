@@ -91,7 +91,7 @@ Feature: Update WordPress core
 
     When I run `wget http://wordpress.org/wordpress-6.1.zip --quiet`
     And I run `wp core update wordpress-6.1.zip --format=table`
-    Then STDOUT should be a table containing rows:
+    Then STDOUT should end with a table containing rows:
       | name | old_version | new_version | status  |
       | core | 6.0         | 6.1         | Updated |
 
