@@ -116,11 +116,8 @@ class Core_Command extends WP_CLI_Command {
 	 * [--version=<version>]
 	 * : Select which version you want to download. Accepts a version number, 'latest' or 'nightly'.
 	 *
-	 * [--retry=<retry>]
-	 * : Number of retries in case of failure. Default is 0.
-	 *
-	 * [--retry-delay=<retry-delay>]
-	 * : Delay between retries in seconds. Default is 5 seconds.
+	 * [--retry=<count>]
+	 * : Number of retries in case of failure. Default is 0. Maximum is 5 retries.
 	 *
 	 * [--skip-content]
 	 * : Download WP without the default themes and plugins.
@@ -297,7 +294,14 @@ class Core_Command extends WP_CLI_Command {
 			];
 
 			$retry       = (int) Utils\get_flag_value( $assoc_args, 'retry', 0 );
-			$retry_delay = (int) Utils\get_flag_value( $assoc_args, 'retry-delay', 5 );
+			$retry_delay = 5; // It will be incremented in the loop after each retry.
+			$current_try = 1;
+
+			if ( 5 < $retry ) {
+				WP_CLI::warning( 'Maximum number of retries can be 5. Resetting to 5.' );
+
+				$retry = 5;
+			}
 
 			do {
 				$response       = Utils\http_request( 'GET', $download_url, null, $headers, $options );
@@ -313,8 +317,11 @@ class Core_Command extends WP_CLI_Command {
 					WP_CLI::error( 'Release not found. Double-check locale or version.' );
 				} elseif ( ! $is_response_ok ) {
 					WP_CLI::warning( "Couldn't access download URL (HTTP code {$response->status_code})." );
+
 					if ( 0 < $retry ) {
-						WP_CLI::log( "Retrying in {$retry_delay} seconds..." );
+						$retry_delay *= $current_try++;
+
+						WP_CLI::log( "Retrying in {$retry_delay} seconds. {$retry} retries left." );
 						sleep( $retry_delay );
 					}
 				}
@@ -322,7 +329,10 @@ class Core_Command extends WP_CLI_Command {
 
 			if ( 'nightly' !== $version ) {
 				unset( $options['filename'] );
-				$retry = (int) Utils\get_flag_value( $assoc_args, 'retry', 0 );
+
+				$retry       = (int) Utils\get_flag_value( $assoc_args, 'retry', 0 );
+				$retry_delay = 5; // It will be incremented in the loop after each retry.
+				$current_try = 1;
 
 				do {
 					$md5_response   = Utils\http_request( 'GET', $download_url . '.md5', null, [], $options );
@@ -348,7 +358,9 @@ class Core_Command extends WP_CLI_Command {
 						WP_CLI::warning( "Couldn't access md5 hash for release ({$download_url}.md5, HTTP code {$md5_response->status_code})." );
 
 						if ( 0 < $retry ) {
-							WP_CLI::log( "Retrying in {$retry_delay} seconds..." );
+							$retry_delay *= $current_try++;
+
+							WP_CLI::log( "Retrying in {$retry_delay} seconds. {$retry} retries left." );
 							sleep( $retry_delay );
 						}
 					}
