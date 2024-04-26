@@ -114,7 +114,7 @@ Subsequent uses of command will use the local cache if it still exists.
 		Select which language you want to download.
 
 	[--version=<version>]
-		Select which version you want to download. Accepts a version number, 'latest' or 'nightly'.
+		Select which version you want to download. Accepts a version number, 'latest', 'beta', 'rc', or 'nightly'.
 
 	[--skip-content]
 		Download WP without the default themes and plugins.
@@ -359,7 +359,7 @@ update isn't actually running.
 		Only perform updates for minor releases (e.g. update from WP 4.3 to 4.3.3 instead of 4.4.2).
 
 	[--version=<version>]
-		Update to a specific version, instead of to the latest version. Alternatively accepts 'nightly'.
+		Update to a specific version, instead of to the latest version. Alternatively accepts 'latest', 'beta', 'rc', or 'nightly'.
 
 	[--force]
 		Update even when installed WP version is greater than the requested version.
