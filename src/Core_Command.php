@@ -304,6 +304,11 @@ class Core_Command extends WP_CLI_Command {
 				$status_code    = (int) $response->status_code;
 				$is_response_ok = $status_code >= 200 && $status_code < 300;
 
+				// Exit the loop if the response is OK or the status code is 404.
+				if ( $is_response_ok || 404 === $status_code ) {
+					$retry = 0;
+				}
+
 				if ( 404 === $status_code ) {
 					WP_CLI::error( 'Release not found. Double-check locale or version.' );
 				} elseif ( ! $is_response_ok ) {
@@ -323,6 +328,11 @@ class Core_Command extends WP_CLI_Command {
 					$md5_response = Utils\http_request( 'GET', $download_url . '.md5', null, [], $options );
 					$status_code  = (int) $md5_response->status_code;
 					$is_response_ok = $status_code >= 200 && $status_code < 300;
+
+					// Exit the loop if the response is OK or the status code is 404.
+					if ( $is_response_ok || 404 === $status_code ) {
+						$retry = 0;
+					}
 
 					if ( $is_response_ok ) {
 						$md5_file = md5_file( $temp );
