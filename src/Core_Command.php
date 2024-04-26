@@ -116,6 +116,12 @@ class Core_Command extends WP_CLI_Command {
 	 * [--version=<version>]
 	 * : Select which version you want to download. Accepts a version number, 'latest' or 'nightly'.
 	 *
+	 * [--retry=<retry>]
+	 * : Number of retries in case of failure. Default is 0.
+	 *
+	 * [--retry-delay=<retry-delay>]
+	 * : Delay between retries in seconds. Default is 5 seconds.
+	 *
 	 * [--skip-content]
 	 * : Download WP without the default themes and plugins.
 	 *
@@ -290,28 +296,54 @@ class Core_Command extends WP_CLI_Command {
 				'insecure' => $insecure,
 			];
 
-			$response = Utils\http_request( 'GET', $download_url, null, $headers, $options );
+			$retry	     = (int) Utils\get_flag_value( $assoc_args, 'retry', 0 );
+			$retry_delay = (int) Utils\get_flag_value( $assoc_args, 'retry-delay', 5 );
 
-			if ( 404 === (int) $response->status_code ) {
-				WP_CLI::error( 'Release not found. Double-check locale or version.' );
-			} elseif ( 20 !== (int) substr( $response->status_code, 0, 2 ) ) {
-				WP_CLI::error( "Couldn't access download URL (HTTP code {$response->status_code})." );
-			}
+			do {
+				$response       = Utils\http_request( 'GET', $download_url, null, $headers, $options );
+				$status_code    = (int) $response->status_code;
+				$is_response_ok = $status_code >= 200 && $status_code < 300;
+
+				if ( 404 === $status_code ) {
+					WP_CLI::error( 'Release not found. Double-check locale or version.' );
+				} elseif ( ! $is_response_ok ) {
+					WP_CLI::warning( "Couldn't access download URL (HTTP code {$response->status_code})." );
+					if ( 0 < $retry ) {
+						WP_CLI::log( "Retrying in {$retry_delay} seconds..." );
+						sleep( $retry_delay );
+					}
+				}
+			} while ( 0 < $retry-- && ! $is_response_ok );
 
 			if ( 'nightly' !== $version ) {
 				unset( $options['filename'] );
-				$md5_response = Utils\http_request( 'GET', $download_url . '.md5', null, [], $options );
-				if ( $md5_response->status_code >= 200 && $md5_response->status_code < 300 ) {
-					$md5_file = md5_file( $temp );
+				$retry = (int) Utils\get_flag_value( $assoc_args, 'retry', 0 );
 
-					if ( $md5_file === $md5_response->body ) {
-						WP_CLI::log( 'md5 hash verified: ' . $md5_file );
+				do {
+					$md5_response = Utils\http_request( 'GET', $download_url . '.md5', null, [], $options );
+					$status_code  = (int) $md5_response->status_code;
+					$is_response_ok = $status_code >= 200 && $status_code < 300;
+
+					if ( $is_response_ok ) {
+						$md5_file = md5_file( $temp );
+
+						if ( $md5_file === $md5_response->body ) {
+							WP_CLI::log( 'md5 hash verified: ' . $md5_file );
+						} else {
+							WP_CLI::error( "md5 hash for download ({$md5_file}) is different than the release hash ({$md5_response->body})." );
+						}
+					} elseif ( 404 === $status_code ) {
+						WP_CLI::warning( 'md5 hash not found for release.' );
 					} else {
-						WP_CLI::error( "md5 hash for download ({$md5_file}) is different than the release hash ({$md5_response->body})." );
+						WP_CLI::warning( "Couldn't access md5 hash for release ({$download_url}.md5, HTTP code {$md5_response->status_code})." );
+
+						if ( 0 < $retry ) {
+							WP_CLI::log( "Retrying in {$retry_delay} seconds..." );
+							sleep( $retry_delay );
+						}
 					}
-				} else {
-					WP_CLI::warning( "Couldn't access md5 hash for release ({$download_url}.md5, HTTP code {$md5_response->status_code})." );
-				}
+				} while ( 0 < $retry-- && ! $is_response_ok );
+
 			} else {
 				WP_CLI::warning( 'md5 hash checks are not available for nightly downloads.' );
 			}
