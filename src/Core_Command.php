@@ -296,7 +296,7 @@ class Core_Command extends WP_CLI_Command {
 				'insecure' => $insecure,
 			];
 
-			$retry	     = (int) Utils\get_flag_value( $assoc_args, 'retry', 0 );
+			$retry       = (int) Utils\get_flag_value( $assoc_args, 'retry', 0 );
 			$retry_delay = (int) Utils\get_flag_value( $assoc_args, 'retry-delay', 5 );
 
 			do {
@@ -325,8 +325,8 @@ class Core_Command extends WP_CLI_Command {
 				$retry = (int) Utils\get_flag_value( $assoc_args, 'retry', 0 );
 
 				do {
-					$md5_response = Utils\http_request( 'GET', $download_url . '.md5', null, [], $options );
-					$status_code  = (int) $md5_response->status_code;
+					$md5_response   = Utils\http_request( 'GET', $download_url . '.md5', null, [], $options );
+					$status_code    = (int) $md5_response->status_code;
 					$is_response_ok = $status_code >= 200 && $status_code < 300;
 
 					// Exit the loop if the response is OK or the status code is 404.
