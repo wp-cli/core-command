@@ -629,11 +629,13 @@ class Core_Command extends WP_CLI_Command {
 
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
+		$admin_password = getenv( 'WP_CLI_CORE_INSTALL_ADMIN_PASSWORD' );
+
 		$defaults = [
 			'title'          => '',
 			'admin_user'     => '',
 			'admin_email'    => '',
-			'admin_password' => '',
+			'admin_password' => false !== $admin_password ? $admin_password : '',
 		];
 
 		if ( Utils\wp_version_compare( '4.0', '<' ) ) {
