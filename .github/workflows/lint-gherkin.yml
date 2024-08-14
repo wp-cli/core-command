@@ -1,0 +1,32 @@
+name: Gherkin Linting
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+      - master
+
+jobs:
+  gherkin-lint:
+    name: Lint Gherkin Feature files
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source code
+        uses: actions/checkout@v4
+
+      - name: Setup node
+        uses: actions/setup-node@v4
+
+      - name: Check existence of .gherkin-lintrc file
+        id: check_gherkin_lintrc_file
+        uses: andstor/file-existence-action@v3
+        with:
+          files: ".gherkin-lintrc"
+
+      - name: Download lint rules
+        if: steps.check_gherkin_lintrc_file.outputs.files_exists == 'false'
+        run: curl https://gist.githubusercontent.com/ernilambar/a7a30af6f6f6bd5be238d5499993233a/raw/3b8f54e2d36be33706947ce6ce44c5a888cee464/gherkin-lintrc.json -o .gherkin-lintrc
+
+      - name: Run lint
+        run: npx --yes gherkin-lint
