@@ -1355,6 +1355,9 @@ EOT;
 
 	/**
 	 * Returns update information.
+	 *
+	 * @param array $assoc_args Associative array of arguments.
+	 * @return array List of available updates , or an empty array if no updates are available.
 	 */
 	private function get_updates( $assoc_args ) {
 		$force_check = Utils\get_flag_value( $assoc_args, 'force-check' );
@@ -1405,7 +1408,7 @@ EOT;
 			if ( true === Utils\get_flag_value( $assoc_args, $type ) ) {
 				return ! empty( $updates[ $type ] )
 					? [ $updates[ $type ] ]
-					: false;
+					: [];
 			}
 		}
 		return array_values( $updates );
