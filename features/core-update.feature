@@ -263,6 +263,12 @@ Feature: Update WordPress core
   @require-mysql
   Scenario: Make sure files are cleaned up with mixed case
     Given a WP install
+    And a wp-content/mu-plugins/silence-requests-deprecation.php file:
+      """
+      <?php
+      define( 'REQUESTS_SILENCE_PSR0_DEPRECATIONS', true );
+      """
+
     And I try `wp theme install twentytwenty --activate`
 
     When I run `wp core update --version=5.8 --force`
