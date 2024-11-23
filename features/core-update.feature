@@ -270,10 +270,10 @@ Feature: Update WordPress core
     Then the wp-includes/Requests/Exception/Transport/cURL.php file should exist
     Then the wp-includes/Requests/Exception/HTTP/502.php file should exist
     Then the wp-includes/Requests/IRI.php file should exist
-    Then the wp-includes/Requests/Transport/Curl.php file should not exist
-    Then the wp-includes/Requests/Exception/Transport/Curl.php file should not exist
-    Then the wp-includes/Requests/Exception/Http/Status502.php file should not exist
-    Then the wp-includes/Requests/Iri.php file should not exist
+    Then the wp-includes/Requests/src/Transport/Curl.php file should not exist
+    Then the wp-includes/Requests/src/Exception/Transport/Curl.php file should not exist
+    Then the wp-includes/Requests/src/Exception/Http/Status502.php file should not exist
+    Then the wp-includes/Requests/src/Iri.php file should not exist
     And STDOUT should contain:
       """
       Success: WordPress updated successfully.
@@ -284,10 +284,10 @@ Feature: Update WordPress core
     Then the wp-includes/Requests/Exception/Transport/cURL.php file should not exist
     Then the wp-includes/Requests/Exception/HTTP/502.php file should not exist
     Then the wp-includes/Requests/IRI.php file should not exist
-    Then the wp-includes/Requests/Transport/Curl.php file should exist
-    Then the wp-includes/Requests/Exception/Transport/Curl.php file should exist
-    Then the wp-includes/Requests/Exception/Http/Status502.php file should exist
-    Then the wp-includes/Requests/Iri.php file should exist
+    Then the wp-includes/Requests/src/Transport/Curl.php file should exist
+    Then the wp-includes/Requests/src/Exception/Transport/Curl.php file should exist
+    Then the wp-includes/Requests/src/Exception/Http/Status502.php file should exist
+    Then the wp-includes/Requests/src/Iri.php file should exist
     Then STDOUT should contain:
       """
       File removed: wp-includes/Requests/Transport/fsockopen.php
