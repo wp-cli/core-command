@@ -10,8 +10,8 @@ Feature: Check for more recent versions
     Then STDOUT should not be empty
 
     When I run `wp core check-update --format=csv`
-    Then STDOUT should match #^{WP_VERSION-latest},major,https://downloads.(w|wordpress).org/release/wordpress-{WP_VERSION-latest}.zip$#
-    And STDOUT should match #^{WP_VERSION-5.8-latest},minor,https://downloads.(w|wordpress).org/release/wordpress-{WP_VERSION-5.8-latest}-partial-0.zip$#
+    Then STDOUT should match #{WP_VERSION-latest},major,https://downloads.(w|wordpress).org/release/wordpress-{WP_VERSION-latest}.zip#
+    And STDOUT should match #{WP_VERSION-5.8-latest},minor,https://downloads.(w|wordpress).org/release/wordpress-{WP_VERSION-5.8-latest}-partial-0.zip#
 
     When I run `wp core check-update --format=count`
     Then STDOUT should be:
@@ -20,7 +20,7 @@ Feature: Check for more recent versions
       """
 
     When I run `wp core check-update --major --format=csv`
-    Then STDOUT should match #^{WP_VERSION-latest},major,https://downloads.(w|wordpress).org/release/wordpress-{WP_VERSION-latest}.zip$#
+    Then STDOUT should match #{WP_VERSION-latest},major,https://downloads.(w|wordpress).org/release/wordpress-{WP_VERSION-latest}.zip#
 
     When I run `wp core check-update --major --format=count`
     Then STDOUT should be:
@@ -29,7 +29,7 @@ Feature: Check for more recent versions
       """
 
     When I run `wp core check-update --minor`
-    Then STDOUT should match #^{WP_VERSION-5.8-latest},minor,https://downloads.(w|wordpress).org/release/wordpress-{WP_VERSION-5.8-latest}-partial-0.zip$#
+    Then STDOUT should match #{WP_VERSION-5.8-latest},minor,https://downloads.(w|wordpress).org/release/wordpress-{WP_VERSION-5.8-latest}-partial-0.zip#
 
     When I run `wp core check-update --minor --format=count`
     Then STDOUT should be:
