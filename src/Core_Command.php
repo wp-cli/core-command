@@ -36,6 +36,8 @@ class Core_Command extends WP_CLI_Command {
 	 * Lists the most recent versions when there are updates available,
 	 * or success message when up to date.
 	 *
+	 * @todo how does this behave with beta/rc/nightly?
+	 *
 	 * ## OPTIONS
 	 *
 	 * [--minor]
@@ -114,7 +116,7 @@ class Core_Command extends WP_CLI_Command {
 	 * : Select which language you want to download.
 	 *
 	 * [--version=<version>]
-	 * : Select which version you want to download. Accepts a version number, 'latest' or 'nightly'.
+	 * : Select which version you want to download. Accepts a version number, 'latest', 'beta', 'rc', or 'nightly'.
 	 *
 	 * [--skip-content]
 	 * : Download WP without the default themes and plugins.
@@ -327,9 +329,9 @@ class Core_Command extends WP_CLI_Command {
 				copy( $temp, $download_dir . basename( $temp ) );
 			}
 
-			// Do not use the cache for nightly builds or for downloaded URLs
+			// Do not use the cache for beta/rc/nightly builds or for downloaded URLs
 			// (the URL could be something like "latest.zip" or "nightly.zip").
-			if ( ! $from_url && 'nightly' !== $version ) {
+			if ( ! $from_url && ! in_array( $version, [ 'beta', 'rc', 'nightly' ], true ) ) {
 				$cache->import( $cache_key, $temp );
 			}
 		}
@@ -1058,7 +1060,7 @@ EOT;
 	 * : Only perform updates for minor releases (e.g. update from WP 4.3 to 4.3.3 instead of 4.4.2).
 	 *
 	 * [--version=<version>]
-	 * : Update to a specific version, instead of to the latest version. Alternatively accepts 'nightly'.
+	 * : Update to a specific version, instead of to the latest version. Alternatively accepts 'latest', 'beta', 'rc', or 'nightly'.
 	 *
 	 * [--force]
 	 * : Update even when installed WP version is greater than the requested version.
@@ -1149,6 +1151,8 @@ EOT;
 				list( $update ) = $from_api->updates;
 			}
 		} elseif ( Utils\wp_version_compare( $assoc_args['version'], '<' )
+			|| 'beta' === $assoc_args['version']
+			|| 'rc' === $assoc_args['version']
 			|| 'nightly' === $assoc_args['version']
 			|| Utils\get_flag_value( $assoc_args, 'force' ) ) {
 
@@ -1338,6 +1342,7 @@ EOT;
 	 * @return string
 	 */
 	private function get_download_url( $version, $locale = 'en_US', $file_type = 'zip' ) {
+		// @todo
 
 		if ( 'nightly' === $version ) {
 			if ( 'zip' === $file_type ) {
