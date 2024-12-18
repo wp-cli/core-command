@@ -347,3 +347,14 @@ Feature: Update WordPress core
       """
       Using cached
       """
+
+  Scenario: Allow installing major version with trailing zero
+    Given a WP install
+
+    When I run `wp core update --version=6.2.0 --force`
+    Then STDOUT should contain:
+    """
+    Success:
+    """
+
+
