@@ -54,7 +54,7 @@ Feature: Download WordPress
   Scenario: Catch download of non-existent WP version
     Given an empty directory
 
-    When I try `wp core download --version=4.1.0 --force`
+    When I try `wp core download --version=1.0.3 --force`
     Then STDERR should contain:
       """
       Error: Release not found.
@@ -473,3 +473,13 @@ Feature: Download WordPress
       Error: Cannot use both --skip-content and --no-extract at the same time.
       """
     And the return code should be 1
+
+    Scenario: Allow installing major version with trailing zero
+    Given an empty directory
+
+    When I run `wp core download --version=6.7.0`
+    Then STDOUT should contain:
+    """
+    Success:
+    """
+

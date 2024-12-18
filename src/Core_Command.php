@@ -1349,6 +1349,10 @@ EOT;
 
 		$locale_subdomain = 'en_US' === $locale ? '' : substr( $locale, 0, 2 ) . '.';
 		$locale_suffix    = 'en_US' === $locale ? '' : "-{$locale}";
+		// Match 6.7.0 but not 6.0
+		if ( substr_count( $version, '.' ) > 1 && substr( $version, -2 ) === '.0' ) {
+			$version = substr( $version, 0, -2 );
+		}
 
 		return "https://{$locale_subdomain}wordpress.org/wordpress-{$version}{$locale_suffix}.{$file_type}";
 	}
