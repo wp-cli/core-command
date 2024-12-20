@@ -28,7 +28,7 @@ Feature: Check for more recent versions
       1
       """
 
-    When I run `wp core check-update --minor`
+    When I run `wp core check-update --minor --format=csv`
     Then STDOUT should match #{WP_VERSION-5.8-latest},minor,https://downloads.(w|wordpress).org/release/wordpress-{WP_VERSION-5.8-latest}-partial-0.zip#
 
     When I run `wp core check-update --minor --format=count`
