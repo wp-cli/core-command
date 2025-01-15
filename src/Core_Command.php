@@ -1316,7 +1316,7 @@ EOT;
 
 					// WP upgrade expects `$_SERVER['HTTP_HOST']` to be set in `wp_guess_url()`, otherwise get PHP notice.
 					if ( ! isset( $_SERVER['HTTP_HOST'] ) ) {
-						$_SERVER['HTTP_HOST'] = 'http://example.com';
+						$_SERVER['HTTP_HOST'] = 'example.com';
 					}
 
 					wp_upgrade();
