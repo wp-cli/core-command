@@ -1013,31 +1013,19 @@ EOT;
 	 * @return string|array String message on failure. An array of checksums on success.
 	 */
 	private static function get_core_checksums( $version, $locale, $insecure ) {
-		$query = http_build_query( compact( 'version', 'locale' ), '', '&' );
-		$url   = "https://api.wordpress.org/core/checksums/1.0/?{$query}";
+		$wp_org_api = new WpOrgApi( [ 'insecure' => $insecure ] );
 
-		$headers = [ 'Accept' => 'application/json' ];
-		$options = [
-			'timeout'  => 30,
-			'insecure' => $insecure,
-		];
-
-		$response = Utils\http_request( 'GET', $url, null, $headers, $options );
-
-		if ( ! $response->success || 200 !== (int) $response->status_code ) {
-			return "Checksum request '{$url}' failed (HTTP {$response->status_code}).";
+		try {
+			$checksums = $wp_org_api->get_core_checksums( $version, $locale );
+		} catch ( Exception $exception ) {
+			return $exception->getMessage();
 		}
 
-		$body = trim( $response->body );
-		$body = json_decode( $body, true );
-
-		if ( ! is_array( $body )
-			|| ! isset( $body['checksums'] )
-			|| ! is_array( $body['checksums'] ) ) {
+		if ( false === $checksums ) {
 			return "Checksums not available for WordPress {$version}/{$locale}.";
 		}
 
-		return $body['checksums'];
+		return $checksums;
 	}
 
 	/**
@@ -1437,9 +1425,11 @@ EOT;
 			WP_CLI::warning( "{$old_checksums} Please cleanup files manually." );
 			return;
 		}
+
 		$new_checksums = self::get_core_checksums( $version_to, $locale ?: 'en_US', $insecure );
 		if ( ! is_array( $new_checksums ) ) {
 			WP_CLI::warning( "{$new_checksums} Please cleanup files manually." );
+
 			return;
 		}
 
