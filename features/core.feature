@@ -52,13 +52,13 @@ Feature: Manage WordPress installation
     And wp-config.php
     And a database
     And a session file:
-    """
-    localhost:8001
-    Test
-    wpcli
-    wpcli
-    admin@example.com
-    """
+      """
+      localhost:8001
+      Test
+      wpcli
+      wpcli
+      admin@example.com
+      """
 
     When I run `wp core install --prompt < session`
     Then STDOUT should not be empty
@@ -293,9 +293,9 @@ Feature: Manage WordPress installation
 
     When I run `wp core download`
     Then STDOUT should contain:
-     """
-     Success: WordPress downloaded.
-     """
+      """
+      Success: WordPress downloaded.
+      """
     And the wp-settings.php file should exist
 
   Scenario: Don't download WordPress when files are already present
@@ -397,6 +397,6 @@ Feature: Manage WordPress installation
 
     When I run `wp core multisite-convert --skip-config`
     Then STDOUT should contain:
-    """
-    Addition of multisite constants to 'wp-config.php' skipped. You need to add them manually:
-    """
+      """
+      Addition of multisite constants to 'wp-config.php' skipped. You need to add them manually:
+      """

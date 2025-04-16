@@ -228,9 +228,10 @@ Feature: Update WordPress core
   Scenario: Make sure files are cleaned up
     Given a WP install
     And I try `wp theme install twentytwenty --activate`
+
     When I run `wp core update --version=4.4 --force`
     Then the wp-includes/rest-api.php file should exist
-    Then the wp-includes/class-wp-comment.php file should exist
+    And the wp-includes/class-wp-comment.php file should exist
     And STDOUT should not contain:
       """
       File removed: wp-content
@@ -238,8 +239,8 @@ Feature: Update WordPress core
 
     When I run `wp core update --version=4.3.2 --force`
     Then the wp-includes/rest-api.php file should not exist
-    Then the wp-includes/class-wp-comment.php file should not exist
-    Then STDOUT should contain:
+    And the wp-includes/class-wp-comment.php file should not exist
+    And STDOUT should contain:
       """
       File removed: wp-includes/class-walker-comment.php
       File removed: wp-includes/class-wp-network.php
@@ -267,13 +268,13 @@ Feature: Update WordPress core
 
     When I run `wp core update --version=5.8 --force`
     Then the wp-includes/Requests/Transport/cURL.php file should exist
-    Then the wp-includes/Requests/Exception/Transport/cURL.php file should exist
-    Then the wp-includes/Requests/Exception/HTTP/502.php file should exist
-    Then the wp-includes/Requests/IRI.php file should exist
-    Then the wp-includes/Requests/src/Transport/Curl.php file should not exist
-    Then the wp-includes/Requests/src/Exception/Transport/Curl.php file should not exist
-    Then the wp-includes/Requests/src/Exception/Http/Status502.php file should not exist
-    Then the wp-includes/Requests/src/Iri.php file should not exist
+    And the wp-includes/Requests/Exception/Transport/cURL.php file should exist
+    And the wp-includes/Requests/Exception/HTTP/502.php file should exist
+    And the wp-includes/Requests/IRI.php file should exist
+    And the wp-includes/Requests/src/Transport/Curl.php file should not exist
+    And the wp-includes/Requests/src/Exception/Transport/Curl.php file should not exist
+    And the wp-includes/Requests/src/Exception/Http/Status502.php file should not exist
+    And the wp-includes/Requests/src/Iri.php file should not exist
     And STDOUT should contain:
       """
       Cleaning up files...
@@ -285,13 +286,13 @@ Feature: Update WordPress core
 
     When I run `wp core update --version=6.2 --force`
     Then the wp-includes/Requests/Transport/cURL.php file should not exist
-    Then the wp-includes/Requests/Exception/Transport/cURL.php file should not exist
-    Then the wp-includes/Requests/Exception/HTTP/502.php file should not exist
-    Then the wp-includes/Requests/IRI.php file should not exist
-    Then the wp-includes/Requests/src/Transport/Curl.php file should exist
-    Then the wp-includes/Requests/src/Exception/Transport/Curl.php file should exist
-    Then the wp-includes/Requests/src/Exception/Http/Status502.php file should exist
-    Then the wp-includes/Requests/src/Iri.php file should exist
+    And the wp-includes/Requests/Exception/Transport/cURL.php file should not exist
+    And the wp-includes/Requests/Exception/HTTP/502.php file should not exist
+    And the wp-includes/Requests/IRI.php file should not exist
+    And the wp-includes/Requests/src/Transport/Curl.php file should exist
+    And the wp-includes/Requests/src/Exception/Transport/Curl.php file should exist
+    And the wp-includes/Requests/src/Exception/Http/Status502.php file should exist
+    And the wp-includes/Requests/src/Iri.php file should exist
     And STDOUT should contain:
       """
       Cleaning up files...
@@ -318,9 +319,9 @@ Feature: Update WordPress core
       """
 
     Examples:
-    | version    |
-    | trunk      |
-    | nightly    |
+      | version    |
+      | trunk      |
+      | nightly    |
 
   @require-php-7.2
   Scenario: Installing latest nightly build should skip cache
@@ -353,8 +354,6 @@ Feature: Update WordPress core
 
     When I run `wp core update --version=6.2.0 --force`
     Then STDOUT should contain:
-    """
-    Success:
-    """
-
-
+      """
+      Success:
+      """
