@@ -851,7 +851,7 @@ EOT;
 		$wp_config_path = Utils\locate_wp_config();
 
 		$token           = "/* That's all, stop editing!";
-		$config_contents = file_get_contents( $wp_config_path );
+		$config_contents = (string) file_get_contents( $wp_config_path );
 		if ( false === strpos( $config_contents, $token ) ) {
 			return false;
 		}
@@ -1121,6 +1121,10 @@ EOT;
 
 			// Update to next release
 			wp_version_check();
+
+			/**
+			 * @var object{updates: array<object{version: string, locale: string}>} $from_api
+			 */
 			$from_api = get_site_transient( 'update_core' );
 
 			if ( Utils\get_flag_value( $assoc_args, 'minor' ) ) {
@@ -1185,7 +1189,12 @@ EOT;
 			$insecure     = (bool) Utils\get_flag_value( $assoc_args, 'insecure', false );
 
 			$GLOBALS['wpcli_core_update_obj'] = $update;
-			$result                           = Utils\get_upgrader( $upgrader, $insecure )->upgrade( $update );
+
+			/**
+			 * @var \WP_CLI\Core\CoreUpgrader $wp_upgrader
+			 */
+			$wp_upgrader = Utils\get_upgrader( $upgrader, $insecure );
+			$result      = $wp_upgrader->upgrade( $update );
 			unset( $GLOBALS['wpcli_core_update_obj'] );
 
 			if ( is_wp_error( $result ) ) {
@@ -1379,6 +1388,10 @@ EOT;
 	private function get_updates( $assoc_args ) {
 		$force_check = (bool) Utils\get_flag_value( $assoc_args, 'force-check' );
 		wp_version_check( [], $force_check );
+
+		/**
+		 * @var object{updates: array<object{version: string, locale: string, packages: object{partial?: string, full: string}}>}|false $from_api
+		 */
 		$from_api = get_site_transient( 'update_core' );
 		if ( ! $from_api ) {
 			return [];
