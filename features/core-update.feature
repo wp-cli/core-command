@@ -22,7 +22,6 @@ Feature: Update WordPress core
       Starting update...
       Unpacking the update...
       Cleaning up files...
-      No files found that need cleaning up.
       Success: WordPress updated successfully.
       """
 
@@ -65,7 +64,7 @@ Feature: Update WordPress core
     When I run `wp core version`
     Then STDOUT should be:
       """
-      {WP_VERSION-4.1-latest}
+      {WP_VERSION-4.9-latest}
       """
 
   # This test downgrades to an older WordPress version, but the SQLite plugin requires 6.0+
