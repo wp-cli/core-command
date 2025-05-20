@@ -51,10 +51,12 @@ class CoreUpgrader extends DefaultCoreUpgrader {
 		 * Filter whether to return the package.
 		 *
 		 * @since 3.7.0
+		 * @since 5.5.0 Added the `$hook_extra` parameter.
 		 *
-		 * @param bool    $reply   Whether to bail without returning the package. Default is false.
-		 * @param string  $package The package file name.
-		 * @param object  $this    The WP_Upgrader instance.
+		 * @param bool         $reply      Whether to bail without returning the package. Default is false.
+		 * @param string       $package    The package file name.
+		 * @param \WP_Upgrader $upgrader   The WP_Upgrader instance.
+		 * @param array        $hook_extra Extra arguments passed to hooked filters.
 		 */
 		$reply = apply_filters(
 			// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Override existing hook from Core.
@@ -115,8 +117,8 @@ class CoreUpgrader extends DefaultCoreUpgrader {
 
 		$this->skin->feedback( 'downloading_package', $package );
 
-		/** @var \Requests_Response|\WpOrg\Requests\Response null $req */
 		try {
+			/** @var \WpOrg\Requests\Response $response */
 			$response = Utils\http_request( 'GET', $package, null, $headers, $options );
 		} catch ( Exception $e ) {
 			return new WP_Error( 'download_failed', $e->getMessage() );

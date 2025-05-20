@@ -138,6 +138,9 @@ class Core_Command extends WP_CLI_Command {
 	 * @when before_wp_load
 	 */
 	public function download( $args, $assoc_args ) {
+		/**
+		 * @var string $download_dir
+		 */
 		$download_dir = ! empty( $assoc_args['path'] )
 			? ( rtrim( $assoc_args['path'], '/\\' ) . '/' )
 			: ABSPATH;
@@ -160,7 +163,11 @@ class Core_Command extends WP_CLI_Command {
 			WP_CLI::log( "Creating directory '{$download_dir}'." );
 			if ( ! @mkdir( $download_dir, 0777, true /*recursive*/ ) ) {
 				$error = error_get_last();
-				WP_CLI::error( "Failed to create directory '{$download_dir}': {$error['message']}." );
+				if ( $error ) {
+					WP_CLI::error( "Failed to create directory '{$download_dir}': {$error['message']}." );
+				} else {
+					WP_CLI::error( "Failed to create directory '{$download_dir}'." );
+				}
 			}
 		}
 
@@ -168,7 +175,10 @@ class Core_Command extends WP_CLI_Command {
 			WP_CLI::error( "'{$download_dir}' is not writable by current user." );
 		}
 
-		$locale       = (string) Utils\get_flag_value( $assoc_args, 'locale', 'en_US' );
+		/**
+		 * @var string $locale
+		 */
+		$locale       = Utils\get_flag_value( $assoc_args, 'locale', 'en_US' );
 		$skip_content = (bool) Utils\get_flag_value( $assoc_args, 'skip-content', false );
 		$insecure     = (bool) Utils\get_flag_value( $assoc_args, 'insecure', false );
 		$extract      = (bool) Utils\get_flag_value( $assoc_args, 'extract', true );
@@ -235,7 +245,7 @@ class Core_Command extends WP_CLI_Command {
 
 		$path_parts = pathinfo( $download_url );
 		$extension  = 'tar.gz';
-		if ( 'zip' === $path_parts['extension'] ) {
+		if ( isset( $path_parts['extension'] ) && 'zip' === $path_parts['extension'] ) {
 			$extension = 'zip';
 			if ( $extract && ! class_exists( 'ZipArchive' ) ) {
 				WP_CLI::error( 'Extracting a zip file requires ZipArchive.' );
@@ -256,7 +266,7 @@ class Core_Command extends WP_CLI_Command {
 
 		$bad_cache = false;
 
-		if ( $cache_file ) {
+		if ( is_string( $cache_file ) ) {
 			WP_CLI::log( "Using cached file '{$cache_file}'..." );
 			$skip_content_cache_file = $skip_content ? self::strip_content_dir( $cache_file ) : null;
 			if ( $extract ) {
@@ -290,16 +300,18 @@ class Core_Command extends WP_CLI_Command {
 				'insecure' => $insecure,
 			];
 
+			/** @var \WpOrg\Requests\Response $response */
 			$response = Utils\http_request( 'GET', $download_url, null, $headers, $options );
 
 			if ( 404 === (int) $response->status_code ) {
 				WP_CLI::error( 'Release not found. Double-check locale or version.' );
-			} elseif ( 20 !== (int) substr( $response->status_code, 0, 2 ) ) {
+			} elseif ( 20 !== (int) substr( (string) $response->status_code, 0, 2 ) ) {
 				WP_CLI::error( "Couldn't access download URL (HTTP code {$response->status_code})." );
 			}
 
 			if ( 'nightly' !== $version ) {
 				unset( $options['filename'] );
+				/** @var \WpOrg\Requests\Response $md5_response */
 				$md5_response = Utils\http_request( 'GET', $download_url . '.md5', null, [], $options );
 				if ( $md5_response->status_code >= 200 && $md5_response->status_code < 300 ) {
 					$md5_file = md5_file( $temp );
@@ -487,8 +499,13 @@ class Core_Command extends WP_CLI_Command {
 
 		$assoc_args = self::set_multisite_defaults( $assoc_args );
 		if ( ! isset( $assoc_args['title'] ) ) {
+			/**
+			 * @var string $blogname
+			 */
+			$blogname = get_option( 'blogname' );
+
 			// translators: placeholder is blog name
-			$assoc_args['title'] = sprintf( _x( '%s Sites', 'Default network name' ), get_option( 'blogname' ) );
+			$assoc_args['title'] = sprintf( _x( '%s Sites', 'Default network name' ), $blogname );
 		}
 
 		if ( $this->multisite_convert_( $assoc_args ) ) {
@@ -619,6 +636,7 @@ class Core_Command extends WP_CLI_Command {
 
 		if ( true === Utils\get_flag_value( $assoc_args, 'skip-email' ) ) {
 			if ( ! function_exists( 'wp_new_blog_notification' ) ) {
+				// @phpstan-ignore function.inner
 				function wp_new_blog_notification() {
 					// Silence is golden
 				}
@@ -636,18 +654,7 @@ class Core_Command extends WP_CLI_Command {
 			'admin_password' => '',
 		];
 
-		if ( Utils\wp_version_compare( '4.0', '<' ) ) {
-			if ( array_key_exists( 'locale', $assoc_args ) ) {
-				WP_CLI::warning(
-					sprintf(
-						'The flag --locale=%s is being ignored as it requires WordPress 4.0+.',
-						$assoc_args['locale']
-					)
-				);
-			}
-		} else {
-			$defaults['locale'] = '';
-		}
+		$defaults['locale'] = '';
 
 		$args = wp_parse_args( $assoc_args, $defaults );
 
@@ -664,31 +671,15 @@ class Core_Command extends WP_CLI_Command {
 			WP_CLI::error( "The '{$args['admin_email']}' email address is invalid." );
 		}
 
-		if ( Utils\wp_version_compare( '4.0', '>=' ) ) {
-			$result = wp_install(
-				$args['title'],
-				$args['admin_user'],
-				$args['admin_email'],
-				$public,
-				'',
-				$password,
-				$args['locale']
-			);
-		} else {
-			$result = wp_install(
-				$args['title'],
-				$args['admin_user'],
-				$args['admin_email'],
-				$public,
-				'',
-				$password
-			);
-		}
-
-		if ( is_wp_error( $result ) ) {
-			$reason = WP_CLI::error_to_string( $result );
-			WP_CLI::error( "Installation failed ({$reason})." );
-		}
+		$result = wp_install(
+			$args['title'],
+			$args['admin_user'],
+			$args['admin_email'],
+			$public,
+			'',
+			$password,
+			$args['locale']
+		);
 
 		if ( ! empty( $GLOBALS['wpdb']->last_error ) ) {
 			WP_CLI::error( 'Installation produced database errors, and may have partially or completely failed.' );
@@ -724,10 +715,15 @@ class Core_Command extends WP_CLI_Command {
 
 		install_network();
 
+		/**
+		 * @var string $admin_email
+		 */
+		$admin_email = get_option( 'admin_email' );
+
 		$result = populate_network(
 			$assoc_args['site_id'],
 			$domain,
-			get_option( 'admin_email' ),
+			$admin_email,
 			$assoc_args['title'],
 			$assoc_args['base'],
 			$assoc_args['subdomains']
@@ -738,7 +734,7 @@ class Core_Command extends WP_CLI_Command {
 
 		if ( true === $result ) {
 			WP_CLI::log( 'Set up multisite database tables.' );
-		} elseif ( is_wp_error( $result ) ) {
+		} else {
 			switch ( $result->get_error_code() ) {
 
 				case 'siteid_exists':
@@ -873,8 +869,12 @@ EOT;
 	}
 
 	private static function get_clean_basedomain() {
-		$domain = preg_replace( '|https?://|', '', get_option( 'siteurl' ) );
-		$slash  = strpos( $domain, '/' );
+		/**
+		 * @var string $siteurl
+		 */
+		$siteurl = get_option( 'siteurl' );
+		$domain  = (string) preg_replace( '|https?://|', '', $siteurl );
+		$slash   = strpos( $domain, '/' );
 		if ( false !== $slash ) {
 			$domain = substr( $domain, 0, $slash );
 		}
@@ -951,7 +951,7 @@ EOT;
 			);
 		}
 
-		$version_content = file_get_contents( $versions_path, false, null, 6, 2048 );
+		$version_content = (string) file_get_contents( $versions_path, false, null, 6, 2048 );
 
 		$vars   = [ 'wp_version', 'wp_db_version', 'tinymce_version', 'wp_local_package' ];
 		$result = [];
@@ -987,7 +987,7 @@ EOT;
 	 * @param string $var_name Variable name to search for.
 	 * @param string $code PHP code to search in.
 	 *
-	 * @return int|string|null
+	 * @return string|null
 	 */
 	private static function find_var( $var_name, $code ) {
 		$start = strpos( $code, '$' . $var_name . ' = ' );
@@ -1016,6 +1016,9 @@ EOT;
 		$wp_org_api = new WpOrgApi( [ 'insecure' => $insecure ] );
 
 		try {
+			/**
+			 * @var array|false $checksums
+			 */
 			$checksums = $wp_org_api->get_core_checksums( $version, $locale );
 		} catch ( Exception $exception ) {
 			return $exception->getMessage();
@@ -1142,7 +1145,11 @@ EOT;
 
 			// Specific version is given
 			$version = $assoc_args['version'];
-			$locale  = Utils\get_flag_value( $assoc_args, 'locale', get_locale() );
+
+			/**
+			 * @var string $locale
+			 */
+			$locale = Utils\get_flag_value( $assoc_args, 'locale', get_locale() );
 
 			$new_package = $this->get_download_url( $version, $locale );
 
@@ -1196,7 +1203,10 @@ EOT;
 					$to_version = $wp_details['wp_version'];
 				}
 
-				$locale = (string) Utils\get_flag_value( $assoc_args, 'locale', get_locale() );
+				/**
+				 * @var string $locale
+				 */
+				$locale = Utils\get_flag_value( $assoc_args, 'locale', get_locale() );
 				$this->cleanup_extra_files( $from_version, $to_version, $locale, $insecure );
 
 				WP_CLI::success( 'WordPress updated successfully.' );
@@ -1256,6 +1266,10 @@ EOT;
 			$success       = 0;
 			$total         = 0;
 			$site_ids      = [];
+
+			/**
+			 * @var object{site_id: int, domain: string, path: string} $blog
+			 */
 			foreach ( $it as $blog ) {
 				++$total;
 				$site_ids[] = $blog->site_id;
@@ -1264,6 +1278,10 @@ EOT;
 				if ( $dry_run ) {
 					$cmd .= ' --dry-run';
 				}
+
+				/**
+				 * @var object{stdout: string, stderr: string, return_code: int} $process
+				 */
 				$process = WP_CLI::runcommand(
 					$cmd,
 					[
@@ -1293,8 +1311,15 @@ EOT;
 			WP_CLI::success( "WordPress database upgraded on {$success}/{$total} sites." );
 		} else {
 			require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+
+			/**
+			 * @var string $wp_current_db_version
+			 */
 			// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Replacing WP Core behavior is the goal here.
-			$wp_current_db_version = (int) __get_option( 'db_version' );
+			$wp_current_db_version = __get_option( 'db_version' );
+			// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Replacing WP Core behavior is the goal here.
+			$wp_current_db_version = (int) $wp_current_db_version;
+
 			if ( $wp_db_version !== $wp_current_db_version ) {
 				if ( $dry_run ) {
 					WP_CLI::success( "WordPress database will be upgraded from db version {$wp_current_db_version} to {$wp_db_version}." );
@@ -1352,7 +1377,7 @@ EOT;
 	 * @return array List of available updates , or an empty array if no updates are available.
 	 */
 	private function get_updates( $assoc_args ) {
-		$force_check = Utils\get_flag_value( $assoc_args, 'force-check' );
+		$force_check = (bool) Utils\get_flag_value( $assoc_args, 'force-check' );
 		wp_version_check( [], $force_check );
 		$from_api = get_site_transient( 'update_core' );
 		if ( ! $from_api ) {
@@ -1466,7 +1491,7 @@ EOT;
 			$old_basename      = basename( $old_realpath );
 			$new_filepath      = $new_filepaths[ $lowercase_old_filepath_to_check ];
 			$expected_basename = basename( $new_filepath );
-			$new_realpath      = realpath( ABSPATH . $new_filepath );
+			$new_realpath      = (string) realpath( ABSPATH . $new_filepath );
 			$new_basename      = basename( $new_realpath );
 
 			// On Windows or Unix with only the incorrectly cased file.
@@ -1483,8 +1508,10 @@ EOT;
 			if ( basename( $old_filepath_to_check ) === $old_basename ) {
 				// Check if case-insensitive file system, eg on OSX.
 				if ( fileinode( $old_realpath ) === fileinode( $new_realpath ) ) {
+					$files = scandir( dirname( $new_realpath ) ) ?: [];
+
 					// Check deeper because even realpath or glob might not return the actual case.
-					if ( ! in_array( $expected_basename, scandir( dirname( $new_realpath ) ), true ) ) {
+					if ( ! in_array( $expected_basename, $files, true ) ) {
 						WP_CLI::debug( "Renaming file '{$old_filepath_to_check}' => '{$new_filepath}'", 'core' );
 
 						rename( ABSPATH . $old_filepath_to_check, ABSPATH . $old_filepath_to_check . '.tmp' );
@@ -1542,6 +1569,10 @@ EOT;
 			// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
 			for ( $i = 0; $i < $zip->numFiles; $i++ ) {
 				$info = $zip->statIndex( $i );
+				if ( ! $info ) {
+					continue;
+				}
+
 				// Strip all files in wp-content/themes and wp-content/plugins
 				// but leave the directories and index.php files intact.
 				if ( in_array(
