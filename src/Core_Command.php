@@ -75,8 +75,11 @@ class Core_Command extends WP_CLI_Command {
 	 *     +---------+-------------+-------------------------------------------------------------+
 	 *
 	 * @subcommand check-update
+	 *
+	 * @param string[] $args Positional arguments. Unused.
+	 * @param array{minor?: bool, major?: bool, 'force-check'?: bool, field?: string, format: string} $assoc_args Associative arguments.
 	 */
-	public function check_update( $_, $assoc_args ) {
+	public function check_update( $args, $assoc_args ) {
 		$format = Utils\get_flag_value( $assoc_args, 'format', 'table' );
 
 		$updates = $this->get_updates( $assoc_args );
@@ -136,6 +139,9 @@ class Core_Command extends WP_CLI_Command {
 	 *     Success: WordPress downloaded.
 	 *
 	 * @when before_wp_load
+	 *
+	 * @param array{0?: string} $args Positional arguments.
+	 * @param array{path?: string, locale?: string, version?: string, 'skip-content'?: bool, force?: bool, insecure?: bool, extract?: bool} $assoc_args Associative arguments.
 	 */
 	public function download( $args, $assoc_args ) {
 		/**
@@ -175,13 +181,10 @@ class Core_Command extends WP_CLI_Command {
 			WP_CLI::error( "'{$download_dir}' is not writable by current user." );
 		}
 
-		/**
-		 * @var string $locale
-		 */
 		$locale       = Utils\get_flag_value( $assoc_args, 'locale', 'en_US' );
-		$skip_content = (bool) Utils\get_flag_value( $assoc_args, 'skip-content', false );
-		$insecure     = (bool) Utils\get_flag_value( $assoc_args, 'insecure', false );
-		$extract      = (bool) Utils\get_flag_value( $assoc_args, 'extract', true );
+		$skip_content = Utils\get_flag_value( $assoc_args, 'skip-content', false );
+		$insecure     = Utils\get_flag_value( $assoc_args, 'insecure', false );
+		$extract      = Utils\get_flag_value( $assoc_args, 'extract', true );
 
 		if ( $skip_content && ! $extract ) {
 			WP_CLI::error( 'Cannot use both --skip-content and --no-extract at the same time.' );
@@ -385,11 +388,12 @@ class Core_Command extends WP_CLI_Command {
 	 *     fi
 	 *
 	 * @subcommand is-installed
+	 *
+	 * @param string[] $args Positional arguments. Unused.
+	 * @param array{network?: bool} $assoc_args Associative arguments.
 	 */
 	public function is_installed( $args, $assoc_args ) {
-		if ( is_blog_installed()
-			&& ( ! Utils\get_flag_value( $assoc_args, 'network' )
-				|| is_multisite() ) ) {
+		if ( is_blog_installed() && ( ! Utils\get_flag_value( $assoc_args, 'network' ) || is_multisite() ) ) {
 			WP_CLI::halt( 0 );
 		}
 
@@ -444,6 +448,9 @@ class Core_Command extends WP_CLI_Command {
 	 *
 	 *     # Install WordPress without disclosing admin_password to bash history
 	 *     $ wp core install --url=example.com --title=Example --admin_user=supervisor --admin_email=info@example.com --prompt=admin_password < admin_password.txt
+	 *
+	 * @param string[] $args Positional arguments. Unused.
+	 * @param array{url: string, title: string, admin_user: string, admin_password?: string, admin_email: string, locale?: string, 'skip-email'?: bool} $assoc_args Associative arguments.
 	 */
 	public function install( $args, $assoc_args ) {
 		if ( $this->do_install( $assoc_args ) ) {
@@ -491,6 +498,9 @@ class Core_Command extends WP_CLI_Command {
 	 *
 	 * @subcommand multisite-convert
 	 * @alias install-network
+	 *
+	 * @param string[] $args Positional arguments. Unused.
+	 * @param array{title?: string, base: string, subdomains?: bool, 'skip-config'?: bool} $assoc_args Associative arguments.
 	 */
 	public function multisite_convert( $args, $assoc_args ) {
 		if ( is_multisite() ) {
@@ -569,6 +579,9 @@ class Core_Command extends WP_CLI_Command {
 	 *     Success: Network installed. Don't forget to set up rewrite rules.
 	 *
 	 * @subcommand multisite-install
+	 *
+	 * @param string[] $args Positional arguments. Unused.
+	 * @param array{url?: string, base: string, subdomains?: bool, title: string, admin_user: string, admin_password?: string, admin_email: string, 'skip-email'?: bool, 'skip-config'?: bool} $assoc_args Associative arguments.
 	 */
 	public function multisite_install( $args, $assoc_args ) {
 		if ( $this->do_install( $assoc_args ) ) {
@@ -903,6 +916,9 @@ EOT;
 	 *     Package language:  en_US
 	 *
 	 * @when before_wp_load
+	 *
+	 * @param string[] $args Positional arguments. Unused.
+	 * @param array{extra?: bool} $assoc_args Associative arguments.
 	 */
 	public function version( $args = [], $assoc_args = [] ) {
 		$details = self::get_wp_details();
@@ -1086,6 +1102,9 @@ EOT;
 	 *     Success: WordPress updated successfully.
 	 *
 	 * @alias upgrade
+	 *
+	 * @param array{0?: string} $args Positional arguments.
+	 * @param array{minor?: bool, version?: string, force?: bool, locale?: string, insecure?: bool} $assoc_args Associative arguments.
 	 */
 	public function update( $args, $assoc_args ) {
 		global $wp_version;
@@ -1248,6 +1267,9 @@ EOT;
 	 *     Success: WordPress database upgraded on 123/123 sites.
 	 *
 	 * @subcommand update-db
+	 *
+	 * @param string[] $args Positional arguments. Unused.
+	 * @param array{network?: bool, 'dry-run'?: bool} $assoc_args Associative arguments.
 	 */
 	public function update_db( $args, $assoc_args ) {
 		global $wpdb, $wp_db_version, $wp_current_db_version;
@@ -1386,7 +1408,7 @@ EOT;
 	 * @return array List of available updates , or an empty array if no updates are available.
 	 */
 	private function get_updates( $assoc_args ) {
-		$force_check = (bool) Utils\get_flag_value( $assoc_args, 'force-check' );
+		$force_check = Utils\get_flag_value( $assoc_args, 'force-check' );
 		wp_version_check( [], $force_check );
 
 		/**
