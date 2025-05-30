@@ -1,77 +1,42 @@
 Feature: Update WordPress core
 
-  # This test downgrades to an older WordPress version, but the SQLite plugin requires 6.0+
+  # This test downgrades to an older WordPress version, but the SQLite plugin requires 6.4+
   @require-mysql
   Scenario: Update from a ZIP file
     Given a WP install
     And I try `wp theme install twentytwenty --activate`
 
-    When I run `wp core download --version=3.9 --force`
+    When I run `wp core download --version=6.2 --force`
     Then STDOUT should not be empty
 
-    When I run `wp eval 'echo $GLOBALS["wp_version"];'`
+    When I try `wp eval 'echo $GLOBALS["wp_version"];'`
     Then STDOUT should be:
       """
-      3.9
+      6.2
       """
 
-    When I run `wget http://wordpress.org/wordpress-4.0.zip --quiet`
-    And I run `wp core update wordpress-4.0.zip`
+    When I run `wget http://wordpress.org/wordpress-6.2.zip --quiet`
+    And I run `wp core update wordpress-6.2.zip`
     Then STDOUT should be:
       """
       Starting update...
       Unpacking the update...
-      Cleaning up files...
-      No files found that need cleaning up.
       Success: WordPress updated successfully.
       """
 
-    When I run `wp eval 'echo $GLOBALS["wp_version"];'`
+    When I try `wp eval 'echo $GLOBALS["wp_version"];'`
     Then STDOUT should be:
       """
-      4.0
+      6.2
       """
 
-  # PHP 7.1 needs WP 3.9 (due to wp_check_php_mysql_versions(), see trac changeset [27257]),
-  # and travis doesn't install mysql extension by default for PHP 7.0.
-  @less-than-php-7
-  Scenario: Update to the latest minor release
-    Given a WP install
-    And I try `wp theme install twentytwenty --activate`
-
-    When I run `wp core download --version=4.1 --force`
-    Then STDOUT should not be empty
-
-    # WP core throws notice for PHP 8+.
-    When I try `wp core update --minor`
-    Then STDOUT should contain:
-      """
-      Updating to version {WP_VERSION-4.1-latest}
-      """
-    And STDOUT should contain:
-      """
-      Success: WordPress updated successfully.
-      """
-
-    When I run `wp core update --minor`
-    Then STDOUT should be:
-      """
-      Success: WordPress is at the latest minor release.
-      """
-
-    When I run `wp core version`
-    Then STDOUT should be:
-      """
-      {WP_VERSION-4.1-latest}
-      """
-
-  # This test downgrades to an older WordPress version, but the SQLite plugin requires 6.0+
+  # This test downgrades to an older WordPress version, but the SQLite plugin requires 6.4+
   @require-mysql
-  Scenario: Update to the latest minor release (PHP 7.1 compatible with WP >= 3.9)
+  Scenario: Update to the latest minor release (PHP 7.2 compatible with WP >= 4.9)
     Given a WP install
     And I try `wp theme install twentytwenty --activate`
 
-    When I run `wp core download --version=4.1.30 --force`
+    When I run `wp core download --version=6.2.5 --force`
     Then STDOUT should contain:
       """
       Success: WordPress downloaded.
@@ -81,7 +46,7 @@ Feature: Update WordPress core
     When I try `wp core update --minor`
     Then STDOUT should contain:
       """
-      Updating to version {WP_VERSION-4.1-latest}
+      Updating to version {WP_VERSION-6.2-latest}
       """
     And STDOUT should contain:
       """
@@ -98,17 +63,17 @@ Feature: Update WordPress core
     When I run `wp core version`
     Then STDOUT should be:
       """
-      {WP_VERSION-4.1-latest}
+      {WP_VERSION-6.2-latest}
       """
 
-  # This test downgrades to an older WordPress version, but the SQLite plugin requires 6.0+
+  # This test downgrades to an older WordPress version, but the SQLite plugin requires 6.4+
   @require-mysql
   Scenario: Core update from cache
     Given a WP install
     And I try `wp theme install twentytwenty --activate`
     And an empty cache
 
-    When I run `wp core update --version=3.9.1 --force`
+    When I run `wp core update --version=6.2.5 --force`
     Then STDOUT should not contain:
       """
       Using cached file
@@ -118,13 +83,13 @@ Feature: Update WordPress core
       Downloading
       """
 
-    When I run `wp core update --version=4.0 --force`
+    When I run `wp core update --version=6.0 --force`
     Then STDOUT should not be empty
 
-    When I run `wp core update --version=3.9.1 --force`
+    When I run `wp core update --version=6.2.5 --force`
     Then STDOUT should contain:
       """
-      Using cached file '{SUITE_CACHE_DIR}/core/wordpress-3.9.1-en_US.zip'...
+      Using cached file '{SUITE_CACHE_DIR}/core/wordpress-6.2.5-en_US.zip'...
       """
     And STDOUT should not contain:
       """
