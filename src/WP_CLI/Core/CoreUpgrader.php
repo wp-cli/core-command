@@ -105,6 +105,7 @@ class CoreUpgrader extends DefaultCoreUpgrader {
 		 */
 		$cache_file = $cache->has( $cache_key );
 
+		// @todo
 		if ( $cache_file && false === stripos( $package, 'https://wordpress.org/nightly-builds/' )
 			&& false === stripos( $package, 'http://wordpress.org/nightly-builds/' ) ) {
 			WP_CLI::log( "Using cached file '{$cache_file}'..." );
@@ -137,6 +138,7 @@ class CoreUpgrader extends DefaultCoreUpgrader {
 			return new WP_Error( 'download_failed', $this->strings['download_failed'] );
 		}
 
+		// @todo
 		if ( false === stripos( $package, 'https://wordpress.org/nightly-builds/' ) ) {
 			$cache->import( $cache_key, $temp );
 		}
