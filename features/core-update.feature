@@ -117,8 +117,6 @@ Feature: Update WordPress core
       Updating
       """
 
-  # This test downgrades to an older WordPress version, but the SQLite plugin requires 6.0+
-  @require-mysql
   Scenario: Ensure cached partial upgrades aren't used in full upgrade
     Given a WP install
     And I try `wp theme install twentytwenty --activate`
@@ -131,31 +129,31 @@ Feature: Update WordPress core
           'updates' => array(
               (object) array(
                 'response' => 'autoupdate',
-                'download' => 'https://downloads.wordpress.org/release/wordpress-4.2.4.zip',
+                'download' => 'https://downloads.wordpress.org/release/wordpress-6.5.5.zip',
                 'locale' => 'en_US',
                 'packages' => (object) array(
-                  'full' => 'https://downloads.wordpress.org/release/wordpress-4.2.4.zip',
-                  'no_content' => 'https://downloads.wordpress.org/release/wordpress-4.2.4-no-content.zip',
-                  'new_bundled' => 'https://downloads.wordpress.org/release/wordpress-4.2.4-new-bundled.zip',
-                  'partial' => 'https://downloads.wordpress.org/release/wordpress-4.2.4-partial-1.zip',
-                  'rollback' => 'https://downloads.wordpress.org/release/wordpress-4.2.4-rollback-1.zip',
+                  'full' => 'https://downloads.wordpress.org/release/wordpress-6.5.5.zip',
+                  'no_content' => 'https://downloads.wordpress.org/release/wordpress-6.5.5-no-content.zip',
+                  'new_bundled' => 'https://downloads.wordpress.org/release/wordpress-6.5.5-new-bundled.zip',
+                  'partial' => 'https://downloads.wordpress.org/release/wordpress-6.5.5-partial-1.zip',
+                  'rollback' => 'https://downloads.wordpress.org/release/wordpress-6.5.5-rollback-1.zip',
                 ),
-                'current' => '4.2.4',
-                'version' => '4.2.4',
-                'php_version' => '5.2.4',
+                'current' => '6.5.5',
+                'version' => '6.5.5',
+                'php_version' => '8.2.1',
                 'mysql_version' => '5.0',
-                'new_bundled' => '4.1',
-                'partial_version' => '4.2.1',
+                'new_bundled' => '6.4',
+                'partial_version' => '6.5.2',
                 'support_email' => 'updatehelp42@wordpress.org',
                 'new_files' => '',
              ),
           ),
-          'version_checked' => '4.2.4', // Needed to avoid PHP notice in `wp_version_check()`.
+          'version_checked' => '6.5.5', // Needed to avoid PHP notice in `wp_version_check()`.
         );
       });
       """
 
-    When I run `wp core download --version=4.2.1 --force`
+    When I run `wp core download --version=6.5.2 --force`
     And I run `wp core update`
     Then STDOUT should contain:
       """
@@ -163,11 +161,12 @@ Feature: Update WordPress core
       """
     And the {SUITE_CACHE_DIR}/core directory should contain:
       """
-      wordpress-4.2.1-en_US.tar.gz
-      wordpress-4.2.4-partial-1-en_US.zip
+      wordpress-6.5.2-en_US.tar.gz
+      wordpress-6.5.5-partial-1-en_US.zip
       """
 
-    When I run `wp core download --version=4.1.1 --force`
+    # Allow for implicit nullable warnings produced by Requests.
+    When I try `wp core download --version=6.4.1 --force`
     And I run `wp core update`
     Then STDOUT should contain:
       """
@@ -182,10 +181,10 @@ Feature: Update WordPress core
       """
     And the {SUITE_CACHE_DIR}/core directory should contain:
       """
-      wordpress-4.1.1-en_US.tar.gz
-      wordpress-4.2.1-en_US.tar.gz
-      wordpress-4.2.4-no-content-en_US.zip
-      wordpress-4.2.4-partial-1-en_US.zip
+      wordpress-6.4.1-en_US.tar.gz
+      wordpress-6.5.2-en_US.tar.gz
+      wordpress-6.5.5-no-content-en_US.zip
+      wordpress-6.5.5-partial-1-en_US.zip
       """
 
   # This test downgrades to an older WordPress version, but the SQLite plugin requires 6.0+
