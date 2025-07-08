@@ -329,3 +329,25 @@ Feature: Install WordPress core
     Then STDOUT should be:
       """
       """
+
+  # Added to verify https://github.com/wp-cli/extension-command/issues/410
+  @require-mysql
+  Scenario: Install child theme
+    Given a WP install
+    When I try `wp theme install https://public-api.wordpress.com/rest/v1/themes/download/rockfield.zip --activate`
+    Then STDERR should contain:
+    """
+    Error: The parent theme is missing. Please install the "varia-wpcom" parent theme.
+    """
+
+    When I run `wp theme install https://public-api.wordpress.com/rest/v1/themes/download/varia.zip --activate`
+    Then STDOUT should contain:
+    """
+    Success: Installed 1 of 1 themes.
+    """
+
+    When I run `wp theme activate rockfield-wpcom`
+    Then STDOUT should contain:
+    """
+    Success: Switched to 'Rockfield' theme.
+    """
