@@ -393,10 +393,45 @@ class Core_Command extends WP_CLI_Command {
 	 * @param array{network?: bool} $assoc_args Associative arguments.
 	 */
 	public function is_installed( $args, $assoc_args ) {
-		if ( is_blog_installed() && ( ! Utils\get_flag_value( $assoc_args, 'network' ) || is_multisite() ) ) {
-			WP_CLI::halt( 0 );
+		// Check if WordPress is installed by verifying required tables exist.
+		if ( ! function_exists( 'is_blog_installed' ) ) {
+			require_once ABSPATH . 'wp-includes/load.php';
 		}
 
+		if ( is_blog_installed() && ( ! Utils\get_flag_value( $assoc_args, 'network' ) || is_multisite() ) ) {
+			global $wpdb;
+			// List of required core tables (prefix will be added automatically)
+			$required_tables = [
+				'options',
+				'users',
+				'usermeta',
+				'posts',
+				'comments',
+				'commentmeta',
+				'terms',
+				'termmeta',
+				'term_taxonomy',
+				'term_relationships',
+				'links',
+				'postmeta',
+			];
+			$missing_tables = [];
+			foreach ( $required_tables as $table ) {
+				$table_name = $wpdb->prefix . $table;
+				// Check if table exists
+				$result = $wpdb->get_var( $wpdb->prepare(
+					"SHOW TABLES LIKE %s", $table_name
+				) );
+				if ( $result !== $table_name ) {
+					$missing_tables[] = $table_name;
+				}
+			}
+			if ( ! empty( $missing_tables ) ) {
+				// Output missing tables for debugging
+				WP_CLI::error( "WordPress is not installed. Missing tables: " . implode( ', ', $missing_tables ), 1 );
+			}
+			WP_CLI::halt( 0 );
+		}
 		WP_CLI::halt( 1 );
 	}
 
