@@ -403,9 +403,12 @@ class Core_Command extends WP_CLI_Command {
 			// Check if all core tables exist
 			foreach ( $tables as $table ) {
 				$table_name = $wpdb->prefix . $table;
-				$result = $wpdb->get_var( $wpdb->prepare(
-					"SHOW TABLES LIKE %s", $table_name
-				) );
+				$result = $wpdb->get_var(
+					$wpdb->prepare(
+						'SHOW TABLES LIKE %s',
+						$table_name
+					)
+				);
 
 				if ( $result !== $table_name ) {
 					$missing_tables[] = $table_name;
@@ -413,7 +416,13 @@ class Core_Command extends WP_CLI_Command {
 			}
 
 			if ( ! empty( $missing_tables ) ) {
-				WP_CLI::error( "WordPress is not installed. Missing tables: " . implode( ', ', $missing_tables ), 1 );
+				WP_CLI::error(
+					sprintf(
+						'WordPress is not installed. Missing tables: %s',
+						implode( ', ', $missing_tables )
+					),
+					1
+				);
 			}
 
 			WP_CLI::halt( 0 );
