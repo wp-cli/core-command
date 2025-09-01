@@ -393,24 +393,54 @@ class Core_Command extends WP_CLI_Command {
 	 * @param array{network?: bool} $assoc_args Associative arguments.
 	 */
 	public function is_installed( $args, $assoc_args ) {
-		if ( is_blog_installed() && ( ! Utils\get_flag_value( $assoc_args, 'network' ) || is_multisite() ) ) {
+		try {
+			if ( ! is_blog_installed() ) {
+				WP_CLI::halt( 1 );
+			}
+
+			if ( Utils\get_flag_value( $assoc_args, 'network' ) && ! is_multisite() ) {
+				WP_CLI::halt( 1 );
+			}
+
 			global $wpdb;
 
-			// Get core tables from $wpdb
-			$tables = $wpdb->tables();
+			// Get all tables including multisite if needed
+			$tables = $wpdb->tables( 'all', true );
 			$missing_tables = [];
 
-			// Check if all core tables exist
+			// Check if we're using SQLite
+			$is_sqlite = ( strpos( DB_HOST, 'sqlite' ) !== false || 
+				( defined( 'DB_DRIVER' ) && 'sqlite' === DB_DRIVER ) ||
+				( defined( 'DB_ENGINE' ) && 'sqlite' === DB_ENGINE )
+			);
+
+			if ( defined( 'WP_CLI_TEST' ) && WP_CLI_TEST ) {
+				WP_CLI::debug( 'Running in test mode. Database type: ' . ( $is_sqlite ? 'SQLite' : 'MySQL/MariaDB' ) );
+			}
+
 			foreach ( $tables as $table ) {
 				$table_name = $wpdb->prefix . $table;
-				$result = $wpdb->get_var(
-					$wpdb->prepare(
-						'SHOW TABLES LIKE %s',
-						$table_name
-					)
-				);
+				
+				try {
+					if ( $is_sqlite ) {
+						// SQLite uses a simpler table existence check
+						$query = $wpdb->prepare( "SELECT name FROM sqlite_master WHERE type='table' AND name=%s", $table_name );
+						$result = $wpdb->get_var( $query );
+					} else {
+						// Standard MySQL/MariaDB check
+						$query = $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name );
+						$result = $wpdb->get_var( $query );
+					}
 
-				if ( $result !== $table_name ) {
+					if ( defined( 'WP_CLI_TEST' ) && WP_CLI_TEST ) {
+						WP_CLI::debug( sprintf( 'Checking table %s: %s', $table_name, $result ? 'exists' : 'missing' ) );
+					}
+
+					if ( $result !== $table_name ) {
+						$missing_tables[] = $table_name;
+					}
+				} catch ( Exception $e ) {
+					WP_CLI::debug( sprintf( 'Error checking table %s: %s', $table_name, $e->getMessage() ) );
 					$missing_tables[] = $table_name;
 				}
 			}
@@ -426,9 +456,11 @@ class Core_Command extends WP_CLI_Command {
 			}
 
 			WP_CLI::halt( 0 );
-		}
 
-		WP_CLI::halt( 1 );
+		} catch ( Exception $e ) {
+			WP_CLI::debug( 'Error in is_installed: ' . $e->getMessage() );
+			WP_CLI::halt( 1 );
+		}
 	}
 
 	/**
