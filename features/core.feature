@@ -23,7 +23,7 @@ Feature: Manage WordPress installation
 
     When I try `wp core is-installed`
     Then the return code should be 1
-    And STDERR should match /WordPress is not installed\. Missing tables:.*wp_/s
+    And STDERR should match /WordPress is not installed[\s\S]*Missing tables:.*\b[^\s_]+_/
 
     When I try `wp core is-installed --network`
     Then the return code should be 1

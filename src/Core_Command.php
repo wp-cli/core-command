@@ -2,7 +2,7 @@
 
 use Composer\Semver\Comparator;
 use WP_CLI\Extractor;
-use WP_CLI\Iterators\Table as TableIterator;
+use WP_CLI\Iterators\Table;
 use WP_CLI\Utils;
 use WP_CLI\Formatter;
 use WP_CLI\WpOrgApi;
@@ -408,32 +408,47 @@ class Core_Command extends WP_CLI_Command {
 			$tables = $wpdb->tables( 'all', true );
 			$missing_tables = [];
 
-			// Check if we're using SQLite
-			$is_sqlite = ( strpos( DB_HOST, 'sqlite' ) !== false || 
+			// Check if we're using SQLite - check multiple possible indicators
+			$is_sqlite = (
+				( isset( $wpdb->dbdriver ) && 'sqlite' === $wpdb->dbdriver ) ||
 				( defined( 'DB_DRIVER' ) && 'sqlite' === DB_DRIVER ) ||
-				( defined( 'DB_ENGINE' ) && 'sqlite' === DB_ENGINE )
+				( defined( 'DB_ENGINE' ) && 'sqlite' === DB_ENGINE ) ||
+				( is_string( DB_HOST ) && ( strpos( DB_HOST, 'sqlite' ) !== false ) )
 			);
 
 			if ( defined( 'WP_CLI_TEST' ) && WP_CLI_TEST ) {
-				WP_CLI::debug( 'Running in test mode. Database type: ' . ( $is_sqlite ? 'SQLite' : 'MySQL/MariaDB' ) );
+				WP_CLI::debug( 'Database type: ' . ( $is_sqlite ? 'SQLite' : 'MySQL/MariaDB' ) );
 			}
 
 			foreach ( $tables as $table ) {
 				$table_name = $wpdb->prefix . $table;
 				
 				try {
-					if ( $is_sqlite ) {
-						// SQLite uses a simpler table existence check
-						$query = $wpdb->prepare( "SELECT name FROM sqlite_master WHERE type='table' AND name=%s", $table_name );
-						$result = $wpdb->get_var( $query );
-					} else {
-						// Standard MySQL/MariaDB check
-						$query = $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name );
-						$result = $wpdb->get_var( $query );
+					try {
+						if ( $is_sqlite ) {
+							// SQLite uses a simpler table existence check
+							$result = $wpdb->get_var(
+								$wpdb->prepare(
+									"SELECT name FROM sqlite_master WHERE type='table' AND name=%s",
+									$table_name
+								)
+							);
+						} else {
+							// Standard MySQL/MariaDB check
+							$result = $wpdb->get_var(
+								$wpdb->prepare(
+									'SHOW TABLES LIKE %s',
+									$table_name
+								)
+							);
+						}
+					} catch ( Exception $e ) {
+						// If there's an error, assume the table doesn't exist
+						$result = null;
 					}
 
 					if ( defined( 'WP_CLI_TEST' ) && WP_CLI_TEST ) {
-						WP_CLI::debug( sprintf( 'Checking table %s: %s', $table_name, $result ? 'exists' : 'missing' ) );
+						WP_CLI::debug( sprintf( 'Table %s: %s', $table_name, $result ? 'exists' : 'missing' ) );
 					}
 
 					if ( $result !== $table_name ) {
