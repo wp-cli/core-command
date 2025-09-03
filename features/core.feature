@@ -256,7 +256,7 @@ Feature: Manage WordPress installation
     Given a WP install
     And a custom wp-content directory
 
-    When I run `wp plugin status hello`
+    When I run `wp plugin status akismet`
     Then STDOUT should not be empty
 
   Scenario: User defined in wp-cli.yml
