@@ -1287,9 +1287,9 @@ EOT;
 					'archived' => 0,
 				],
 			];
-			$it                  = new TableIterator( $iterator_args );
-			$total               = 0;
-			$needs_update        = 0;
+			$it                   = new TableIterator( $iterator_args );
+			$total                = 0;
+			$needs_update         = 0;
 			$sites_needing_update = [];
 
 			/**
