@@ -88,34 +88,6 @@ or success message when up to date.
 
 
 
-### wp core check-update-db
-
-Checks for the need for WordPress database updates.
-
-~~~
-wp core check-update-db [--network]
-~~~
-
-Compares the current database version with the version required by WordPress core
-to determine if database updates are needed.
-
-**OPTIONS**
-
-	[--network]
-		Check databases for all sites on a network.
-
-**EXAMPLES**
-
-    # Check if database update is needed
-    $ wp core check-update-db
-    Success: WordPress database is up to date.
-
-    # Check database update status for all sites on a network
-    $ wp core check-update-db --network
-    Success: WordPress databases are up to date on 5/5 sites.
-
-
-
 ### wp core download
 
 Downloads core WordPress files.
