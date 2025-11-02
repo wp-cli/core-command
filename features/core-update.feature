@@ -1,35 +1,33 @@
 Feature: Update WordPress core
 
-  # This test downgrades to an older WordPress version, but the SQLite plugin requires 6.0+
+  # This test downgrades to an older WordPress version, but the SQLite plugin requires 6.4+
   @require-mysql
   Scenario: Update from a ZIP file
     Given a WP install
     And I try `wp theme install twentytwenty --activate`
 
-    When I run `wp core download --version=3.9 --force`
+    When I run `wp core download --version=6.2 --force`
     Then STDOUT should not be empty
 
-    When I run `wp eval 'echo $GLOBALS["wp_version"];'`
+    When I try `wp eval 'echo $GLOBALS["wp_version"];'`
     Then STDOUT should be:
       """
-      3.9
+      6.2
       """
 
-    When I run `wget http://wordpress.org/wordpress-4.0.zip --quiet`
-    And I run `wp core update wordpress-4.0.zip`
+    When I run `wget http://wordpress.org/wordpress-6.2.zip --quiet`
+    And I run `wp core update wordpress-6.2.zip`
     Then STDOUT should be:
       """
       Starting update...
       Unpacking the update...
-      Cleaning up files...
-      No files found that need cleaning up.
       Success: WordPress updated successfully.
       """
 
-    When I run `wp eval 'echo $GLOBALS["wp_version"];'`
+    When I try `wp eval 'echo $GLOBALS["wp_version"];'`
     Then STDOUT should be:
       """
-      4.0
+      6.2
       """
 
   @require-php-7.0
@@ -95,46 +93,13 @@ Feature: Update WordPress core
       | name | old_version | new_version | status  |
       | core | 6.0         | 6.1         | Updated |
 
-  # PHP 7.1 needs WP 3.9 (due to wp_check_php_mysql_versions(), see trac changeset [27257]),
-  # and travis doesn't install mysql extension by default for PHP 7.0.
-  @less-than-php-7
-  Scenario: Update to the latest minor release
-    Given a WP install
-    And I try `wp theme install twentytwenty --activate`
-
-    When I run `wp core download --version=4.1 --force`
-    Then STDOUT should not be empty
-
-    # WP core throws notice for PHP 8+.
-    When I try `wp core update --minor`
-    Then STDOUT should contain:
-      """
-      Updating to version {WP_VERSION-4.1-latest}
-      """
-    And STDOUT should contain:
-      """
-      Success: WordPress updated successfully.
-      """
-
-    When I run `wp core update --minor`
-    Then STDOUT should be:
-      """
-      Success: WordPress is at the latest minor release.
-      """
-
-    When I run `wp core version`
-    Then STDOUT should be:
-      """
-      {WP_VERSION-4.1-latest}
-      """
-
-  # This test downgrades to an older WordPress version, but the SQLite plugin requires 6.0+
+  # This test downgrades to an older WordPress version, but the SQLite plugin requires 6.4+
   @require-mysql
-  Scenario: Update to the latest minor release (PHP 7.1 compatible with WP >= 3.9)
+  Scenario: Update to the latest minor release (PHP 7.2 compatible with WP >= 4.9)
     Given a WP install
     And I try `wp theme install twentytwenty --activate`
 
-    When I run `wp core download --version=4.1.30 --force`
+    When I run `wp core download --version=6.2.5 --force`
     Then STDOUT should contain:
       """
       Success: WordPress downloaded.
@@ -144,7 +109,7 @@ Feature: Update WordPress core
     When I try `wp core update --minor`
     Then STDOUT should contain:
       """
-      Updating to version {WP_VERSION-4.1-latest}
+      Updating to version {WP_VERSION-6.2-latest}
       """
     And STDOUT should contain:
       """
@@ -161,17 +126,17 @@ Feature: Update WordPress core
     When I run `wp core version`
     Then STDOUT should be:
       """
-      {WP_VERSION-4.1-latest}
+      {WP_VERSION-6.2-latest}
       """
 
-  # This test downgrades to an older WordPress version, but the SQLite plugin requires 6.0+
+  # This test downgrades to an older WordPress version, but the SQLite plugin requires 6.4+
   @require-mysql
   Scenario: Core update from cache
     Given a WP install
     And I try `wp theme install twentytwenty --activate`
     And an empty cache
 
-    When I run `wp core update --version=3.9.1 --force`
+    When I run `wp core update --version=6.2.5 --force`
     Then STDOUT should not contain:
       """
       Using cached file
@@ -181,13 +146,13 @@ Feature: Update WordPress core
       Downloading
       """
 
-    When I run `wp core update --version=4.0 --force`
+    When I run `wp core update --version=6.0 --force`
     Then STDOUT should not be empty
 
-    When I run `wp core update --version=3.9.1 --force`
+    When I run `wp core update --version=6.2.5 --force`
     Then STDOUT should contain:
       """
-      Using cached file '{SUITE_CACHE_DIR}/core/wordpress-3.9.1-en_US.zip'...
+      Using cached file '{SUITE_CACHE_DIR}/core/wordpress-6.2.5-en_US.zip'...
       """
     And STDOUT should not contain:
       """
@@ -215,8 +180,6 @@ Feature: Update WordPress core
       Updating
       """
 
-  # This test downgrades to an older WordPress version, but the SQLite plugin requires 6.0+
-  @require-mysql
   Scenario: Ensure cached partial upgrades aren't used in full upgrade
     Given a WP install
     And I try `wp theme install twentytwenty --activate`
@@ -229,31 +192,31 @@ Feature: Update WordPress core
           'updates' => array(
               (object) array(
                 'response' => 'autoupdate',
-                'download' => 'https://downloads.wordpress.org/release/wordpress-4.2.4.zip',
+                'download' => 'https://downloads.wordpress.org/release/wordpress-6.5.5.zip',
                 'locale' => 'en_US',
                 'packages' => (object) array(
-                  'full' => 'https://downloads.wordpress.org/release/wordpress-4.2.4.zip',
-                  'no_content' => 'https://downloads.wordpress.org/release/wordpress-4.2.4-no-content.zip',
-                  'new_bundled' => 'https://downloads.wordpress.org/release/wordpress-4.2.4-new-bundled.zip',
-                  'partial' => 'https://downloads.wordpress.org/release/wordpress-4.2.4-partial-1.zip',
-                  'rollback' => 'https://downloads.wordpress.org/release/wordpress-4.2.4-rollback-1.zip',
+                  'full' => 'https://downloads.wordpress.org/release/wordpress-6.5.5.zip',
+                  'no_content' => 'https://downloads.wordpress.org/release/wordpress-6.5.5-no-content.zip',
+                  'new_bundled' => 'https://downloads.wordpress.org/release/wordpress-6.5.5-new-bundled.zip',
+                  'partial' => 'https://downloads.wordpress.org/release/wordpress-6.5.5-partial-1.zip',
+                  'rollback' => 'https://downloads.wordpress.org/release/wordpress-6.5.5-rollback-1.zip',
                 ),
-                'current' => '4.2.4',
-                'version' => '4.2.4',
-                'php_version' => '5.2.4',
+                'current' => '6.5.5',
+                'version' => '6.5.5',
+                'php_version' => '8.2.1',
                 'mysql_version' => '5.0',
-                'new_bundled' => '4.1',
-                'partial_version' => '4.2.1',
+                'new_bundled' => '6.4',
+                'partial_version' => '6.5.2',
                 'support_email' => 'updatehelp42@wordpress.org',
                 'new_files' => '',
              ),
           ),
-          'version_checked' => '4.2.4', // Needed to avoid PHP notice in `wp_version_check()`.
+          'version_checked' => '6.5.5', // Needed to avoid PHP notice in `wp_version_check()`.
         );
       });
       """
 
-    When I run `wp core download --version=4.2.1 --force`
+    When I run `wp core download --version=6.5.2 --force`
     And I run `wp core update`
     Then STDOUT should contain:
       """
@@ -261,11 +224,12 @@ Feature: Update WordPress core
       """
     And the {SUITE_CACHE_DIR}/core directory should contain:
       """
-      wordpress-4.2.1-en_US.tar.gz
-      wordpress-4.2.4-partial-1-en_US.zip
+      wordpress-6.5.2-en_US.tar.gz
+      wordpress-6.5.5-partial-1-en_US.zip
       """
 
-    When I run `wp core download --version=4.1.1 --force`
+    # Allow for implicit nullable warnings produced by Requests.
+    When I try `wp core download --version=6.4.1 --force`
     And I run `wp core update`
     Then STDOUT should contain:
       """
@@ -280,10 +244,10 @@ Feature: Update WordPress core
       """
     And the {SUITE_CACHE_DIR}/core directory should contain:
       """
-      wordpress-4.1.1-en_US.tar.gz
-      wordpress-4.2.1-en_US.tar.gz
-      wordpress-4.2.4-no-content-en_US.zip
-      wordpress-4.2.4-partial-1-en_US.zip
+      wordpress-6.4.1-en_US.tar.gz
+      wordpress-6.5.2-en_US.tar.gz
+      wordpress-6.5.5-no-content-en_US.zip
+      wordpress-6.5.5-partial-1-en_US.zip
       """
 
   # This test downgrades to an older WordPress version, but the SQLite plugin requires 6.0+
@@ -291,9 +255,10 @@ Feature: Update WordPress core
   Scenario: Make sure files are cleaned up
     Given a WP install
     And I try `wp theme install twentytwenty --activate`
+
     When I run `wp core update --version=4.4 --force`
     Then the wp-includes/rest-api.php file should exist
-    Then the wp-includes/class-wp-comment.php file should exist
+    And the wp-includes/class-wp-comment.php file should exist
     And STDOUT should not contain:
       """
       File removed: wp-content
@@ -301,8 +266,8 @@ Feature: Update WordPress core
 
     When I run `wp core update --version=4.3.2 --force`
     Then the wp-includes/rest-api.php file should not exist
-    Then the wp-includes/class-wp-comment.php file should not exist
-    Then STDOUT should contain:
+    And the wp-includes/class-wp-comment.php file should not exist
+    And STDOUT should contain:
       """
       File removed: wp-includes/class-walker-comment.php
       File removed: wp-includes/class-wp-network.php
@@ -322,7 +287,7 @@ Feature: Update WordPress core
     When I run `wp post create --post_title='Test post' --porcelain`
     Then STDOUT should be a number
 
-  # This test downgrades to an older WordPress version, but the SQLite plugin requires 6.0+
+  # This test downgrades to an older WordPress version, but the SQLite plugin requires 6.4+
   @require-mysql
   Scenario: Make sure files are cleaned up with mixed case
     Given a WP install
@@ -330,72 +295,34 @@ Feature: Update WordPress core
 
     When I run `wp core update --version=5.8 --force`
     Then the wp-includes/Requests/Transport/cURL.php file should exist
-    Then the wp-includes/Requests/Exception/Transport/cURL.php file should exist
-    Then the wp-includes/Requests/Exception/HTTP/502.php file should exist
-    Then the wp-includes/Requests/IRI.php file should exist
-    Then the wp-includes/Requests/Transport/Curl.php file should not exist
-    Then the wp-includes/Requests/Exception/Transport/Curl.php file should not exist
-    Then the wp-includes/Requests/Exception/Http/Status502.php file should not exist
-    Then the wp-includes/Requests/Iri.php file should not exist
+    And the wp-includes/Requests/Exception/Transport/cURL.php file should exist
+    And the wp-includes/Requests/Exception/HTTP/502.php file should exist
+    And the wp-includes/Requests/IRI.php file should exist
+    And the wp-includes/Requests/src/Transport/Curl.php file should not exist
+    And the wp-includes/Requests/src/Exception/Transport/Curl.php file should not exist
+    And the wp-includes/Requests/src/Exception/Http/Status502.php file should not exist
+    And the wp-includes/Requests/src/Iri.php file should not exist
+    And STDOUT should contain:
+      """
+      Cleaning up files...
+      """
     And STDOUT should contain:
       """
       Success: WordPress updated successfully.
       """
 
-    When I run `wp core update --version=5.9-beta1 --force`
+    When I run `wp core update --version=6.2 --force`
     Then the wp-includes/Requests/Transport/cURL.php file should not exist
-    Then the wp-includes/Requests/Exception/Transport/cURL.php file should not exist
-    Then the wp-includes/Requests/Exception/HTTP/502.php file should not exist
-    Then the wp-includes/Requests/IRI.php file should not exist
-    Then the wp-includes/Requests/Transport/Curl.php file should exist
-    Then the wp-includes/Requests/Exception/Transport/Curl.php file should exist
-    Then the wp-includes/Requests/Exception/Http/Status502.php file should exist
-    Then the wp-includes/Requests/Iri.php file should exist
-    Then STDOUT should contain:
+    And the wp-includes/Requests/Exception/Transport/cURL.php file should not exist
+    And the wp-includes/Requests/Exception/HTTP/502.php file should not exist
+    And the wp-includes/Requests/IRI.php file should not exist
+    And the wp-includes/Requests/src/Transport/Curl.php file should exist
+    And the wp-includes/Requests/src/Exception/Transport/Curl.php file should exist
+    And the wp-includes/Requests/src/Exception/Http/Status502.php file should exist
+    And the wp-includes/Requests/src/Iri.php file should exist
+    And STDOUT should contain:
       """
-      File removed: wp-includes/Requests/Transport/fsockopen.php
-      File removed: wp-includes/Requests/Transport/cURL.php
-      File removed: wp-includes/Requests/Hooker.php
-      File removed: wp-includes/Requests/IPv6.php
-      File removed: wp-includes/Requests/Exception/Transport/cURL.php
-      File removed: wp-includes/Requests/Exception/HTTP.php
-      File removed: wp-includes/Requests/Exception/HTTP/502.php
-      File removed: wp-includes/Requests/Exception/HTTP/Unknown.php
-      File removed: wp-includes/Requests/Exception/HTTP/412.php
-      File removed: wp-includes/Requests/Exception/HTTP/408.php
-      File removed: wp-includes/Requests/Exception/HTTP/431.php
-      File removed: wp-includes/Requests/Exception/HTTP/501.php
-      File removed: wp-includes/Requests/Exception/HTTP/500.php
-      File removed: wp-includes/Requests/Exception/HTTP/407.php
-      File removed: wp-includes/Requests/Exception/HTTP/416.php
-      File removed: wp-includes/Requests/Exception/HTTP/428.php
-      File removed: wp-includes/Requests/Exception/HTTP/406.php
-      File removed: wp-includes/Requests/Exception/HTTP/504.php
-      File removed: wp-includes/Requests/Exception/HTTP/411.php
-      File removed: wp-includes/Requests/Exception/HTTP/414.php
-      File removed: wp-includes/Requests/Exception/HTTP/511.php
-      File removed: wp-includes/Requests/Exception/HTTP/410.php
-      File removed: wp-includes/Requests/Exception/HTTP/403.php
-      File removed: wp-includes/Requests/Exception/HTTP/400.php
-      File removed: wp-includes/Requests/Exception/HTTP/505.php
-      File removed: wp-includes/Requests/Exception/HTTP/413.php
-      File removed: wp-includes/Requests/Exception/HTTP/404.php
-      File removed: wp-includes/Requests/Exception/HTTP/306.php
-      File removed: wp-includes/Requests/Exception/HTTP/304.php
-      File removed: wp-includes/Requests/Exception/HTTP/405.php
-      File removed: wp-includes/Requests/Exception/HTTP/429.php
-      File removed: wp-includes/Requests/Exception/HTTP/417.php
-      File removed: wp-includes/Requests/Exception/HTTP/409.php
-      File removed: wp-includes/Requests/Exception/HTTP/402.php
-      File removed: wp-includes/Requests/Exception/HTTP/418.php
-      File removed: wp-includes/Requests/Exception/HTTP/305.php
-      File removed: wp-includes/Requests/Exception/HTTP/415.php
-      File removed: wp-includes/Requests/Exception/HTTP/401.php
-      File removed: wp-includes/Requests/Exception/HTTP/503.php
-      File removed: wp-includes/Requests/IRI.php
-      File removed: wp-includes/Requests/IDNAEncoder.php
-      File removed: wp-includes/Requests/SSL.php
-      File removed: wp-includes/Requests/Proxy/HTTP.php
+      Cleaning up files...
       """
 
     When I run `wp option add str_opt 'bar'`
@@ -403,7 +330,7 @@ Feature: Update WordPress core
     When I run `wp post create --post_title='Test post' --porcelain`
     Then STDOUT should be a number
 
-  @require-php-7.0
+  @require-php-7.2
   Scenario Outline: Use `--version=(nightly|trunk)` to update to the latest nightly version
     Given a WP install
 
@@ -419,11 +346,11 @@ Feature: Update WordPress core
       """
 
     Examples:
-    | version    |
-    | trunk      |
-    | nightly    |
+      | version    |
+      | trunk      |
+      | nightly    |
 
-  @require-php-7.0
+  @require-php-7.2
   Scenario: Installing latest nightly build should skip cache
     Given a WP install
 
@@ -447,4 +374,13 @@ Feature: Update WordPress core
     And STDOUT should not contain:
       """
       Using cached
+      """
+
+  Scenario: Allow installing major version with trailing zero
+    Given a WP install
+
+    When I run `wp core update --version=6.2.0 --force`
+    Then STDOUT should contain:
+      """
+      Success:
       """

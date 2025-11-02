@@ -39,9 +39,9 @@ Feature: Download WordPress
     When I run `wp core download --force`
     Then the wp-settings.php file should exist
     And STDOUT should contain:
-    """
-    Using cached file '{SUITE_CACHE_DIR}/core/wordpress-{VERSION}-en_US.tar.gz'...
-    """
+      """
+      Using cached file '{SUITE_CACHE_DIR}/core/wordpress-{VERSION}-en_US.tar.gz'...
+      """
 
   Scenario: Localized install
     Given an empty directory
@@ -54,7 +54,7 @@ Feature: Download WordPress
   Scenario: Catch download of non-existent WP version
     Given an empty directory
 
-    When I try `wp core download --version=4.1.0 --force`
+    When I try `wp core download --version=1.0.3 --force`
     Then STDERR should contain:
       """
       Error: Release not found.
@@ -115,9 +115,10 @@ Feature: Download WordPress
 
   Scenario: Make sure files are cleaned up
     Given an empty directory
+
     When I run `wp core download --version=4.4`
     Then the wp-includes/rest-api.php file should exist
-    Then the wp-includes/class-wp-comment.php file should exist
+    And the wp-includes/class-wp-comment.php file should exist
     And STDERR should not contain:
       """
       Warning: Failed to find WordPress version. Please cleanup files manually.
@@ -125,7 +126,7 @@ Feature: Download WordPress
 
     When I run `wp core download --version=4.3.2 --force`
     Then the wp-includes/rest-api.php file should not exist
-    Then the wp-includes/class-wp-comment.php file should not exist
+    And the wp-includes/class-wp-comment.php file should not exist
     And STDOUT should not contain:
       """
       File removed: wp-content
@@ -238,9 +239,9 @@ Feature: Download WordPress
     When I try `wp core download --version=nightly --locale=de_DE`
     Then the return code should be 1
     And STDERR should contain:
-    """
-    Error: Nightly builds are only available for the en_US locale.
-    """
+      """
+      Error: Nightly builds are only available for the en_US locale.
+      """
 
   Scenario: Installing a release candidate or beta version
     Given an empty directory
@@ -249,7 +250,7 @@ Feature: Download WordPress
     # Test with incorrect case.
     When I try `wp core download --version=4.6-rc2`
     Then the return code should be 1
-    Then STDERR should contain:
+    And STDERR should contain:
       """
       Error: Release not found.
       """
@@ -281,62 +282,62 @@ Feature: Download WordPress
   Scenario: Fail if path can't be created
     Given an empty directory
     And a non-directory-path file:
-    """
-    """
+      """
+      """
 
     When I try `wp core download --path=non-directory-path`
     Then STDERR should contain:
-    """
-    Failed to create directory
-    """
+      """
+      Failed to create directory
+      """
     And STDERR should contain:
-    """
-    /non-directory-path/
-    """
+      """
+      /non-directory-path/
+      """
     And the return code should be 1
 
     When I try `WP_CLI_STRICT_ARGS_MODE=1 wp core download --path=non-directory-path`
     Then STDERR should contain:
-    """
-    Failed to create directory
-    """
+      """
+      Failed to create directory
+      """
     And STDERR should contain:
-    """
-    non-directory-path/
-    """
+      """
+      non-directory-path/
+      """
     And the return code should be 1
 
     When I try `WP_CLI_STRICT_ARGS_MODE=1 wp core download --path=non-directory-path\\`
     Then STDERR should contain:
-    """
-    Failed to create directory
-    """
+      """
+      Failed to create directory
+      """
     And STDERR should contain:
-    """
-    non-directory-path/
-    """
+      """
+      non-directory-path/
+      """
     And the return code should be 1
 
     When I try `wp core download --path=/root-level-directory`
     Then STDERR should contain:
-    """
-    Insufficient permission to create directory
-    """
+      """
+      Insufficient permission to create directory
+      """
     And STDERR should contain:
-    """
-    /root-level-directory/
-    """
+      """
+      /root-level-directory/
+      """
     And the return code should be 1
 
     When I try `WP_CLI_STRICT_ARGS_MODE=1 wp core download --path=/root-level-directory`
     Then STDERR should contain:
-    """
-    Insufficient permission to create directory
-    """
+      """
+      Insufficient permission to create directory
+      """
     And STDERR should contain:
-    """
-    /root-level-directory/
-    """
+      """
+      /root-level-directory/
+      """
     And the return code should be 1
 
   Scenario: Core download without the full wp-content/plugins dir
@@ -366,9 +367,9 @@ Feature: Download WordPress
     And the wp-includes directory should exist
     And the wp-content/themes directory should exist
     And the wp-content/themes directory should be:
-       """
-       index.php
-       """
+      """
+      index.php
+      """
     And the wp-includes/js/tinymce/themes directory should exist
 
   Scenario: Core download without the full wp-content/plugins dir should work non US locale
@@ -382,9 +383,9 @@ Feature: Download WordPress
     And the wp-includes directory should exist
     And the wp-content/plugins directory should exist
     And the wp-content/plugins directory should be:
-       """
-       index.php
-       """
+      """
+      index.php
+      """
     And the wp-includes/js/tinymce/plugins directory should exist
 
   Scenario: Core download without the full wp-content/themes dir should work non US locale
@@ -398,9 +399,9 @@ Feature: Download WordPress
     And the wp-includes directory should exist
     And the wp-content/themes directory should exist
     And the wp-content/themes directory should be:
-       """
-       index.php
-       """
+      """
+      index.php
+      """
     And the wp-includes/js/tinymce/themes directory should exist
 
   Scenario: Core download without the full wp-content/plugins dir should work if a version is set
@@ -414,14 +415,14 @@ Feature: Download WordPress
     And the wp-includes directory should exist
     And the wp-content/plugins directory should exist
     And the wp-content/plugins directory should be:
-       """
-       index.php
-       """
+      """
+      index.php
+      """
     And the wp-content/themes directory should exist
     And the wp-content/themes directory should be:
-       """
-       index.php
-       """
+      """
+      index.php
+      """
     And the wp-includes/js/tinymce/themes directory should exist
     And the wp-includes/js/tinymce/plugins directory should exist
 
@@ -473,3 +474,13 @@ Feature: Download WordPress
       Error: Cannot use both --skip-content and --no-extract at the same time.
       """
     And the return code should be 1
+
+  Scenario: Allow installing major version with trailing zero
+    Given an empty directory
+
+    When I run `wp core download --version=6.7.0`
+    Then STDOUT should contain:
+      """
+      Success:
+      """
+

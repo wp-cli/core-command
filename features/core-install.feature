@@ -195,9 +195,9 @@ Feature: Install WordPress core
 
     When I run `wp config create --dbname={DB_NAME} --dbuser={DB_USER} --dbpass={DB_PASSWORD} --dbhost={DB_HOST} --locale=de_DE --skip-check`
     Then STDOUT should be:
-    """
-    Success: Generated 'wp-config.php' file.
-    """
+      """
+      Success: Generated 'wp-config.php' file.
+      """
 
     # Old versions of WP can generate wpdb database errors if the WP tables don't exist, so STDERR may or may not be empty
     When I try `wp core install --url=example.org --title=Test --admin_user=testadmin --admin_email=testadmin@example.com --admin_password=newpassword --locale=de_DE --skip-email`
@@ -205,7 +205,7 @@ Feature: Install WordPress core
       """
       Warning: The flag --locale=de_DE is being ignored as it requires WordPress 4.0+.
       """
-    Then STDOUT should contain:
+    And STDOUT should contain:
       """
       Success: WordPress installed successfully.
       """
@@ -241,9 +241,9 @@ Feature: Install WordPress core
 
     When I run `wp config create --dbname={DB_NAME} --dbuser={DB_USER} --dbpass={DB_PASSWORD} --dbhost={DB_HOST} --locale=de_DE --skip-check`
     Then STDOUT should be:
-    """
-    Success: Generated 'wp-config.php' file.
-    """
+      """
+      Success: Generated 'wp-config.php' file.
+      """
 
     # Old versions of WP can generate wpdb database errors if the WP tables don't exist, so STDERR may or may not be empty
     When I run `wp core install --url=example.org --title=Test --admin_user=testadmin --admin_email=testadmin@example.com --admin_password=newpassword --locale=de_DE --skip-email`
@@ -290,9 +290,9 @@ Feature: Install WordPress core
 
     When I run `wp core multisite-install --url=foobar.org --title=Test --admin_user=wpcli --admin_email=admin@example.com --admin_password=password --skip-config`
     Then STDOUT should contain:
-    """
-    Addition of multisite constants to 'wp-config.php' skipped. You need to add them manually:
-    """
+      """
+      Addition of multisite constants to 'wp-config.php' skipped. You need to add them manually:
+      """
 
   @require-mysql
   Scenario: Install WordPress multisite with existing multisite constants in wp-config file
