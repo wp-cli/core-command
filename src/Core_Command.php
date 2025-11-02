@@ -1279,7 +1279,7 @@ EOT;
 		}
 
 		if ( $network ) {
-			$iterator_args = [
+			$iterator_args        = [
 				'table' => $wpdb->blogs,
 				'where' => [
 					'spam'     => 0,
