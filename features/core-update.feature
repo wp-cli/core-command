@@ -35,20 +35,20 @@ Feature: Update WordPress core
     Given a WP install
     And I try `wp theme install twentytwenty --activate`
 
-    When I run `wp core download --version=6.0 --force`
+    When I run `wp core download --version=6.6 --force`
     Then STDOUT should not be empty
 
     When I run `wp eval 'echo $GLOBALS["wp_version"];'`
     Then STDOUT should be:
       """
-      6.0
+      6.6
       """
 
-    When I run `wget http://wordpress.org/wordpress-6.1.zip --quiet`
-    And I run `wp core update wordpress-6.1.zip --format=json`
+    When I run `wget http://wordpress.org/wordpress-6.8.zip --quiet`
+    And I run `wp core update wordpress-6.8.zip --format=json`
     Then STDOUT should be:
       """
-      [{"name":"core","old_version":"6.0","new_version":"6.1","status":"Updated"}]
+      [{"name":"core","old_version":"6.6","new_version":"6.8","status":"Updated"}]
       """
 
   @require-php-7.0
@@ -56,21 +56,21 @@ Feature: Update WordPress core
     Given a WP install
     And I try `wp theme install twentytwenty --activate`
 
-    When I run `wp core download --version=6.0 --force`
+    When I run `wp core download --version=6.6 --force`
     Then STDOUT should not be empty
 
     When I run `wp eval 'echo $GLOBALS["wp_version"];'`
     Then STDOUT should be:
       """
-      6.0
+      6.6
       """
 
-    When I run `wget http://wordpress.org/wordpress-6.1.zip --quiet`
-    And I run `wp core update wordpress-6.1.zip --format=csv`
+    When I run `wget http://wordpress.org/wordpress-6.8.zip --quiet`
+    And I run `wp core update wordpress-6.8.zip --format=csv`
     Then STDOUT should be:
       """
       name,old_version,new_version,status
-      core,6.0,6.1,Updated
+      core,6.6,6.8,Updated
       """
 
   @require-php-7.0
@@ -78,20 +78,20 @@ Feature: Update WordPress core
     Given a WP install
     And I try `wp theme install twentytwenty --activate`
 
-    When I run `wp core download --version=6.0 --force`
+    When I run `wp core download --version=6.6 --force`
     Then STDOUT should not be empty
 
     When I run `wp eval 'echo $GLOBALS["wp_version"];'`
     Then STDOUT should be:
       """
-      6.0
+      6.6
       """
 
-    When I run `wget http://wordpress.org/wordpress-6.1.zip --quiet`
-    And I run `wp core update wordpress-6.1.zip --format=table`
+    When I run `wget http://wordpress.org/wordpress-6.8.zip --quiet`
+    And I run `wp core update wordpress-6.8.zip --format=table`
     Then STDOUT should end with a table containing rows:
       | name | old_version | new_version | status  |
-      | core | 6.0         | 6.1         | Updated |
+      | core | 6.6         | 6.8         | Updated |
 
   # This test downgrades to an older WordPress version, but the SQLite plugin requires 6.4+
   @require-mysql
