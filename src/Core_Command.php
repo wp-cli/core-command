@@ -1114,7 +1114,7 @@ EOT;
 	 * @alias upgrade
 	 *
 	 * @param array{0?: string} $args Positional arguments.
-	 * @param array{minor?: bool, version?: string, force?: bool, locale?: string, insecure?: bool} $assoc_args Associative arguments.
+	 * @param array{minor?: bool, version?: string, force?: bool, locale?: string, insecure?: bool, format?: string} $assoc_args Associative arguments.
 	 */
 	public function update( $args, $assoc_args ) {
 		global $wp_version;
