@@ -43,8 +43,6 @@ Feature: Check if WordPress database update is needed
       Success: WordPress database is up to date.
       """
 
-  # This test downgrades to an older WordPress version, but the SQLite plugin requires 6.0+
-  @require-mysql
   Scenario: Check if database update is needed across network
     Given a WP multisite install
     And a disable_sidebar_check.php file:
@@ -55,9 +53,9 @@ Feature: Check if WordPress database update is needed
       } );
       """
     And I try `wp theme install twentytwenty --activate`
-    And I run `wp core download --version=5.4 --force`
-    And I run `wp option update db_version 45805 --require=disable_sidebar_check.php`
-    And I run `wp site option update wpmu_upgrade_site 45805`
+    And I run `wp core download --version=6.6 --force`
+    And I run `wp option update db_version 57155 --require=disable_sidebar_check.php`
+    And I run `wp site option update wpmu_upgrade_site 57155`
     And I run `wp site create --slug=foo`
     And I run `wp site create --slug=bar`
     And I run `wp site create --slug=burrito --porcelain`
@@ -69,6 +67,7 @@ Feature: Check if WordPress database update is needed
     And I run `wp site archive {BURRITO_ID}`
     And I run `wp site spam {TACO_ID}`
     And I run `wp site delete {PIZZA_ID} --yes`
+    And I run `wp core update`
 
     When I try `wp core check-update-db --network`
     Then the return code should be 1
