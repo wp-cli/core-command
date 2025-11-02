@@ -341,7 +341,7 @@ file with the appropriate multisite rewrite rules.
 Updates WordPress to a newer version.
 
 ~~~
-wp core update [<zip>] [--minor] [--version=<version>] [--force] [--locale=<locale>] [--insecure]
+wp core update [<zip>] [--minor] [--version=<version>] [--force] [--locale=<locale>] [--format=<format>] [--insecure]
 ~~~
 
 Defaults to updating WordPress to the latest version.
@@ -366,6 +366,15 @@ update isn't actually running.
 
 	[--locale=<locale>]
 		Select which language you want to download.
+
+	[--format=<format>]
+		Render output in a particular format.
+		---
+		options:
+		  - table
+		  - csv
+		  - json
+		---
 
 	[--insecure]
 		Retry download without certificate validation if TLS handshake fails. Note: This makes the request vulnerable to a MITM attack.
