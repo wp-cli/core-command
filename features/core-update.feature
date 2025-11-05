@@ -388,9 +388,8 @@ Feature: Update WordPress core
   Scenario: Show helpful tip when update is locked
     Given a WP install
 
-    # Create a lock option to simulate another update in progress
-    When I run `wp option add core_updater.lock 1`
-    And I try `wp core update --version=latest`
+    When I run `wp option update core_updater.lock 100000000000000`
+    And I try `wp core update --version=trunk`
     Then STDERR should contain:
       """
       Another update is currently in progress. You may need to run `wp option delete core_updater.lock` after verifying another update isn't actually running.
