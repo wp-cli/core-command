@@ -32,6 +32,11 @@ use WP_CLI\WpOrgApi;
 class Core_Command extends WP_CLI_Command {
 
 	/**
+	 * Tip message for resolving the core_updater.lock issue.
+	 */
+	const LOCK_TIP_MESSAGE = 'You may need to run `wp option delete core_updater.lock` after verifying another update isn\'t actually running.';
+
+	/**
 	 * Checks for WordPress updates via Version Check API.
 	 *
 	 * Lists the most recent versions when there are updates available,
@@ -1235,8 +1240,8 @@ EOT;
 				$message = WP_CLI::error_to_string( $result );
 				if ( 'up_to_date' !== $result->get_error_code() ) {
 					// Check if the error is related to the core_updater.lock
-					if ( 'locked' === $result->get_error_code() || false !== stripos( $message, 'another update is currently in progress' ) ) {
-						WP_CLI::error( $message . ' You may need to run `wp option delete core_updater.lock` after verifying another update isn\'t actually running.' );
+					if ( self::is_lock_error( $result ) ) {
+						WP_CLI::error( $message . ' ' . self::LOCK_TIP_MESSAGE );
 					} else {
 						WP_CLI::error( $message );
 					}
@@ -1667,5 +1672,26 @@ EOT;
 		} else {
 			WP_CLI::error( 'ZipArchive failed to open ZIP file.' );
 		}
+	}
+
+	/**
+	 * Checks if a WP_Error is related to the core_updater.lock.
+	 *
+	 * @param WP_Error $error The error object to check.
+	 * @return bool True if the error is related to the lock, false otherwise.
+	 */
+	private static function is_lock_error( $error ) {
+		if ( ! is_wp_error( $error ) ) {
+			return false;
+		}
+
+		// Check for the 'locked' error code used by WordPress Core
+		if ( 'locked' === $error->get_error_code() ) {
+			return true;
+		}
+
+		// Also check if the error message contains the lock text as a fallback
+		$message = WP_CLI::error_to_string( $error );
+		return false !== stripos( $message, 'another update is currently in progress' );
 	}
 }
