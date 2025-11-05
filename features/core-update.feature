@@ -399,11 +399,7 @@ Feature: Update WordPress core
     When I try `wp core update --version=latest`
     Then STDERR should contain:
       """
-      wp option delete core_updater.lock
-      """
-    And STDERR should contain:
-      """
-      another update
+      Another update is currently in progress. You may need to run `wp option delete core_updater.lock` after verifying another update isn't actually running.
       """
     And the return code should be 1
 
