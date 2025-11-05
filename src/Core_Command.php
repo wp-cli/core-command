@@ -34,7 +34,7 @@ class Core_Command extends WP_CLI_Command {
 	/**
 	 * Tip message for resolving the core_updater.lock issue.
 	 */
-	const LOCK_TIP_MESSAGE = 'You may need to run `wp option delete core_updater.lock` after verifying another update isn\'t actually running.';
+	const CORE_UPDATER_LOCK_TIP = 'You may need to run `wp option delete core_updater.lock` after verifying another update isn\'t actually running.';
 
 	/**
 	 * Checks for WordPress updates via Version Check API.
@@ -1241,7 +1241,7 @@ EOT;
 				if ( 'up_to_date' !== $result->get_error_code() ) {
 					// Check if the error is related to the core_updater.lock
 					if ( self::is_lock_error( $result ) ) {
-						WP_CLI::error( $message . ' ' . self::LOCK_TIP_MESSAGE );
+						WP_CLI::error( rtrim( $message, '.' ) . '. ' . self::CORE_UPDATER_LOCK_TIP );
 					} else {
 						WP_CLI::error( $message );
 					}
@@ -1677,7 +1677,7 @@ EOT;
 	/**
 	 * Checks if a WP_Error is related to the core_updater.lock.
 	 *
-	 * @param WP_Error $error The error object to check.
+	 * @param \WP_Error $error The error object to check.
 	 * @return bool True if the error is related to the lock, false otherwise.
 	 */
 	private static function is_lock_error( $error ) {
