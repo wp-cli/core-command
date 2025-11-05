@@ -390,13 +390,7 @@ Feature: Update WordPress core
 
     # Create a lock option to simulate another update in progress
     When I run `wp option add core_updater.lock 1`
-    Then STDOUT should contain:
-      """
-      Success:
-      """
-
-    # Try to update and expect the lock error with helpful tip
-    When I try `wp core update --version=latest`
+    And I try `wp core update --version=latest`
     Then STDERR should contain:
       """
       Another update is currently in progress. You may need to run `wp option delete core_updater.lock` after verifying another update isn't actually running.
