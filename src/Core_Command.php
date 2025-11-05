@@ -1676,10 +1676,6 @@ EOT;
 	 * @return bool True if the error is related to the lock, false otherwise.
 	 */
 	private static function is_lock_error( $error ) {
-		if ( ! is_wp_error( $error ) ) {
-			return false;
-		}
-
 		// Check for the 'locked' error code used by WordPress Core
 		if ( 'locked' === $error->get_error_code() ) {
 			return true;
