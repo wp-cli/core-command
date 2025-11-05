@@ -1234,7 +1234,12 @@ EOT;
 			if ( is_wp_error( $result ) ) {
 				$message = WP_CLI::error_to_string( $result );
 				if ( 'up_to_date' !== $result->get_error_code() ) {
-					WP_CLI::error( $message );
+					// Check if the error is related to the core_updater.lock
+					if ( 'locked' === $result->get_error_code() || false !== stripos( $message, 'another update is currently in progress' ) ) {
+						WP_CLI::error( $message . ' You may need to run `wp option delete core_updater.lock` after verifying another update isn\'t actually running.' );
+					} else {
+						WP_CLI::error( $message );
+					}
 				} else {
 					WP_CLI::success( $message );
 				}

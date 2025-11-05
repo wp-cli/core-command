@@ -384,3 +384,32 @@ Feature: Update WordPress core
       """
       Success:
       """
+
+  Scenario: Show helpful tip when update is locked
+    Given a WP install
+
+    # Create a lock option to simulate another update in progress
+    When I run `wp option add core_updater.lock 1`
+    Then STDOUT should contain:
+      """
+      Success:
+      """
+
+    # Try to update and expect the lock error with helpful tip
+    When I try `wp core update --version=latest`
+    Then STDERR should contain:
+      """
+      wp option delete core_updater.lock
+      """
+    And STDERR should contain:
+      """
+      another update
+      """
+    And the return code should be 1
+
+    # Clean up the lock
+    When I run `wp option delete core_updater.lock`
+    Then STDOUT should contain:
+      """
+      Success:
+      """
