@@ -384,3 +384,24 @@ Feature: Update WordPress core
       """
       Success:
       """
+
+  Scenario: No HTML output from async translation updates during core update
+    Given a WP install
+
+    When I run `wp core update --version=6.2.0 --force`
+    Then STDOUT should not contain:
+      """
+      <p>
+      """
+    And STDOUT should not contain:
+      """
+      <div
+      """
+    And STDOUT should not contain:
+      """
+      <script
+      """
+    And STDOUT should not contain:
+      """
+      </div>
+      """
