@@ -1778,7 +1778,7 @@ EOT;
 				continue;
 			}
 
-			$path = $dir . '/' . $item;
+			$path = $dir . DIRECTORY_SEPARATOR . $item;
 
 			if ( is_dir( $path ) ) {
 				if ( ! $this->remove_directory( $path ) ) {
