@@ -1270,7 +1270,14 @@ EOT;
 				WP_CLI::success( 'WordPress updated successfully.' );
 			}
 		} else {
-			WP_CLI::success( 'WordPress is up to date.' );
+			// Check if user attempted to downgrade without --force
+			if ( ! empty( $assoc_args['version'] ) && Utils\wp_version_compare( $assoc_args['version'], '>' ) ) {
+				WP_CLI::log( "WordPress is up to date at version {$wp_version}." );
+				WP_CLI::log( "The version you requested ({$assoc_args['version']}) is older than the current version ({$wp_version})." );
+				WP_CLI::log( "Use --force to update anyway (e.g., to downgrade to version {$assoc_args['version']})." );
+			} else {
+				WP_CLI::success( "WordPress is up to date at version {$wp_version}." );
+			}
 		}
 	}
 

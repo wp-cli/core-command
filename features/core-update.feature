@@ -167,7 +167,7 @@ Feature: Update WordPress core
     When I run `wp core update`
     Then STDOUT should contain:
       """
-      WordPress is up to date
+      WordPress is up to date at version
       """
     And STDOUT should not contain:
       """
@@ -383,4 +383,40 @@ Feature: Update WordPress core
     Then STDOUT should contain:
       """
       Success:
+      """
+
+  @require-php-7.0
+  Scenario: Attempting to downgrade without --force shows helpful message
+    Given a WP install
+
+    When I run `wp core version`
+    Then save STDOUT as {WP_CURRENT_VERSION}
+
+    When I try `wp core update --version=6.0`
+    Then STDOUT should contain:
+      """
+      WordPress is up to date at version
+      """
+    And STDOUT should contain:
+      """
+      is older than the current version
+      """
+    And STDOUT should contain:
+      """
+      Use --force to update anyway
+      """
+    And STDOUT should not contain:
+      """
+      Success:
+      """
+    And the return code should be 0
+
+    When I run `wp core update --version=6.0 --force`
+    Then STDOUT should contain:
+      """
+      Updating to version 6.0
+      """
+    And STDOUT should contain:
+      """
+      Success: WordPress updated successfully.
       """
