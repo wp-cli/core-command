@@ -1708,6 +1708,15 @@ EOT;
 	 */
 	private function remove_old_files_from_list( $files ) {
 		$count = 0;
+		
+		// Cache ABSPATH realpath for performance
+		$abspath_realpath = realpath( ABSPATH );
+		if ( false === $abspath_realpath ) {
+			WP_CLI::debug( 'Failed to resolve ABSPATH realpath', 'core' );
+			return $count;
+		}
+		$abspath_realpath_trailing = trailingslashit( $abspath_realpath );
+		
 		foreach ( $files as $file ) {
 			// wp-content should be considered user data
 			if ( 0 === stripos( $file, 'wp-content' ) ) {
@@ -1719,8 +1728,7 @@ EOT;
 			// Validate the path is within ABSPATH
 			$file_realpath = realpath( $file_path );
 			if ( false !== $file_realpath ) {
-				$abspath_realpath = realpath( ABSPATH );
-				if ( false === $abspath_realpath || 0 !== strpos( $file_realpath, trailingslashit( $abspath_realpath ) ) ) {
+				if ( 0 !== strpos( $file_realpath, $abspath_realpath_trailing ) ) {
 					WP_CLI::debug( "Skipping file outside of ABSPATH: {$file}", 'core' );
 					continue;
 				}
