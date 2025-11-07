@@ -151,6 +151,24 @@ Feature: Update core's database
       {UPDATE_VERSION}
       """
 
+  Scenario: Update db respects current network in multinetwork setup
+    Given a WP multisite install
+    And a disable_sidebar_check.php file:
+      """
+      <?php
+      WP_CLI::add_wp_hook( 'init', static function () {
+        remove_action( 'after_switch_theme', '_wp_sidebars_changed' );
+      } );
+      """
+    And I try `wp theme install twentytwenty --activate`
+
+    # Verify that network ID is determined correctly
+    When I run `wp eval "echo defined('SITE_ID_CURRENT_SITE') ? SITE_ID_CURRENT_SITE : 'not defined';"`
+    Then STDOUT should contain:
+      """
+      1
+      """
+
   Scenario: Ensure update-db sets WP_INSTALLING constant
     Given a WP install
     And a before.php file:
