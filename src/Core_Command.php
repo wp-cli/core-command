@@ -659,7 +659,21 @@ class Core_Command extends WP_CLI_Command {
 			add_filter( 'send_site_admin_email_change_email', '__return_false' );
 		}
 
-		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+		$upgrade_file = ABSPATH . 'wp-admin/includes/upgrade.php';
+		if ( ! file_exists( $upgrade_file ) ) {
+			WP_CLI::error( "WordPress installation is incomplete. The file '{$upgrade_file}' is missing." );
+		}
+
+		// Suppress errors from require_once and catch them for better error messages.
+		// phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- Intentional to provide better error messages.
+		if ( ! @require_once $upgrade_file ) {
+			$error = error_get_last();
+			if ( $error ) {
+				WP_CLI::error( "Failed to load WordPress installation file '{$upgrade_file}': {$error['message']}" );
+			} else {
+				WP_CLI::error( "Failed to load WordPress installation file '{$upgrade_file}'." );
+			}
+		}
 
 		$defaults = [
 			'title'          => '',
@@ -715,7 +729,21 @@ class Core_Command extends WP_CLI_Command {
 	private function multisite_convert_( $assoc_args ) {
 		global $wpdb;
 
-		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+		$upgrade_file = ABSPATH . 'wp-admin/includes/upgrade.php';
+		if ( ! file_exists( $upgrade_file ) ) {
+			WP_CLI::error( "WordPress installation is incomplete. The file '{$upgrade_file}' is missing." );
+		}
+
+		// Suppress errors from require_once and catch them for better error messages.
+		// phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- Intentional to provide better error messages.
+		if ( ! @require_once $upgrade_file ) {
+			$error = error_get_last();
+			if ( $error ) {
+				WP_CLI::error( "Failed to load WordPress installation file '{$upgrade_file}': {$error['message']}" );
+			} else {
+				WP_CLI::error( "Failed to load WordPress installation file '{$upgrade_file}'." );
+			}
+		}
 
 		$domain = self::get_clean_basedomain();
 		if ( 'localhost' === $domain && ! empty( $assoc_args['subdomains'] ) ) {
@@ -1211,7 +1239,21 @@ EOT;
 			&& ( $update->version !== $wp_version
 				|| Utils\get_flag_value( $assoc_args, 'force' ) ) ) {
 
-			require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+			$upgrade_file = ABSPATH . 'wp-admin/includes/upgrade.php';
+			if ( ! file_exists( $upgrade_file ) ) {
+				WP_CLI::error( "WordPress installation is incomplete. The file '{$upgrade_file}' is missing." );
+			}
+
+			// Suppress errors from require_once and catch them for better error messages.
+			// phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- Intentional to provide better error messages.
+			if ( ! @require_once $upgrade_file ) {
+				$error = error_get_last();
+				if ( $error ) {
+					WP_CLI::error( "Failed to load WordPress installation file '{$upgrade_file}': {$error['message']}" );
+				} else {
+					WP_CLI::error( "Failed to load WordPress installation file '{$upgrade_file}'." );
+				}
+			}
 
 			if ( $update->version ) {
 				WP_CLI::log( "Updating to version {$update->version} ({$update->locale})..." );
@@ -1371,7 +1413,21 @@ EOT;
 			}
 			WP_CLI::success( "WordPress database upgraded on {$success}/{$total} sites." );
 		} else {
-			require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+			$upgrade_file = ABSPATH . 'wp-admin/includes/upgrade.php';
+			if ( ! file_exists( $upgrade_file ) ) {
+				WP_CLI::error( "WordPress installation is incomplete. The file '{$upgrade_file}' is missing." );
+			}
+
+			// Suppress errors from require_once and catch them for better error messages.
+			// phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- Intentional to provide better error messages.
+			if ( ! @require_once $upgrade_file ) {
+				$error = error_get_last();
+				if ( $error ) {
+					WP_CLI::error( "Failed to load WordPress installation file '{$upgrade_file}': {$error['message']}" );
+				} else {
+					WP_CLI::error( "Failed to load WordPress installation file '{$upgrade_file}'." );
+				}
+			}
 
 			/**
 			 * @var string $wp_current_db_version
