@@ -387,8 +387,21 @@ Feature: Update WordPress core
 
   Scenario: No HTML output from async translation updates during core update
     Given a WP install
+    And an empty cache
 
-    When I run `wp core update --version=6.2.0 --force`
+    When I run `wp core download --version=6.5 --locale=de_DE --force`
+    Then STDOUT should contain:
+      """
+      Success: WordPress downloaded.
+      """
+
+    When I run `wp core version --extra`
+    Then STDOUT should contain:
+      """
+      Package language:  de_DE
+      """
+
+    When I run `wp core update --version=latest --force`
     Then STDOUT should not contain:
       """
       <p>
