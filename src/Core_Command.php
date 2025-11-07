@@ -1624,17 +1624,8 @@ EOT;
 	 * It unconditionally deletes files from the $_old_files global array maintained by WordPress core.
 	 */
 	private function cleanup_old_files() {
-		// Include WordPress core's update file to access the $_old_files list
-		if ( ! file_exists( ABSPATH . 'wp-admin/includes/update-core.php' ) ) {
-			WP_CLI::warning( 'Could not find update-core.php. Please cleanup files manually.' );
-			return;
-		}
-
-		require_once ABSPATH . 'wp-admin/includes/update-core.php';
-
-		global $_old_files;
-
-		if ( empty( $_old_files ) || ! is_array( $_old_files ) ) {
+		$old_files = $this->get_old_files_list();
+		if ( empty( $old_files ) ) {
 			WP_CLI::log( 'No files found that need cleaning up.' );
 			return;
 		}
@@ -1642,7 +1633,7 @@ EOT;
 		WP_CLI::log( 'Cleaning up files...' );
 
 		$count = 0;
-		foreach ( $_old_files as $file ) {
+		foreach ( $old_files as $file ) {
 			// wp-content should be considered user data
 			if ( 0 === stripos( $file, 'wp-content' ) ) {
 				continue;
@@ -1657,12 +1648,16 @@ EOT;
 					if ( $this->remove_directory( $file_path ) ) {
 						WP_CLI::log( "Directory removed: {$file}" );
 						++$count;
+					} else {
+						WP_CLI::debug( "Failed to remove directory: {$file}", 'core' );
 					}
 				} else {
 					// Remove file
-					if ( unlink( $file_path ) ) {
+					if ( @unlink( $file_path ) ) {
 						WP_CLI::log( "File removed: {$file}" );
 						++$count;
+					} else {
+						WP_CLI::debug( "Failed to remove file: {$file}", 'core' );
 					}
 				}
 			}
@@ -1686,16 +1681,8 @@ EOT;
 	 * @param array $new_checksums New checksums array.
 	 */
 	private function cleanup_old_files_not_in_checksums( $old_checksums, $new_checksums ) {
-		// Include WordPress core's update file to access the $_old_files list
-		if ( ! file_exists( ABSPATH . 'wp-admin/includes/update-core.php' ) ) {
-			return;
-		}
-
-		require_once ABSPATH . 'wp-admin/includes/update-core.php';
-
-		global $_old_files;
-
-		if ( empty( $_old_files ) || ! is_array( $_old_files ) ) {
+		$old_files = $this->get_old_files_list();
+		if ( empty( $old_files ) ) {
 			return;
 		}
 
@@ -1704,7 +1691,7 @@ EOT;
 		$all_checksum_files = array_unique( $all_checksum_files );
 
 		// Find files in $_old_files that are not in checksums
-		$files_to_remove = array_diff( $_old_files, $all_checksum_files );
+		$files_to_remove = array_diff( $old_files, $all_checksum_files );
 
 		if ( empty( $files_to_remove ) ) {
 			return;
@@ -1726,12 +1713,16 @@ EOT;
 					if ( $this->remove_directory( $file_path ) ) {
 						WP_CLI::log( "Directory removed: {$file}" );
 						++$count;
+					} else {
+						WP_CLI::debug( "Failed to remove directory: {$file}", 'core' );
 					}
 				} else {
 					// Remove file
-					if ( unlink( $file_path ) ) {
+					if ( @unlink( $file_path ) ) {
 						WP_CLI::log( "File removed: {$file}" );
 						++$count;
+					} else {
+						WP_CLI::debug( "Failed to remove file: {$file}", 'core' );
 					}
 				}
 			}
@@ -1740,6 +1731,29 @@ EOT;
 		if ( $count ) {
 			WP_CLI::log( number_format( $count ) . ' additional old files cleaned up.' );
 		}
+	}
+
+	/**
+	 * Get the list of old files from WordPress core.
+	 *
+	 * @return array Array of old file paths, or empty array if not available.
+	 */
+	private function get_old_files_list() {
+		// Include WordPress core's update file to access the $_old_files list
+		if ( ! file_exists( ABSPATH . 'wp-admin/includes/update-core.php' ) ) {
+			WP_CLI::warning( 'Could not find update-core.php. Please cleanup files manually.' );
+			return array();
+		}
+
+		require_once ABSPATH . 'wp-admin/includes/update-core.php';
+
+		global $_old_files;
+
+		if ( empty( $_old_files ) || ! is_array( $_old_files ) ) {
+			return array();
+		}
+
+		return $_old_files;
 	}
 
 	/**
@@ -1755,6 +1769,7 @@ EOT;
 
 		$items = scandir( $dir );
 		if ( false === $items ) {
+			WP_CLI::debug( "Failed to scan directory: {$dir}", 'core' );
 			return false;
 		}
 
@@ -1766,13 +1781,24 @@ EOT;
 			$path = $dir . '/' . $item;
 
 			if ( is_dir( $path ) ) {
-				$this->remove_directory( $path );
+				if ( ! $this->remove_directory( $path ) ) {
+					WP_CLI::debug( "Failed to remove subdirectory: {$path}", 'core' );
+					return false;
+				}
 			} else {
-				unlink( $path );
+				if ( ! @unlink( $path ) ) {
+					WP_CLI::debug( "Failed to remove file in directory: {$path}", 'core' );
+					return false;
+				}
 			}
 		}
 
-		return rmdir( $dir );
+		if ( ! @rmdir( $dir ) ) {
+			WP_CLI::debug( "Failed to remove directory: {$dir}", 'core' );
+			return false;
+		}
+
+		return true;
 	}
 
 	private static function strip_content_dir( $zip_file ) {
