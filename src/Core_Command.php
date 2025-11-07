@@ -1611,6 +1611,10 @@ EOT;
 				WP_CLI::log( 'No files found that need cleaning up.' );
 			}
 		}
+
+		// Additionally, clean up files from $_old_files that are not in checksums
+		// These should be deleted unconditionally as they are known old files
+		$this->cleanup_old_files_not_in_checksums( $old_checksums, $new_checksums );
 	}
 
 	/**
@@ -1668,6 +1672,73 @@ EOT;
 			WP_CLI::log( number_format( $count ) . ' files cleaned up.' );
 		} else {
 			WP_CLI::log( 'No files found that need cleaning up.' );
+		}
+	}
+
+	/**
+	 * Clean up old files from $_old_files that are not tracked in checksums.
+	 *
+	 * This method is used as a supplement when checksums ARE available.
+	 * It unconditionally deletes files from $_old_files that are not present in either
+	 * the old or new checksums, as these files cannot be verified for modifications.
+	 *
+	 * @param array $old_checksums Old checksums array.
+	 * @param array $new_checksums New checksums array.
+	 */
+	private function cleanup_old_files_not_in_checksums( $old_checksums, $new_checksums ) {
+		// Include WordPress core's update file to access the $_old_files list
+		if ( ! file_exists( ABSPATH . 'wp-admin/includes/update-core.php' ) ) {
+			return;
+		}
+
+		require_once ABSPATH . 'wp-admin/includes/update-core.php';
+
+		global $_old_files;
+
+		if ( empty( $_old_files ) || ! is_array( $_old_files ) ) {
+			return;
+		}
+
+		// Combine all files from both checksum arrays
+		$all_checksum_files = array_merge( array_keys( $old_checksums ), array_keys( $new_checksums ) );
+		$all_checksum_files = array_unique( $all_checksum_files );
+
+		// Find files in $_old_files that are not in checksums
+		$files_to_remove = array_diff( $_old_files, $all_checksum_files );
+
+		if ( empty( $files_to_remove ) ) {
+			return;
+		}
+
+		$count = 0;
+		foreach ( $files_to_remove as $file ) {
+			// wp-content should be considered user data
+			if ( 0 === stripos( $file, 'wp-content' ) ) {
+				continue;
+			}
+
+			$file_path = ABSPATH . $file;
+
+			// Handle both files and directories
+			if ( file_exists( $file_path ) ) {
+				if ( is_dir( $file_path ) ) {
+					// Remove directory recursively
+					if ( $this->remove_directory( $file_path ) ) {
+						WP_CLI::log( "Directory removed: {$file}" );
+						++$count;
+					}
+				} else {
+					// Remove file
+					if ( unlink( $file_path ) ) {
+						WP_CLI::log( "File removed: {$file}" );
+						++$count;
+					}
+				}
+			}
+		}
+
+		if ( $count ) {
+			WP_CLI::log( number_format( $count ) . ' additional old files cleaned up.' );
 		}
 	}
 
