@@ -1763,6 +1763,16 @@ EOT;
 	 * @return bool True on success, false on failure.
 	 */
 	private function remove_directory( $dir ) {
+		$dir_realpath = realpath( $dir );
+		$abspath_realpath = realpath( ABSPATH );
+		if ( false === $dir_realpath || false === $abspath_realpath ) {
+			WP_CLI::debug( "Failed to resolve realpath for directory or ABSPATH: {$dir}", 'core' );
+			return false;
+		}
+		if ( 0 !== strpos( $dir_realpath, $abspath_realpath ) ) {
+			WP_CLI::debug( "Attempted to remove directory outside of ABSPATH: {$dir_realpath}", 'core' );
+			return false;
+		}
 		if ( ! is_dir( $dir ) ) {
 			return false;
 		}
