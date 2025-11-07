@@ -1724,6 +1724,10 @@ EOT;
 					WP_CLI::debug( "Skipping file outside of ABSPATH: {$file}", 'core' );
 					continue;
 				}
+			} else {
+				// Skip files with invalid paths
+				WP_CLI::debug( "Skipping file with invalid path: {$file}", 'core' );
+				continue;
 			}
 
 			// Handle both files and directories
@@ -1765,7 +1769,7 @@ EOT;
 			return false;
 		}
 		// Normalize paths with trailing slashes for accurate comparison
-		if ( 0 !== strpos( trailingslashit( $dir_realpath ), trailingslashit( $abspath_realpath ) ) ) {
+		if ( 0 !== strpos( $dir_realpath, trailingslashit( $abspath_realpath ) ) ) {
 			WP_CLI::debug( "Attempted to remove directory outside of ABSPATH: {$dir_realpath}", 'core' );
 			return false;
 		}
