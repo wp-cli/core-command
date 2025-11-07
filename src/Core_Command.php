@@ -1511,15 +1511,13 @@ EOT;
 		}
 
 		$old_checksums = self::get_core_checksums( $version_from, $locale ?: 'en_US', $insecure );
-		if ( ! is_array( $old_checksums ) ) {
-			WP_CLI::warning( "{$old_checksums} Please cleanup files manually." );
-			return;
-		}
-
 		$new_checksums = self::get_core_checksums( $version_to, $locale ?: 'en_US', $insecure );
-		if ( ! is_array( $new_checksums ) ) {
-			WP_CLI::warning( "{$new_checksums} Please cleanup files manually." );
 
+		$has_checksums = is_array( $old_checksums ) && is_array( $new_checksums );
+
+		if ( ! $has_checksums ) {
+			// When checksums are not available, use WordPress core's $_old_files list
+			$this->cleanup_old_files();
 			return;
 		}
 
@@ -1613,6 +1611,97 @@ EOT;
 				WP_CLI::log( 'No files found that need cleaning up.' );
 			}
 		}
+	}
+
+	/**
+	 * Clean up old files using WordPress core's $_old_files list.
+	 *
+	 * This method is used when checksums are not available for version comparison.
+	 * It unconditionally deletes files from the $_old_files global array maintained by WordPress core.
+	 */
+	private function cleanup_old_files() {
+		// Include WordPress core's update file to access the $_old_files list
+		if ( ! file_exists( ABSPATH . 'wp-admin/includes/update-core.php' ) ) {
+			WP_CLI::warning( 'Could not find update-core.php. Please cleanup files manually.' );
+			return;
+		}
+
+		require_once ABSPATH . 'wp-admin/includes/update-core.php';
+
+		global $_old_files;
+
+		if ( empty( $_old_files ) || ! is_array( $_old_files ) ) {
+			WP_CLI::log( 'No files found that need cleaning up.' );
+			return;
+		}
+
+		WP_CLI::log( 'Cleaning up files...' );
+
+		$count = 0;
+		foreach ( $_old_files as $file ) {
+			// wp-content should be considered user data
+			if ( 0 === stripos( $file, 'wp-content' ) ) {
+				continue;
+			}
+
+			$file_path = ABSPATH . $file;
+
+			// Handle both files and directories
+			if ( file_exists( $file_path ) ) {
+				if ( is_dir( $file_path ) ) {
+					// Remove directory recursively
+					if ( $this->remove_directory( $file_path ) ) {
+						WP_CLI::log( "Directory removed: {$file}" );
+						++$count;
+					}
+				} else {
+					// Remove file
+					if ( unlink( $file_path ) ) {
+						WP_CLI::log( "File removed: {$file}" );
+						++$count;
+					}
+				}
+			}
+		}
+
+		if ( $count ) {
+			WP_CLI::log( number_format( $count ) . ' files cleaned up.' );
+		} else {
+			WP_CLI::log( 'No files found that need cleaning up.' );
+		}
+	}
+
+	/**
+	 * Recursively remove a directory and its contents.
+	 *
+	 * @param string $dir Directory path to remove.
+	 * @return bool True on success, false on failure.
+	 */
+	private function remove_directory( $dir ) {
+		if ( ! is_dir( $dir ) ) {
+			return false;
+		}
+
+		$items = scandir( $dir );
+		if ( false === $items ) {
+			return false;
+		}
+
+		foreach ( $items as $item ) {
+			if ( '.' === $item || '..' === $item ) {
+				continue;
+			}
+
+			$path = $dir . '/' . $item;
+
+			if ( is_dir( $path ) ) {
+				$this->remove_directory( $path );
+			} else {
+				unlink( $path );
+			}
+		}
+
+		return rmdir( $dir );
 	}
 
 	private static function strip_content_dir( $zip_file ) {
