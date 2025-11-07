@@ -1653,7 +1653,7 @@ EOT;
 					}
 				} else {
 					// Remove file
-					if ( @unlink( $file_path ) ) {
+					if ( unlink( $file_path ) ) {
 						WP_CLI::log( "File removed: {$file}" );
 						++$count;
 					} else {
@@ -1718,7 +1718,7 @@ EOT;
 					}
 				} else {
 					// Remove file
-					if ( @unlink( $file_path ) ) {
+					if ( unlink( $file_path ) ) {
 						WP_CLI::log( "File removed: {$file}" );
 						++$count;
 					} else {
@@ -1786,14 +1786,14 @@ EOT;
 					return false;
 				}
 			} else {
-				if ( ! @unlink( $path ) ) {
+				if ( ! unlink( $path ) ) {
 					WP_CLI::debug( "Failed to remove file in directory: {$path}", 'core' );
 					return false;
 				}
 			}
 		}
 
-		if ( ! @rmdir( $dir ) ) {
+		if ( ! rmdir( $dir ) ) {
 			WP_CLI::debug( "Failed to remove directory: {$dir}", 'core' );
 			return false;
 		}
