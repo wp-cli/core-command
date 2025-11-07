@@ -1632,36 +1632,7 @@ EOT;
 
 		WP_CLI::log( 'Cleaning up files...' );
 
-		$count = 0;
-		foreach ( $old_files as $file ) {
-			// wp-content should be considered user data
-			if ( 0 === stripos( $file, 'wp-content' ) ) {
-				continue;
-			}
-
-			$file_path = ABSPATH . $file;
-
-			// Handle both files and directories
-			if ( file_exists( $file_path ) ) {
-				if ( is_dir( $file_path ) ) {
-					// Remove directory recursively
-					if ( $this->remove_directory( $file_path ) ) {
-						WP_CLI::log( "Directory removed: {$file}" );
-						++$count;
-					} else {
-						WP_CLI::debug( "Failed to remove directory: {$file}", 'core' );
-					}
-				} else {
-					// Remove file
-					if ( unlink( $file_path ) ) {
-						WP_CLI::log( "File removed: {$file}" );
-						++$count;
-					} else {
-						WP_CLI::debug( "Failed to remove file: {$file}", 'core' );
-					}
-				}
-			}
-		}
+		$count = $this->remove_old_files_from_list( $old_files );
 
 		if ( $count ) {
 			WP_CLI::log( number_format( $count ) . ' files cleaned up.' );
@@ -1697,8 +1668,47 @@ EOT;
 			return;
 		}
 
+		$count = $this->remove_old_files_from_list( $files_to_remove );
+
+		if ( $count ) {
+			WP_CLI::log( number_format( $count ) . ' additional old files cleaned up.' );
+		}
+	}
+
+	/**
+	 * Get the list of old files from WordPress core.
+	 *
+	 * @return array Array of old file paths, or empty array if not available.
+	 */
+	private function get_old_files_list() {
+		// Include WordPress core's update file to access the $_old_files list
+		if ( ! file_exists( ABSPATH . 'wp-admin/includes/update-core.php' ) ) {
+			WP_CLI::warning( 'Could not find update-core.php. Please cleanup files manually.' );
+			return array();
+		}
+
+		require_once ABSPATH . 'wp-admin/includes/update-core.php';
+
+		global $_old_files;
+
+		if ( empty( $_old_files ) || ! is_array( $_old_files ) ) {
+			return array();
+		}
+
+		return $_old_files;
+	}
+
+	/**
+	 * Remove old files from a list.
+	 *
+	 * This is a shared helper method that handles the actual removal of files and directories.
+	 *
+	 * @param array $files Array of file paths to remove.
+	 * @return int Number of files/directories successfully removed.
+	 */
+	private function remove_old_files_from_list( $files ) {
 		$count = 0;
-		foreach ( $files_to_remove as $file ) {
+		foreach ( $files as $file ) {
 			// wp-content should be considered user data
 			if ( 0 === stripos( $file, 'wp-content' ) ) {
 				continue;
@@ -1728,32 +1738,7 @@ EOT;
 			}
 		}
 
-		if ( $count ) {
-			WP_CLI::log( number_format( $count ) . ' additional old files cleaned up.' );
-		}
-	}
-
-	/**
-	 * Get the list of old files from WordPress core.
-	 *
-	 * @return array Array of old file paths, or empty array if not available.
-	 */
-	private function get_old_files_list() {
-		// Include WordPress core's update file to access the $_old_files list
-		if ( ! file_exists( ABSPATH . 'wp-admin/includes/update-core.php' ) ) {
-			WP_CLI::warning( 'Could not find update-core.php. Please cleanup files manually.' );
-			return array();
-		}
-
-		require_once ABSPATH . 'wp-admin/includes/update-core.php';
-
-		global $_old_files;
-
-		if ( empty( $_old_files ) || ! is_array( $_old_files ) ) {
-			return array();
-		}
-
-		return $_old_files;
+		return $count;
 	}
 
 	/**
@@ -1789,6 +1774,15 @@ EOT;
 			}
 
 			$path = $dir . DIRECTORY_SEPARATOR . $item;
+
+			// Handle symbolic links before checking if it's a directory
+			if ( is_link( $path ) ) {
+				if ( ! unlink( $path ) ) {
+					WP_CLI::debug( "Failed to remove symbolic link: {$path}", 'core' );
+					return false;
+				}
+				continue;
+			}
 
 			if ( is_dir( $path ) ) {
 				if ( ! $this->remove_directory( $path ) ) {
