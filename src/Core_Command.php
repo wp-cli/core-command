@@ -1296,6 +1296,11 @@ EOT;
 	 *     WordPress database upgraded successfully from db version 35700 to 29630 on example.com/
 	 *     Success: WordPress database upgraded on 123/123 sites.
 	 *
+	 *     # Update databases for all sites on a specific network in a multinetwork install.
+	 *     $ wp core update-db --network --url=network2.example.com
+	 *     WordPress database upgraded successfully from db version 35700 to 29630 on network2.example.com/
+	 *     Success: WordPress database upgraded on 50/50 sites.
+	 *
 	 * @subcommand update-db
 	 *
 	 * @param string[] $args Positional arguments. Unused.
@@ -1315,9 +1320,20 @@ EOT;
 		}
 
 		if ( $network ) {
+			// Determine the network ID to update
+			// In multinetwork setups, use the current network (determined by --url parameter)
+			$network_id = defined( 'SITE_ID_CURRENT_SITE' ) ? SITE_ID_CURRENT_SITE : null;
+			if ( null === $network_id && function_exists( 'get_current_network_id' ) ) {
+				$network_id = get_current_network_id();
+			}
+			if ( null === $network_id ) {
+				$network_id = 1; // Default to primary network
+			}
+
 			$iterator_args = [
 				'table' => $wpdb->blogs,
 				'where' => [
+					'site_id'  => $network_id,
 					'spam'     => 0,
 					'deleted'  => 0,
 					'archived' => 0,
