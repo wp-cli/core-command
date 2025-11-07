@@ -1716,6 +1716,16 @@ EOT;
 
 			$file_path = ABSPATH . $file;
 
+			// Validate the path is within ABSPATH
+			$file_realpath = realpath( $file_path );
+			if ( false !== $file_realpath ) {
+				$abspath_realpath = realpath( ABSPATH );
+				if ( false === $abspath_realpath || 0 !== strpos( $file_realpath, trailingslashit( $abspath_realpath ) ) ) {
+					WP_CLI::debug( "Skipping file outside of ABSPATH: {$file}", 'core' );
+					continue;
+				}
+			}
+
 			// Handle both files and directories
 			if ( file_exists( $file_path ) ) {
 				if ( is_dir( $file_path ) ) {
@@ -1754,7 +1764,8 @@ EOT;
 			WP_CLI::debug( "Failed to resolve realpath for directory or ABSPATH: {$dir}", 'core' );
 			return false;
 		}
-		if ( 0 !== strpos( $dir_realpath, $abspath_realpath ) ) {
+		// Normalize paths with trailing slashes for accurate comparison
+		if ( 0 !== strpos( trailingslashit( $dir_realpath ), trailingslashit( $abspath_realpath ) ) ) {
 			WP_CLI::debug( "Attempted to remove directory outside of ABSPATH: {$dir_realpath}", 'core' );
 			return false;
 		}
