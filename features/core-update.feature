@@ -389,7 +389,8 @@ Feature: Update WordPress core
     Given a WP install
     And an empty cache
 
-    When I run `wp core download --version=6.5 --locale=de_DE --force`
+    # Using `try` in case there are checksum warnings.
+    When I try `wp core download --version=6.5 --locale=de_DE --force`
     Then STDOUT should contain:
       """
       Success: WordPress downloaded.
