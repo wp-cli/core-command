@@ -1271,7 +1271,8 @@ EOT;
 			}
 		} else {
 			// Check if user attempted to downgrade without --force
-			if ( ! empty( $assoc_args['version'] ) && Utils\wp_version_compare( $assoc_args['version'], '>' ) ) {
+			if ( ! empty( $assoc_args['version'] ) && version_compare( $assoc_args['version'], $wp_version, '<' ) ) {
+				// Requested version is older than current (downgrade attempt)
 				WP_CLI::log( "WordPress is up to date at version {$wp_version}." );
 				WP_CLI::log( "The version you requested ({$assoc_args['version']}) is older than the current version ({$wp_version})." );
 				WP_CLI::log( "Use --force to update anyway (e.g., to downgrade to version {$assoc_args['version']})." );
