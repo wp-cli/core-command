@@ -1708,29 +1708,15 @@ EOT;
 					false !== strpos( $error['file'], 'wp-admin/includes/' )
 					|| false !== strpos( $error['file'], 'wp-includes/' )
 				) {
-					$message = sprintf(
-						"Failed to load WordPress files for %s. This often indicates a missing PHP extension or a corrupted WordPress installation.\n\nError: %s in %s on line %d\n\nPlease check that all required PHP extensions are installed and that your WordPress installation is complete.",
-						$context,
-						$error['message'],
-						$error['file'],
-						$error['line']
+					WP_CLI::error(
+						sprintf(
+							"Failed to load WordPress files for %s. This often indicates a missing PHP extension or a corrupted WordPress installation.\n\nError: %s in %s on line %d\n\nPlease check that all required PHP extensions are installed and that your WordPress installation is complete.",
+							$context,
+							$error['message'],
+							$error['file'],
+							$error['line']
+						)
 					);
-					// Attempt to use WP_CLI::error(), but fall back to direct output if in shutdown.
-					try {
-						if ( class_exists( 'WP_CLI' ) && method_exists( 'WP_CLI', 'error' ) ) {
-							WP_CLI::error( $message );
-						} else {
-							throw new \Exception( 'WP_CLI::error() not available' );
-						}
-					} catch ( \Throwable $e ) {
-						// Fallback: output directly to STDERR and exit.
-						if ( defined( 'STDERR' ) ) {
-							fwrite( STDERR, $message . "\n" );
-						} else {
-							error_log( $message );
-						}
-						exit( 1 );
-					}
 				}
 			}
 		};
