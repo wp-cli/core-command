@@ -1684,8 +1684,16 @@ EOT;
 			WP_CLI::error( "Cannot read WordPress installation file '{$upgrade_file}'. Check file permissions." );
 		}
 
+		// Use a flag to track successful completion and prevent handler from executing after success.
+		$require_completed = false;
+
 		// Register a shutdown function to catch fatal errors during require_once.
-		$shutdown_handler = function () use ( $context ) {
+		$shutdown_handler = function () use ( $context, &$require_completed ) {
+			// Only handle errors if require_once did not complete successfully.
+			if ( $require_completed ) {
+				return;
+			}
+
 			$error = error_get_last();
 			if (
 				null !== $error
@@ -1731,5 +1739,8 @@ EOT;
 
 		// phpcs:ignore WordPressVIPMinimum.Files.IncludingFile.UsingVariable -- Path comes from WordPress itself.
 		require_once $upgrade_file;
+
+		// Mark as completed to prevent the shutdown handler from executing on unrelated errors.
+		$require_completed = true;
 	}
 }
