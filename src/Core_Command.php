@@ -1326,7 +1326,7 @@ EOT;
 			if ( null === $network_id && function_exists( 'get_current_network_id' ) ) {
 				$network_id = get_current_network_id();
 			}
-			if ( null === $network_id ) {
+			if ( ! $network_id ) {
 				$network_id = 1; // Default to primary network
 			}
 
