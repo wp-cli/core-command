@@ -1342,16 +1342,14 @@ EOT;
 			$it            = new TableIterator( $iterator_args );
 			$success       = 0;
 			$total         = 0;
-			$site_ids      = [];
 
 			/**
 			 * @var object{site_id: int, domain: string, path: string} $blog
 			 */
 			foreach ( $it as $blog ) {
 				++$total;
-				$site_ids[] = $blog->site_id;
-				$url        = $blog->domain . $blog->path;
-				$cmd        = "--url={$url} core update-db";
+				$url = $blog->domain . $blog->path;
+				$cmd = "--url={$url} core update-db";
 				if ( $dry_run ) {
 					$cmd .= ' --dry-run';
 				}
@@ -1381,9 +1379,7 @@ EOT;
 				}
 			}
 			if ( ! $dry_run && $total && $success === $total ) {
-				foreach ( array_unique( $site_ids ) as $site_id ) {
-					update_metadata( 'site', $site_id, 'wpmu_upgrade_site', $wp_db_version );
-				}
+				update_metadata( 'site', $network_id, 'wpmu_upgrade_site', $wp_db_version );
 			}
 			WP_CLI::success( "WordPress database upgraded on {$success}/{$total} sites." );
 		} else {
