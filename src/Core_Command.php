@@ -1687,18 +1687,42 @@ EOT;
 		// Register a shutdown function to catch fatal errors during require_once.
 		$shutdown_handler = function () use ( $upgrade_file, $context ) {
 			$error = error_get_last();
-			if ( null !== $error && in_array( $error['type'], [ E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR ], true ) ) {
+			if (
+				null !== $error
+				&& in_array(
+					$error['type'],
+					[ E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_COMPILE_WARNING, E_USER_ERROR ],
+					true
+				)
+			) {
 				// Check if error occurred in the upgrade file or files it includes.
-				if ( false !== strpos( $error['file'], 'wp-admin/includes/' ) || false !== strpos( $error['file'], 'wp-includes/' ) ) {
-					WP_CLI::error(
-						sprintf(
-							"Failed to load WordPress files for %s. This often indicates a missing PHP extension or a corrupted WordPress installation.\n\nError: %s in %s on line %d\n\nPlease check that all required PHP extensions are installed and that your WordPress installation is complete.",
-							$context,
-							$error['message'],
-							$error['file'],
-							$error['line']
-						)
+				if (
+					false !== strpos( $error['file'], 'wp-admin/includes/' )
+					|| false !== strpos( $error['file'], 'wp-includes/' )
+				) {
+					$message = sprintf(
+						"Failed to load WordPress files for %s. This often indicates a missing PHP extension or a corrupted WordPress installation.\n\nError: %s in %s on line %d\n\nPlease check that all required PHP extensions are installed and that your WordPress installation is complete.",
+						$context,
+						$error['message'],
+						$error['file'],
+						$error['line']
 					);
+					// Attempt to use WP_CLI::error(), but fall back to direct output if in shutdown.
+					try {
+						if ( class_exists( 'WP_CLI' ) && method_exists( 'WP_CLI', 'error' ) ) {
+							WP_CLI::error( $message );
+						} else {
+							throw new \Exception( 'WP_CLI::error() not available' );
+						}
+					} catch ( \Throwable $e ) {
+						// Fallback: output directly to STDERR and exit.
+						if ( defined( 'STDERR' ) ) {
+							fwrite( STDERR, $message . "\n" );
+						} else {
+							error_log( $message );
+						}
+						exit( 1 );
+					}
 				}
 			}
 		};
