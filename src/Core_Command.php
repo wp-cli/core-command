@@ -1685,7 +1685,7 @@ EOT;
 		}
 
 		// Register a shutdown function to catch fatal errors during require_once.
-		$shutdown_handler = function () use ( $upgrade_file, $context ) {
+		$shutdown_handler = function () use ( $context ) {
 			$error = error_get_last();
 			if (
 				null !== $error
