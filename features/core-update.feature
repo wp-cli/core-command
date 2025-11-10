@@ -385,7 +385,7 @@ Feature: Update WordPress core
       Success:
       """
 
-  @require-php-7.0
+  @require-php-7.0 @require-wp-6.1
   Scenario: Attempting to downgrade without --force shows helpful message
     Given a WP install
 
