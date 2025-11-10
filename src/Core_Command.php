@@ -1715,7 +1715,7 @@ EOT;
 			WP_CLI::debug( 'Failed to resolve ABSPATH realpath', 'core' );
 			return $count;
 		}
-		$abspath_realpath_trailing = trailingslashit( $abspath_realpath );
+		$abspath_realpath_trailing = Utils\trailingslashit( $abspath_realpath );
 
 		foreach ( $files as $file ) {
 			// wp-content should be considered user data
@@ -1748,14 +1748,11 @@ EOT;
 					} else {
 						WP_CLI::debug( "Failed to remove directory: {$file}", 'core' );
 					}
+				} elseif ( unlink( $file_path ) ) {
+					WP_CLI::log( "File removed: {$file}" );
+					++$count;
 				} else {
-					// Remove file
-					if ( unlink( $file_path ) ) {
-						WP_CLI::log( "File removed: {$file}" );
-						++$count;
-					} else {
-						WP_CLI::debug( "Failed to remove file: {$file}", 'core' );
-					}
+					WP_CLI::debug( "Failed to remove file: {$file}", 'core' );
 				}
 			}
 		}
@@ -1770,14 +1767,14 @@ EOT;
 	 * @return bool True on success, false on failure.
 	 */
 	private function remove_directory( $dir ) {
-		$dir_realpath = realpath( $dir );
+		$dir_realpath     = realpath( $dir );
 		$abspath_realpath = realpath( ABSPATH );
 		if ( false === $dir_realpath || false === $abspath_realpath ) {
 			WP_CLI::debug( "Failed to resolve realpath for directory or ABSPATH: {$dir}", 'core' );
 			return false;
 		}
 		// Normalize paths with trailing slashes for accurate comparison
-		if ( 0 !== strpos( $dir_realpath, trailingslashit( $abspath_realpath ) ) ) {
+		if ( 0 !== strpos( $dir_realpath, Utils\trailingslashit( $abspath_realpath ) ) ) {
 			WP_CLI::debug( "Attempted to remove directory outside of ABSPATH: {$dir_realpath}", 'core' );
 			return false;
 		}
@@ -1812,11 +1809,9 @@ EOT;
 					WP_CLI::debug( "Failed to remove subdirectory: {$path}", 'core' );
 					return false;
 				}
-			} else {
-				if ( ! unlink( $path ) ) {
+			} elseif ( ! unlink( $path ) ) {
 					WP_CLI::debug( "Failed to remove file in directory: {$path}", 'core' );
 					return false;
-				}
 			}
 		}
 
