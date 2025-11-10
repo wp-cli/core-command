@@ -1690,6 +1690,7 @@ EOT;
 		// Register a shutdown function to catch fatal errors during require_once.
 		$shutdown_handler = function () use ( $context, &$require_completed ) {
 			// Only handle errors if require_once did not complete successfully.
+			// @phpstan-ignore-next-line
 			if ( $require_completed ) {
 				return;
 			}
