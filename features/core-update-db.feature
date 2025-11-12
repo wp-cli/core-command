@@ -151,6 +151,45 @@ Feature: Update core's database
       {UPDATE_VERSION}
       """
 
+  # This test downgrades to an older WordPress version, but the SQLite plugin requires 6.0+
+  @require-mysql
+  Scenario: Update db respects current network in multinetwork setup
+    Given a WP multisite install
+    And a disable_sidebar_check.php file:
+      """
+      <?php
+      WP_CLI::add_wp_hook( 'init', static function () {
+        remove_action( 'after_switch_theme', '_wp_sidebars_changed' );
+      } );
+      """
+    And I try `wp theme install twentytwenty --activate`
+    And I run `wp core download --version=5.4 --force`
+    And I run `wp option update db_version 45805 --require=disable_sidebar_check.php`
+    And I run `wp site option update wpmu_upgrade_site 45805`
+    And I run `wp site create --slug=foo`
+    And I run `wp site create --slug=bar`
+
+    When I run `wp eval "echo defined('SITE_ID_CURRENT_SITE') ? SITE_ID_CURRENT_SITE : 'not defined';"`
+    Then STDOUT should contain:
+      """
+      1
+      """
+
+    When I run `wp site option get wpmu_upgrade_site`
+    Then save STDOUT as {UPDATE_VERSION}
+
+    When I run `wp core update-db --network`
+    Then STDOUT should contain:
+      """
+      Success: WordPress database upgraded on 3/3 sites.
+      """
+
+    When I run `wp site option get wpmu_upgrade_site`
+    Then STDOUT should not contain:
+      """
+      {UPDATE_VERSION}
+      """
+
   Scenario: Ensure update-db sets WP_INSTALLING constant
     Given a WP install
     And a before.php file:
