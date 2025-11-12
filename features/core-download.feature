@@ -180,7 +180,7 @@ Feature: Download WordPress
       """
       Failed to find WordPress version
       """
-    And STDERR should contain:
+    And STDERR should not contain:
       """
       Warning: Checksums not available for WordPress nightly/en_US. Please cleanup files manually.
       """
