@@ -99,18 +99,16 @@ class Core_Command extends WP_CLI_Command {
 				[ 'version', 'update_type', 'package_url' ]
 			);
 			$formatter->display_items( $updates );
-		} else {
+		} elseif ( $this->version_check_error ) {
 			// If there was an HTTP error during version check, show a warning
-			if ( $this->version_check_error ) {
-				WP_CLI::warning(
-					sprintf(
-						'Failed to check for updates: %s',
-						$this->version_check_error->get_error_message()
-					)
-				);
-			} else {
-				WP_CLI::success( 'WordPress is at the latest version.' );
-			}
+			WP_CLI::warning(
+				sprintf(
+					'Failed to check for updates: %s',
+					$this->version_check_error->get_error_message()
+				)
+			);
+		} else {
+			WP_CLI::success( 'WordPress is at the latest version.' );
 		}
 	}
 
@@ -1537,14 +1535,8 @@ EOT;
 	 * @param array          $_args    HTTP request arguments (unused).
 	 * @param string         $url      URL being requested.
 	 */
-	private function capture_version_check_error( $response, $context, $_class, $_args, $url ) {
-		// Only capture errors for the version check API using str_contains for PHP 8.0+
-		// or fallback to strpos for older versions
-		$is_version_check_url = function_exists( 'str_contains' )
-			? str_contains( $url, 'api.wordpress.org/core/version-check' )
-			: false !== strpos( $url, 'api.wordpress.org/core/version-check' );
-
-		if ( ! $is_version_check_url ) {
+	public function capture_version_check_error( $response, $context, $_class, $_args, $url ) {
+		if ( false !== strpos( $url, 'api.wordpress.org/core/version-check' ) ) {
 			return;
 		}
 
