@@ -32,6 +32,13 @@ use WP_CLI\WpOrgApi;
 class Core_Command extends WP_CLI_Command {
 
 	/**
+	 * Stores HTTP API errors encountered during version check.
+	 *
+	 * @var \WP_Error|null
+	 */
+	private $version_check_error = null;
+
+	/**
 	 * Checks for WordPress updates via Version Check API.
 	 *
 	 * Lists the most recent versions when there are updates available,
@@ -93,7 +100,17 @@ class Core_Command extends WP_CLI_Command {
 			);
 			$formatter->display_items( $updates );
 		} else {
-			WP_CLI::success( 'WordPress is at the latest version.' );
+			// If there was an HTTP error during version check, show a warning
+			if ( $this->version_check_error ) {
+				WP_CLI::warning(
+					sprintf(
+						'Failed to check for updates: %s',
+						$this->version_check_error->get_error_message()
+					)
+				);
+			} else {
+				WP_CLI::success( 'WordPress is at the latest version.' );
+			}
 		}
 	}
 
@@ -1439,7 +1456,17 @@ EOT;
 	 */
 	private function get_updates( $assoc_args ) {
 		$force_check = Utils\get_flag_value( $assoc_args, 'force-check' );
+
+		// Reset error tracking
+		$this->version_check_error = null;
+
+		// Hook into HTTP API debug to capture errors during version check
+		add_action( 'http_api_debug', [ $this, 'capture_version_check_error' ], 10, 5 );
+
 		wp_version_check( [], $force_check );
+
+		// Remove the hook after version check
+		remove_action( 'http_api_debug', [ $this, 'capture_version_check_error' ], 10 );
 
 		/**
 		 * @var object{updates: array<object{version: string, locale: string, packages: object{partial?: string, full: string}}>}|false $from_api
@@ -1494,6 +1521,27 @@ EOT;
 			}
 		}
 		return array_values( $updates );
+	}
+
+	/**
+	 * Handles the http_api_debug action to capture HTTP errors during version check.
+	 *
+	 * @param array|WP_Error $response HTTP response or WP_Error object.
+	 * @param string         $context  Context of the HTTP request.
+	 * @param string         $class    HTTP transport class name.
+	 * @param array          $args     HTTP request arguments.
+	 * @param string         $url      URL being requested.
+	 */
+	private function capture_version_check_error( $response, $context, $class, $args, $url ) {
+		// Only capture errors for the version check API
+		if ( false === strpos( $url, 'api.wordpress.org/core/version-check' ) ) {
+			return;
+		}
+
+		// Store the error if the response is a WP_Error
+		if ( is_wp_error( $response ) ) {
+			$this->version_check_error = $response;
+		}
 	}
 
 	/**
