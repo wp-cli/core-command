@@ -1538,6 +1538,11 @@ EOT;
 			return;
 		}
 
+		// Only capture on response, not pre_response
+		if ( 'response' !== $context ) {
+			return;
+		}
+
 		// Store the error if the response is a WP_Error
 		if ( is_wp_error( $response ) ) {
 			$this->version_check_error = $response;

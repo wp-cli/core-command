@@ -79,5 +79,11 @@
     },
     "support": {
         "issues": "https://github.com/wp-cli/core-command/issues"
+    },
+    "repositories": {
+        "self": {
+            "type": "path",
+            "url": "."
+        }
     }
 }
