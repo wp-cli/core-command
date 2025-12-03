@@ -1463,10 +1463,12 @@ EOT;
 		// Hook into HTTP API debug to capture errors during version check
 		add_action( 'http_api_debug', [ $this, 'capture_version_check_error' ], 10, 5 );
 
-		wp_version_check( [], $force_check );
-
-		// Remove the hook after version check
-		remove_action( 'http_api_debug', [ $this, 'capture_version_check_error' ], 10 );
+		try {
+			wp_version_check( [], $force_check );
+		} finally {
+			// Ensure the hook is always removed, even if wp_version_check() throws an exception
+			remove_action( 'http_api_debug', [ $this, 'capture_version_check_error' ], 10 );
+		}
 
 		/**
 		 * @var object{updates: array<object{version: string, locale: string, packages: object{partial?: string, full: string}}>}|false $from_api
@@ -1526,15 +1528,23 @@ EOT;
 	/**
 	 * Handles the http_api_debug action to capture HTTP errors during version check.
 	 *
+	 * This method signature matches the http_api_debug action hook signature.
+	 * Note: $class and $args parameters are not used but are required by the hook.
+	 *
 	 * @param array|WP_Error $response HTTP response or WP_Error object.
 	 * @param string         $context  Context of the HTTP request.
-	 * @param string         $class    HTTP transport class name.
-	 * @param array          $args     HTTP request arguments.
+	 * @param string         $_class   HTTP transport class name (unused).
+	 * @param array          $_args    HTTP request arguments (unused).
 	 * @param string         $url      URL being requested.
 	 */
-	private function capture_version_check_error( $response, $context, $class, $args, $url ) {
-		// Only capture errors for the version check API
-		if ( false === strpos( $url, 'api.wordpress.org/core/version-check' ) ) {
+	private function capture_version_check_error( $response, $context, $_class, $_args, $url ) {
+		// Only capture errors for the version check API using str_contains for PHP 8.0+
+		// or fallback to strpos for older versions
+		$is_version_check_url = function_exists( 'str_contains' )
+			? str_contains( $url, 'api.wordpress.org/core/version-check' )
+			: false !== strpos( $url, 'api.wordpress.org/core/version-check' );
+
+		if ( ! $is_version_check_url ) {
 			return;
 		}
 
