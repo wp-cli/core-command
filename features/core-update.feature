@@ -417,7 +417,7 @@ Feature: Update WordPress core
       <?php
       // Old SimplePie Core file
       """
-    And a wp-includes/SimplePie/src/Decode directory
+    And an empty wp-includes/SimplePie/src/Decode directory
 
     When I run `wp core update --version=6.9 --force`
     Then STDOUT should contain:
@@ -452,7 +452,7 @@ Feature: Update WordPress core
       <?php
       // Test old file 2
       """
-    And a wp-includes/test-old-dir directory
+    And an empty wp-includes/test-old-dir directory
     And a wp-includes/test-old-dir/test-file.php file:
       """
       <?php
@@ -474,7 +474,7 @@ Feature: Update WordPress core
     When I run `mv wp-admin/includes/update-core.php wp-admin/includes/update-core-backup.php`
     And I run `mv wp-admin/includes/update-core-custom.php wp-admin/includes/update-core.php`
 
-    When I run `wp core update --version=6.9 --force`
+    And I run `wp core update --version=6.9 --force`
     Then STDOUT should contain:
       """
       Success: WordPress updated successfully.
@@ -518,7 +518,7 @@ Feature: Update WordPress core
     And I run `mv wp-admin/includes/update-core-custom.php wp-admin/includes/update-core.php`
 
     # Update to a version where checksums might not be available
-    When I try `wp core update --version=nightly --force`
+    And I try `wp core update --version=nightly --force`
     Then STDOUT should contain:
       """
       Cleaning up files...
