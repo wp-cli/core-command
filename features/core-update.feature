@@ -432,63 +432,6 @@ Feature: Update WordPress core
     And the wp-includes/SimplePie/src/Decode directory should not exist
 
   @require-php-7.2
-  Scenario: Custom old_files list is used for cleanup
-    Given a WP install
-
-    When I run `wp core download --version=6.8 --force`
-    Then STDOUT should contain:
-      """
-      Success: WordPress downloaded.
-      """
-
-    # Create test files that we'll add to custom old_files list
-    Given a wp-includes/test-old-file-1.php file:
-      """
-      <?php
-      // Test old file 1
-      """
-    And a wp-includes/test-old-file-2.php file:
-      """
-      <?php
-      // Test old file 2
-      """
-    And an empty wp-includes/test-old-dir directory
-    And a wp-includes/test-old-dir/test-file.php file:
-      """
-      <?php
-      // Test file in old directory
-      """
-
-    # Modify update-core.php to include our test files in old_files list
-    And a wp-admin/includes/update-core-custom.php file:
-      """
-      <?php
-      global $_old_files;
-      require_once ABSPATH . 'wp-admin/includes/update-core.php';
-      $_old_files[] = 'wp-includes/test-old-file-1.php';
-      $_old_files[] = 'wp-includes/test-old-file-2.php';
-      $_old_files[] = 'wp-includes/test-old-dir';
-      """
-
-    # Backup original and replace with custom version
-    When I run `mv wp-admin/includes/update-core.php wp-admin/includes/update-core-backup.php`
-    And I run `mv wp-admin/includes/update-core-custom.php wp-admin/includes/update-core.php`
-
-    And I run `wp core update --version=6.9 --force`
-    Then STDOUT should contain:
-      """
-      Success: WordPress updated successfully.
-      """
-
-    # Restore original update-core.php
-    When I run `mv wp-admin/includes/update-core-backup.php wp-admin/includes/update-core.php`
-
-    # Verify custom old files were removed
-    Then the wp-includes/test-old-file-1.php file should not exist
-    And the wp-includes/test-old-file-2.php file should not exist
-    And the wp-includes/test-old-dir directory should not exist
-
-  @require-php-7.2
   Scenario: Old files cleanup works when checksums unavailable
     Given a WP install
 
@@ -498,32 +441,35 @@ Feature: Update WordPress core
       Success: WordPress downloaded.
       """
 
-    # Create files that should be removed
-    Given a wp-includes/test-cleanup-file.php file:
+    # Create files that exist in the $_old_files list from WordPress 6.9
+    Given a wp-includes/blocks/post-author/editor.css file:
       """
-      <?php
-      // Test cleanup file
+      /* Old CSS file */
       """
-
-    # Modify update-core.php to include our test file
-    And a wp-admin/includes/update-core-custom.php file:
+    And a wp-includes/blocks/post-author/editor.min.css file:
       """
-      <?php
-      global $_old_files;
-      require_once ABSPATH . 'wp-admin/includes/update-core.php';
-      $_old_files[] = 'wp-includes/test-cleanup-file.php';
+      /* Old minified CSS */
       """
 
-    When I run `mv wp-admin/includes/update-core.php wp-admin/includes/update-core-backup.php`
-    And I run `mv wp-admin/includes/update-core-custom.php wp-admin/includes/update-core.php`
+    # Mock checksum API to return empty response so checksums are unavailable
+    Given that HTTP requests to https://api.wordpress.org/core/checksums/1.0/ will respond with:
+      """
+      HTTP/1.1 200
+      Content-Type: application/json
 
-    # Update to a version where checksums might not be available
-    And I try `wp core update --version=nightly --force`
+      {}
+      """
+
+    When I try `wp core update --version=6.9 --force`
     Then STDOUT should contain:
       """
       Cleaning up files...
       """
+    And STDOUT should contain:
+      """
+      Success: WordPress updated successfully.
+      """
 
-    When I run `mv wp-admin/includes/update-core-backup.php wp-admin/includes/update-core.php`
-
-    Then the wp-includes/test-cleanup-file.php file should not exist
+    # Verify files from $_old_files were removed
+    Then the wp-includes/blocks/post-author/editor.css file should not exist
+    And the wp-includes/blocks/post-author/editor.min.css file should not exist
