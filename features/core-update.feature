@@ -452,7 +452,7 @@ Feature: Update WordPress core
       """
 
     # Mock checksum API to return empty response so checksums are unavailable
-    Given that HTTP requests to https://api.wordpress.org/core/checksums/1.0/ will respond with:
+    And that HTTP requests to https://api.wordpress.org/core/checksums/1.0/ will respond with:
       """
       HTTP/1.1 200
       Content-Type: application/json
@@ -471,5 +471,5 @@ Feature: Update WordPress core
       """
 
     # Verify files from $_old_files were removed
-    Then the wp-includes/blocks/post-author/editor.css file should not exist
+    And the wp-includes/blocks/post-author/editor.css file should not exist
     And the wp-includes/blocks/post-author/editor.min.css file should not exist
