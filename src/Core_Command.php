@@ -1216,7 +1216,7 @@ EOT;
 			// Prevent async translation updates which output HTML.
 			add_action(
 				'upgrader_process_complete',
-				function () {
+				static function () {
 					remove_action( 'upgrader_process_complete', array( 'Language_Pack_Upgrader', 'async_upgrade' ), 20 );
 				},
 				1
