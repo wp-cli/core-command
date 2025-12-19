@@ -385,6 +385,41 @@ Feature: Update WordPress core
       Success:
       """
 
+  Scenario: No HTML output from async translation updates during core update
+    Given a WP install
+    And an empty cache
+
+    # Using `try` in case there are checksum warnings.
+    When I try `wp core download --version=6.5 --locale=de_DE --force`
+    Then STDOUT should contain:
+      """
+      Success: WordPress downloaded.
+      """
+
+    When I run `wp core version --extra`
+    Then STDOUT should contain:
+      """
+      Package language:  de_DE
+      """
+
+    When I run `wp core update --version=latest --force`
+    Then STDOUT should not contain:
+      """
+      <p>
+      """
+    And STDOUT should not contain:
+      """
+      <div
+      """
+    And STDOUT should not contain:
+      """
+      <script
+      """
+    And STDOUT should not contain:
+      """
+      </div>
+      """
+
   Scenario: Show helpful tip when update is locked
     Given a WP install
 
