@@ -5,6 +5,7 @@ use WP_CLI\Extractor;
 use WP_CLI\Iterators\Table as TableIterator;
 use WP_CLI\Utils;
 use WP_CLI\Formatter;
+use WP_CLI\Loggers;
 use WP_CLI\WpOrgApi;
 
 /**
@@ -1073,6 +1074,15 @@ EOT;
 	 * [--locale=<locale>]
 	 * : Select which language you want to download.
 	 *
+	* [--format=<format>]
+	 * : Render output in a particular format.
+	 * ---
+	 * options:
+	 *   - table
+	 *   - csv
+	 *   - json
+	 * ---
+	 *
 	 * [--insecure]
 	 * : Retry download without certificate validation if TLS handshake fails. Note: This makes the request vulnerable to a MITM attack.
 	 *
@@ -1104,7 +1114,7 @@ EOT;
 	 * @alias upgrade
 	 *
 	 * @param array{0?: string} $args Positional arguments.
-	 * @param array{minor?: bool, version?: string, force?: bool, locale?: string, insecure?: bool} $assoc_args Associative arguments.
+	 * @param array{minor?: bool, version?: string, force?: bool, locale?: string, insecure?: bool, format?: string} $assoc_args Associative arguments.
 	 */
 	public function update( $args, $assoc_args ) {
 		global $wp_version;
@@ -1114,6 +1124,11 @@ EOT;
 
 		if ( 'trunk' === Utils\get_flag_value( $assoc_args, 'version' ) ) {
 			$assoc_args['version'] = 'nightly';
+		}
+
+		if ( ! empty( $assoc_args['format'] ) && in_array( $assoc_args['format'], [ 'json', 'csv' ], true ) ) {
+			$logger = new Loggers\Quiet( WP_CLI::get_runner()->in_color() );
+			WP_CLI::set_logger( $logger );
 		}
 
 		if ( ! empty( $args[0] ) ) {
@@ -1198,6 +1213,15 @@ EOT;
 
 			require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
+			// Prevent async translation updates which output HTML.
+			add_action(
+				'upgrader_process_complete',
+				static function () {
+					remove_action( 'upgrader_process_complete', array( 'Language_Pack_Upgrader', 'async_upgrade' ), 20 );
+				},
+				1
+			);
+
 			if ( $update->version ) {
 				WP_CLI::log( "Updating to version {$update->version} ({$update->locale})..." );
 			} else {
@@ -1236,6 +1260,21 @@ EOT;
 				 */
 				$locale = Utils\get_flag_value( $assoc_args, 'locale', get_locale() );
 				$this->cleanup_extra_files( $from_version, $to_version, $locale, $insecure );
+
+				$data = [
+					[
+						'name'        => 'core',
+						'old_version' => $from_version,
+						'new_version' => $to_version,
+						'status'      => 'Updated',
+					],
+				];
+
+				$format = Utils\get_flag_value( $assoc_args, 'format' );
+
+				if ( ! empty( $format ) ) {
+					Utils\format_items( $format, $data, [ 'name', 'old_version', 'new_version', 'status' ] );
+				}
 
 				WP_CLI::success( 'WordPress updated successfully.' );
 			}

@@ -30,6 +30,69 @@ Feature: Update WordPress core
       6.2
       """
 
+  @require-php-7.0
+  Scenario: Output in JSON format
+    Given a WP install
+    And I try `wp theme install twentytwenty --activate`
+
+    When I run `wp core download --version=6.6 --force`
+    Then STDOUT should not be empty
+
+    When I run `wp eval 'echo $GLOBALS["wp_version"];'`
+    Then STDOUT should be:
+      """
+      6.6
+      """
+
+    When I run `wget http://wordpress.org/wordpress-6.8.zip --quiet`
+    And I run `wp core update wordpress-6.8.zip --format=json`
+    Then STDOUT should be:
+      """
+      [{"name":"core","old_version":"6.6","new_version":"6.8","status":"Updated"}]
+      """
+
+  @require-php-7.0
+  Scenario: Output in CSV format
+    Given a WP install
+    And I try `wp theme install twentytwenty --activate`
+
+    When I run `wp core download --version=6.6 --force`
+    Then STDOUT should not be empty
+
+    When I run `wp eval 'echo $GLOBALS["wp_version"];'`
+    Then STDOUT should be:
+      """
+      6.6
+      """
+
+    When I run `wget http://wordpress.org/wordpress-6.8.zip --quiet`
+    And I run `wp core update wordpress-6.8.zip --format=csv`
+    Then STDOUT should be:
+      """
+      name,old_version,new_version,status
+      core,6.6,6.8,Updated
+      """
+
+  @require-php-7.0
+  Scenario: Output in table format
+    Given a WP install
+    And I try `wp theme install twentytwenty --activate`
+
+    When I run `wp core download --version=6.6 --force`
+    Then STDOUT should not be empty
+
+    When I run `wp eval 'echo $GLOBALS["wp_version"];'`
+    Then STDOUT should be:
+      """
+      6.6
+      """
+
+    When I run `wget http://wordpress.org/wordpress-6.8.zip --quiet`
+    And I run `wp core update wordpress-6.8.zip --format=table`
+    Then STDOUT should end with a table containing rows:
+      | name | old_version | new_version | status  |
+      | core | 6.6         | 6.8         | Updated |
+
   # This test downgrades to an older WordPress version, but the SQLite plugin requires 6.4+
   @require-mysql
   Scenario: Update to the latest minor release (PHP 7.2 compatible with WP >= 4.9)
@@ -267,7 +330,7 @@ Feature: Update WordPress core
     When I run `wp post create --post_title='Test post' --porcelain`
     Then STDOUT should be a number
 
-  @require-php-7.2
+  @require-php-7.4
   Scenario Outline: Use `--version=(nightly|trunk)` to update to the latest nightly version
     Given a WP install
 
@@ -287,7 +350,7 @@ Feature: Update WordPress core
       | trunk      |
       | nightly    |
 
-  @require-php-7.2
+  @require-php-7.4
   Scenario: Installing latest nightly build should skip cache
     Given a WP install
 
@@ -320,4 +383,39 @@ Feature: Update WordPress core
     Then STDOUT should contain:
       """
       Success:
+      """
+
+  Scenario: No HTML output from async translation updates during core update
+    Given a WP install
+    And an empty cache
+
+    # Using `try` in case there are checksum warnings.
+    When I try `wp core download --version=6.5 --locale=de_DE --force`
+    Then STDOUT should contain:
+      """
+      Success: WordPress downloaded.
+      """
+
+    When I run `wp core version --extra`
+    Then STDOUT should contain:
+      """
+      Package language:  de_DE
+      """
+
+    When I run `wp core update --version=latest --force`
+    Then STDOUT should not contain:
+      """
+      <p>
+      """
+    And STDOUT should not contain:
+      """
+      <div
+      """
+    And STDOUT should not contain:
+      """
+      <script
+      """
+    And STDOUT should not contain:
+      """
+      </div>
       """
