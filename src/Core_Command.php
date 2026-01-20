@@ -1228,6 +1228,15 @@ EOT;
 
 			require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
+			// Prevent async translation updates which output HTML.
+			add_action(
+				'upgrader_process_complete',
+				static function () {
+					remove_action( 'upgrader_process_complete', array( 'Language_Pack_Upgrader', 'async_upgrade' ), 20 );
+				},
+				1
+			);
+
 			if ( $update->version ) {
 				WP_CLI::log( "Updating to version {$update->version} ({$update->locale})..." );
 			} else {
