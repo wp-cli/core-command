@@ -73,7 +73,7 @@ Feature: Check for more recent versions
 
   Scenario: Check update shows warning when version check API fails
     Given a WP install
-    And that HTTP requests to `api.wordpress.org` will respond with:
+    And that HTTP requests to https://api.wordpress.org/core/version-check/1.7/ will respond with:
       """
       HTTP/1.1 500 Internal Server Error
       """
