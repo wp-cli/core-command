@@ -1819,8 +1819,8 @@ EOT;
 					return false;
 				}
 			} elseif ( ! unlink( $path ) ) {
-					WP_CLI::debug( "Failed to remove file in directory: {$path}", 'core' );
-					return false;
+				WP_CLI::debug( "Failed to remove file in directory: {$path}", 'core' );
+				return false;
 			}
 		}
 
