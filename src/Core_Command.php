@@ -1749,9 +1749,17 @@ EOT;
 
 			// Handle both files and directories
 			if ( file_exists( $file_path ) ) {
-				if ( is_dir( $file_path ) ) {
+				if ( is_link( $file_path ) ) {
+					// Remove symbolic link without following it
+					if ( unlink( $file_path ) ) {
+						WP_CLI::log( "File removed: {$file}" );
+						++$count;
+					} else {
+						WP_CLI::debug( "Failed to remove file: {$file}", 'core' );
+					}
+				} elseif ( is_dir( $file_path ) ) {
 					// Remove directory recursively
-					if ( $this->remove_directory( $file_path ) ) {
+					if ( $this->remove_directory( $file_path, $abspath_realpath_trailing ) ) {
 						WP_CLI::log( "Directory removed: {$file}" );
 						++$count;
 					} else {
@@ -1773,17 +1781,17 @@ EOT;
 	 * Recursively remove a directory and its contents.
 	 *
 	 * @param string $dir Directory path to remove.
+	 * @param string $abspath_realpath_trailing Cached ABSPATH realpath with trailing slash for performance.
 	 * @return bool True on success, false on failure.
 	 */
-	private function remove_directory( $dir ) {
-		$dir_realpath     = realpath( $dir );
-		$abspath_realpath = realpath( ABSPATH );
-		if ( false === $dir_realpath || false === $abspath_realpath ) {
-			WP_CLI::debug( "Failed to resolve realpath for directory or ABSPATH: {$dir}", 'core' );
+	private function remove_directory( $dir, $abspath_realpath_trailing ) {
+		$dir_realpath = realpath( $dir );
+		if ( false === $dir_realpath ) {
+			WP_CLI::debug( "Failed to resolve realpath for directory: {$dir}", 'core' );
 			return false;
 		}
 		// Normalize paths with trailing slashes for accurate comparison
-		if ( 0 !== strpos( $dir_realpath, Utils\trailingslashit( $abspath_realpath ) ) ) {
+		if ( 0 !== strpos( $dir_realpath, $abspath_realpath_trailing ) ) {
 			WP_CLI::debug( "Attempted to remove directory outside of ABSPATH: {$dir_realpath}", 'core' );
 			return false;
 		}
@@ -1814,7 +1822,7 @@ EOT;
 			}
 
 			if ( is_dir( $path ) ) {
-				if ( ! $this->remove_directory( $path ) ) {
+				if ( ! $this->remove_directory( $path, $abspath_realpath_trailing ) ) {
 					WP_CLI::debug( "Failed to remove subdirectory: {$path}", 'core' );
 					return false;
 				}
