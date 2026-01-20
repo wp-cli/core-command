@@ -1545,7 +1545,7 @@ EOT;
 	 * @param string         $url      URL being requested.
 	 */
 	public function capture_version_check_error( $response, $context, $_class, $_args, $url ) {
-		if ( false !== strpos( $url, 'api.wordpress.org/core/version-check' ) ) {
+		if ( false === strpos( $url, 'api.wordpress.org/core/version-check' ) ) {
 			return;
 		}
 
