@@ -1752,10 +1752,10 @@ EOT;
 				if ( is_link( $file_path ) ) {
 					// Remove symbolic link without following it
 					if ( unlink( $file_path ) ) {
-						WP_CLI::log( "File removed: {$file}" );
+						WP_CLI::log( "Symbolic link removed: {$file}" );
 						++$count;
 					} else {
-						WP_CLI::debug( "Failed to remove file: {$file}", 'core' );
+						WP_CLI::debug( "Failed to remove symbolic link: {$file}", 'core' );
 					}
 				} elseif ( is_dir( $file_path ) ) {
 					// Remove directory recursively
