@@ -330,7 +330,7 @@ Feature: Update WordPress core
     When I run `wp post create --post_title='Test post' --porcelain`
     Then STDOUT should be a number
 
-  @require-php-7.2
+  @require-php-7.4
   Scenario Outline: Use `--version=(nightly|trunk)` to update to the latest nightly version
     Given a WP install
 
@@ -350,7 +350,7 @@ Feature: Update WordPress core
       | trunk      |
       | nightly    |
 
-  @require-php-7.2
+  @require-php-7.4
   Scenario: Installing latest nightly build should skip cache
     Given a WP install
 
