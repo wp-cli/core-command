@@ -1737,9 +1737,14 @@ EOT;
 			// For symlinks, validate the symlink itself is within ABSPATH (not where it points)
 			// For other files, validate the real path is within ABSPATH
 			if ( is_link( $file_path ) ) {
-				// Check symlink path directly without following it
-				// Ensure the file path starts with ABSPATH
-				if ( 0 !== strpos( $file_path, ABSPATH ) ) {
+				// Normalize the path to handle any .. sequences
+				$normalized_path = realpath( dirname( $file_path ) );
+				if ( false === $normalized_path ) {
+					WP_CLI::debug( "Skipping symbolic link with invalid parent directory: {$file}", 'core' );
+					continue;
+				}
+				// Ensure the normalized parent directory is within ABSPATH
+				if ( 0 !== strpos( Utils\trailingslashit( $normalized_path ), $abspath_realpath_trailing ) && $normalized_path !== rtrim( $abspath_realpath_trailing, '/' ) ) {
 					WP_CLI::debug( "Skipping symbolic link outside of ABSPATH: {$file}", 'core' );
 					continue;
 				}
