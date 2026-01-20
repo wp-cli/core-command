@@ -330,7 +330,7 @@ Feature: Update WordPress core
     When I run `wp post create --post_title='Test post' --porcelain`
     Then STDOUT should be a number
 
-  @require-php-7.2
+  @require-php-7.4
   Scenario Outline: Use `--version=(nightly|trunk)` to update to the latest nightly version
     Given a WP install
 
@@ -350,7 +350,7 @@ Feature: Update WordPress core
       | trunk      |
       | nightly    |
 
-  @require-php-7.2
+  @require-php-7.4
   Scenario: Installing latest nightly build should skip cache
     Given a WP install
 
@@ -385,15 +385,40 @@ Feature: Update WordPress core
       Success:
       """
 
+  Scenario: No HTML output from async translation updates during core update
+    Given a WP install
+    And an empty cache
+
+    # Using `try` in case there are checksum warnings.
+    When I try `wp core download --version=6.5 --locale=de_DE --force`
+    Then STDOUT should contain:
+      """
+      Success: WordPress downloaded.
+      """
+
+    When I run `wp core update --version=latest --force`
+    Then STDOUT should not contain:
+      """
+      <p>
+      """
+    And STDOUT should not contain:
+      """
+      <div
+      """
+    And STDOUT should not contain:
+      """
+      <script
+      """
+    And STDOUT should not contain:
+      """
+      </div>
+      """
+
   @require-php-7.2
   Scenario: Old files from $_old_files are cleaned up when upgrading
     Given a WP install
 
     When I run `wp core download --version=6.8 --force`
-    Then STDOUT should contain:
-      """
-      Success: WordPress downloaded.
-      """
 
     # Create files that should be removed according to 6.9 old_files list
     Given a wp-includes/blocks/post-author/editor.css file:
@@ -473,3 +498,8 @@ Feature: Update WordPress core
     # Verify files from $_old_files were removed
     And the wp-includes/blocks/post-author/editor.css file should not exist
     And the wp-includes/blocks/post-author/editor.min.css file should not exist
+    When I run `wp core version --extra`
+    Then STDOUT should contain:
+      """
+      Package language:  de_DE
+      """
