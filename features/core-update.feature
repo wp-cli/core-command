@@ -396,6 +396,12 @@ Feature: Update WordPress core
       Success: WordPress downloaded.
       """
 
+    When I run `wp core version --extra`
+    Then STDOUT should contain:
+      """
+      Package language:  de_DE
+      """
+
     When I run `wp core update --version=latest --force`
     Then STDOUT should not contain:
       """
@@ -498,8 +504,3 @@ Feature: Update WordPress core
     # Verify files from $_old_files were removed
     And the wp-includes/blocks/post-author/editor.css file should not exist
     And the wp-includes/blocks/post-author/editor.min.css file should not exist
-    When I run `wp core version --extra`
-    Then STDOUT should contain:
-      """
-      Package language:  de_DE
-      """
