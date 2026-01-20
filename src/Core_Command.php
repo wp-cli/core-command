@@ -1734,17 +1734,28 @@ EOT;
 
 			$file_path = ABSPATH . $file;
 
-			// Validate the path is within ABSPATH
-			$file_realpath = realpath( $file_path );
-			if ( false === $file_realpath ) {
-				// Skip files with invalid paths
-				WP_CLI::debug( "Skipping file with invalid path: {$file}", 'core' );
-				continue;
-			}
+			// For symlinks, validate the symlink itself is within ABSPATH
+			// For other files, validate the real path is within ABSPATH
+			if ( is_link( $file_path ) ) {
+				// Validate the symlink path itself (not target) is within ABSPATH
+				$parent_dir_realpath = realpath( dirname( $file_path ) );
+				if ( false === $parent_dir_realpath || 0 !== strpos( $parent_dir_realpath, $abspath_realpath_trailing ) ) {
+					WP_CLI::debug( "Skipping symbolic link outside of ABSPATH: {$file}", 'core' );
+					continue;
+				}
+			} else {
+				// Validate the path is within ABSPATH
+				$file_realpath = realpath( $file_path );
+				if ( false === $file_realpath ) {
+					// Skip files with invalid paths
+					WP_CLI::debug( "Skipping file with invalid path: {$file}", 'core' );
+					continue;
+				}
 
-			if ( 0 !== strpos( $file_realpath, $abspath_realpath_trailing ) ) {
-				WP_CLI::debug( "Skipping file outside of ABSPATH: {$file}", 'core' );
-				continue;
+				if ( 0 !== strpos( $file_realpath, $abspath_realpath_trailing ) ) {
+					WP_CLI::debug( "Skipping file outside of ABSPATH: {$file}", 'core' );
+					continue;
+				}
 			}
 
 			// Handle both files and directories
