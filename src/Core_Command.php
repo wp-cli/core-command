@@ -1709,7 +1709,7 @@ EOT;
 				null !== $error
 				&& in_array(
 					$error['type'],
-					[ E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_COMPILE_WARNING, E_USER_ERROR ],
+					[ E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR ],
 					true
 				)
 			) {
