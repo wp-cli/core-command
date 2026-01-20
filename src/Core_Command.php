@@ -1734,12 +1734,12 @@ EOT;
 
 			$file_path = ABSPATH . $file;
 
-			// For symlinks, validate the symlink itself is within ABSPATH
+			// For symlinks, validate the symlink itself is within ABSPATH (not where it points)
 			// For other files, validate the real path is within ABSPATH
 			if ( is_link( $file_path ) ) {
-				// Validate the symlink path itself (not target) is within ABSPATH
-				$parent_dir_realpath = realpath( dirname( $file_path ) );
-				if ( false === $parent_dir_realpath || 0 !== strpos( $parent_dir_realpath, $abspath_realpath_trailing ) ) {
+				// Check symlink path directly without following it
+				// Ensure the file path starts with ABSPATH
+				if ( 0 !== strpos( $file_path, ABSPATH ) ) {
 					WP_CLI::debug( "Skipping symbolic link outside of ABSPATH: {$file}", 'core' );
 					continue;
 				}
