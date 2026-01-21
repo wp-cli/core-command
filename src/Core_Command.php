@@ -1243,7 +1243,12 @@ EOT;
 			if ( is_wp_error( $result ) ) {
 				$message = WP_CLI::error_to_string( $result );
 				if ( 'up_to_date' !== $result->get_error_code() ) {
-					WP_CLI::error( $message );
+					// Check if the error is related to the core_updater.lock
+					if ( self::is_lock_error( $result ) ) {
+						WP_CLI::error( rtrim( $message, '.' ) . '. You may need to run `wp option delete core_updater.lock` after verifying another update isn\'t actually running.' );
+					} else {
+						WP_CLI::error( $message );
+					}
 				} else {
 					WP_CLI::success( $message );
 				}
@@ -1677,5 +1682,22 @@ EOT;
 		} else {
 			WP_CLI::error( 'ZipArchive failed to open ZIP file.' );
 		}
+	}
+
+	/**
+	 * Checks if a WP_Error is related to the core_updater.lock.
+	 *
+	 * @param \WP_Error $error The error object to check.
+	 * @return bool True if the error is related to the lock, false otherwise.
+	 */
+	private static function is_lock_error( $error ) {
+		// Check for the 'locked' error code used by WordPress Core
+		if ( 'locked' === $error->get_error_code() ) {
+			return true;
+		}
+
+		// Also check if the error message contains the lock text as a fallback
+		$message = WP_CLI::error_to_string( $error );
+		return false !== stripos( $message, 'another update is currently in progress' );
 	}
 }
