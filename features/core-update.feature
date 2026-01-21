@@ -330,7 +330,7 @@ Feature: Update WordPress core
     When I run `wp post create --post_title='Test post' --porcelain`
     Then STDOUT should be a number
 
-  @require-php-7.2
+  @require-php-7.4
   Scenario Outline: Use `--version=(nightly|trunk)` to update to the latest nightly version
     Given a WP install
 
@@ -350,7 +350,7 @@ Feature: Update WordPress core
       | trunk      |
       | nightly    |
 
-  @require-php-7.2
+  @require-php-7.4
   Scenario: Installing latest nightly build should skip cache
     Given a WP install
 
@@ -418,4 +418,22 @@ Feature: Update WordPress core
     And STDOUT should not contain:
       """
       </div>
+      """
+
+  Scenario: Show helpful tip when update is locked
+    Given a WP install
+
+    When I run `wp option update core_updater.lock 100000000000000`
+    And I try `wp core update --version=trunk`
+    Then STDERR should contain:
+      """
+      Another update is currently in progress. You may need to run `wp option delete core_updater.lock` after verifying another update isn't actually running.
+      """
+    And the return code should be 1
+
+    # Clean up the lock
+    When I run `wp option delete core_updater.lock`
+    Then STDOUT should contain:
+      """
+      Success:
       """
