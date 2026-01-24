@@ -419,3 +419,21 @@ Feature: Update WordPress core
       """
       </div>
       """
+
+  Scenario: Show helpful tip when update is locked
+    Given a WP install
+
+    When I run `wp option update core_updater.lock 100000000000000`
+    And I try `wp core update --version=trunk`
+    Then STDERR should contain:
+      """
+      Another update is currently in progress. You may need to run `wp option delete core_updater.lock` after verifying another update isn't actually running.
+      """
+    And the return code should be 1
+
+    # Clean up the lock
+    When I run `wp option delete core_updater.lock`
+    Then STDOUT should contain:
+      """
+      Success:
+      """
