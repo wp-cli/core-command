@@ -76,6 +76,9 @@ Feature: Check for more recent versions
     And that HTTP requests to https://api.wordpress.org/core/version-check/1.7/ will respond with:
       """
       HTTP/1.1 500 Internal Server Error
+      Content-Type: text/plain
+
+      <Error body>
       """
 
     When I run `wp core check-update --force-check`
