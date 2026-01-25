@@ -81,7 +81,7 @@ Feature: Check for more recent versions
       <Error body>
       """
 
-    When I run `wp core check-update --force-check`
+    When I try `wp core check-update --force-check`
     Then STDERR should contain:
       """
       Warning: Failed to check for updates
