@@ -1476,11 +1476,16 @@ EOT;
 		// This is necessary because tests and plugins may use pre_http_request to mock responses
 		add_filter( 'pre_http_request', [ $this, 'capture_version_check_error' ], PHP_INT_MAX, 3 );
 
+		// Also hook into http_api_debug to capture errors from real HTTP requests
+		// This fires when pre_http_request doesn't short-circuit the request
+		add_action( 'http_api_debug', [ $this, 'capture_version_check_error_from_response' ], 10, 5 );
+
 		try {
 			wp_version_check( [], $force_check );
 		} finally {
-			// Ensure the hook is always removed, even if wp_version_check() throws an exception
+			// Ensure the hooks are always removed, even if wp_version_check() throws an exception
 			remove_filter( 'pre_http_request', [ $this, 'capture_version_check_error' ], PHP_INT_MAX );
+			remove_action( 'http_api_debug', [ $this, 'capture_version_check_error_from_response' ], 10 );
 		}
 
 		/**
@@ -1573,6 +1578,47 @@ EOT;
 		}
 
 		return $response;
+	}
+
+	/**
+	 * Handles the http_api_debug action to capture HTTP errors from real requests.
+	 *
+	 * This fires when pre_http_request doesn't short-circuit the request.
+	 * Uses the http_api_debug action hook signature.
+	 *
+	 * @param array|WP_Error $response HTTP response or WP_Error object.
+	 * @param string         $context  Context of the HTTP request.
+	 * @param string         $_class   HTTP transport class name (unused).
+	 * @param array          $_args    HTTP request arguments (unused).
+	 * @param string         $url      URL being requested.
+	 */
+	public function capture_version_check_error_from_response( $response, $context, $_class, $_args, $url ) {
+		if ( false === strpos( $url, 'api.wordpress.org/core/version-check' ) ) {
+			return;
+		}
+
+		// Only capture on response, not pre_response
+		if ( 'response' !== $context ) {
+			return;
+		}
+
+		// Store the error if the response is a WP_Error
+		if ( is_wp_error( $response ) ) {
+			$this->version_check_error = $response;
+		} elseif ( is_array( $response ) && isset( $response['response']['code'] ) && $response['response']['code'] >= 400 ) {
+			// HTTP error status code (4xx or 5xx) - convert to WP_Error for consistency
+			$this->version_check_error = new \WP_Error(
+				'http_request_failed',
+				sprintf(
+					'HTTP request failed with status %d: %s',
+					$response['response']['code'],
+					isset( $response['response']['message'] ) ? $response['response']['message'] : 'Unknown error'
+				)
+			);
+		} else {
+			// Clear any previous error if we got a successful response
+			$this->version_check_error = null;
+		}
 	}
 
 	/**
