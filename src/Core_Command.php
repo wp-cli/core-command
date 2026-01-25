@@ -1559,9 +1559,11 @@ EOT;
 			return;
 		}
 
-		// Store the error if the response is a WP_Error
+		// Store the error if the response is a WP_Error; clear it otherwise.
 		if ( is_wp_error( $response ) ) {
 			$this->version_check_error = $response;
+		} else {
+			$this->version_check_error = null;
 		}
 	}
 
