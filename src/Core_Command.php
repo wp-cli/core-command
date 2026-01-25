@@ -1544,6 +1544,30 @@ EOT;
 	}
 
 	/**
+	 * Sets or clears the version check error property based on an HTTP response.
+	 *
+	 * @param mixed $response The HTTP response (WP_Error, array, or other).
+	 */
+	private function set_version_check_error( $response ) {
+		if ( is_wp_error( $response ) ) {
+			$this->version_check_error = $response;
+		} elseif ( is_array( $response ) && isset( $response['response']['code'] ) && $response['response']['code'] >= 400 ) {
+			// HTTP error status code (4xx or 5xx) - convert to WP_Error for consistency
+			$this->version_check_error = new \WP_Error(
+				'http_request_failed',
+				sprintf(
+					'HTTP request failed with status %d: %s',
+					$response['response']['code'],
+					isset( $response['response']['message'] ) ? $response['response']['message'] : 'Unknown error'
+				)
+			);
+		} else {
+			// Clear any previous error if we got a successful response.
+			$this->version_check_error = null;
+		}
+	}
+
+	/**
 	 * Handles the pre_http_request filter to capture HTTP errors during version check.
 	 *
 	 * This method signature matches the pre_http_request filter signature.
@@ -1559,22 +1583,11 @@ EOT;
 			return $response;
 		}
 
-		// Store the error if the response is a WP_Error
-		if ( is_wp_error( $response ) ) {
-			$this->version_check_error = $response;
-		} elseif ( is_array( $response ) && isset( $response['response']['code'] ) && $response['response']['code'] >= 400 ) {
-			// HTTP error status code (4xx or 5xx) - convert to WP_Error for consistency
-			$this->version_check_error = new \WP_Error(
-				'http_request_failed',
-				sprintf(
-					'HTTP request failed with status %d: %s',
-					$response['response']['code'],
-					isset( $response['response']['message'] ) ? $response['response']['message'] : 'Unknown error'
-				)
-			);
-		} elseif ( false !== $response ) {
-			// Clear any previous error if we got a successful mocked response
-			$this->version_check_error = null;
+		// A `false` response means the request is not being preempted.
+		// In this case, we don't want to change the error status, as the subsequent
+		// `http_api_debug` hook will handle the actual response.
+		if ( false !== $response ) {
+			$this->set_version_check_error( $response );
 		}
 
 		return $response;
@@ -1602,23 +1615,7 @@ EOT;
 			return;
 		}
 
-		// Store the error if the response is a WP_Error
-		if ( is_wp_error( $response ) ) {
-			$this->version_check_error = $response;
-		} elseif ( is_array( $response ) && isset( $response['response']['code'] ) && $response['response']['code'] >= 400 ) {
-			// HTTP error status code (4xx or 5xx) - convert to WP_Error for consistency
-			$this->version_check_error = new \WP_Error(
-				'http_request_failed',
-				sprintf(
-					'HTTP request failed with status %d: %s',
-					$response['response']['code'],
-					isset( $response['response']['message'] ) ? $response['response']['message'] : 'Unknown error'
-				)
-			);
-		} else {
-			// Clear any previous error if we got a successful response
-			$this->version_check_error = null;
-		}
+		$this->set_version_check_error( $response );
 	}
 
 	/**
