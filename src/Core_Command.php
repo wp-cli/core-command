@@ -903,6 +903,9 @@ EOT;
 	 * [--extra]
 	 * : Show extended version information.
 	 *
+	 * [--actual]
+	 * : Show the actual database version from the database. This requires WordPress to be loaded and only works with --extra flag. Useful for checking the database version of a specific site in a multisite installation using --url.
+	 *
 	 * ## EXAMPLES
 	 *
 	 *     # Display the WordPress version
@@ -916,12 +919,50 @@ EOT;
 	 *     TinyMCE version:   4.310 (4310-20160418)
 	 *     Package language:  en_US
 	 *
+	 *     # Display actual database version for a multisite subsite
+	 *     $ wp core version --extra --actual --url=example.com/subsite
+	 *     WordPress version: 4.5.2
+	 *     Database revision: 35700
+	 *     TinyMCE version:   4.310 (4310-20160418)
+	 *     Package language:  en_US
+	 *
 	 * @when before_wp_load
 	 *
 	 * @param string[] $args Positional arguments. Unused.
-	 * @param array{extra?: bool} $assoc_args Associative arguments.
+	 * @param array{extra?: bool, actual?: bool} $assoc_args Associative arguments.
 	 */
 	public function version( $args = [], $assoc_args = [] ) {
+		$use_actual_db_version = Utils\get_flag_value( $assoc_args, 'actual' );
+
+		// If --actual flag is used, delegate to a command that runs after WP load
+		if ( $use_actual_db_version ) {
+			if ( ! Utils\get_flag_value( $assoc_args, 'extra' ) ) {
+				WP_CLI::error( 'The --actual flag can only be used with --extra.' );
+			}
+
+			// Build the command to run after WP load
+			$cmd_args = [];
+			foreach ( $assoc_args as $key => $value ) {
+				if ( 'actual' !== $key ) {
+					if ( true === $value ) {
+						$cmd_args[] = "--{$key}";
+					} elseif ( is_string( $value ) ) {
+						$cmd_args[] = "--{$key}=" . escapeshellarg( $value );
+					}
+				}
+			}
+			$cmd = 'core version-actual-db ' . implode( ' ', $cmd_args );
+
+			WP_CLI::runcommand(
+				$cmd,
+				[
+					'launch'     => true,
+					'exit_error' => true,
+				]
+			);
+			return;
+		}
+
 		$details = self::get_wp_details();
 
 		if ( ! Utils\get_flag_value( $assoc_args, 'extra' ) ) {
@@ -938,6 +979,42 @@ EOT;
 			[
 				'wp-version'    => $details['wp_version'],
 				'db-version'    => $details['wp_db_version'],
+				'local-package' => empty( $details['wp_local_package'] )
+					? 'en_US'
+					: $details['wp_local_package'],
+				'mce-version'   => $human_readable_tiny_mce
+					? "{$human_readable_tiny_mce} ({$details['tinymce_version']})"
+					: $details['tinymce_version'],
+			]
+		);
+	}
+
+	/**
+	 * Helper command to display actual database version (runs after WP load).
+	 *
+	 * This is an internal command called by 'core version --actual'.
+	 *
+	 * @subcommand version-actual-db
+	 * @when after_wp_load
+	 *
+	 * @param string[] $args Positional arguments. Unused.
+	 * @param array{extra?: bool} $assoc_args Associative arguments.
+	 */
+	public function version_actual_db( $args = [], $assoc_args = [] ) {
+		$details = self::get_wp_details();
+
+		// Get the actual database version from the options table
+		$actual_db_version = get_option( 'db_version' );
+
+		$match                   = [];
+		$found_version           = preg_match( '/(\d)(\d+)-/', $details['tinymce_version'], $match );
+		$human_readable_tiny_mce = $found_version ? "{$match[1]}.{$match[2]}" : '';
+
+		echo Utils\mustache_render(
+			self::get_template_path( 'versions.mustache' ),
+			[
+				'wp-version'    => $details['wp_version'],
+				'db-version'    => $actual_db_version,
 				'local-package' => empty( $details['wp_local_package'] )
 					? 'en_US'
 					: $details['wp_local_package'],
