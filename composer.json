@@ -48,7 +48,7 @@
             "core update",
             "core update-db",
             "core version",
-            "core version-actual-db"
+            "core version-db-actual"
         ]
     },
     "autoload": {

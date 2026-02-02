@@ -947,11 +947,11 @@ EOT;
 					if ( true === $value ) {
 						$cmd_args[] = "--{$key}";
 					} elseif ( is_string( $value ) ) {
-						$cmd_args[] = "--{$key}=" . escapeshellarg( $value );
+						$cmd_args[] = "--{$key}={$value}";
 					}
 				}
 			}
-			$cmd = 'core version-actual-db ' . implode( ' ', $cmd_args );
+			$cmd = 'core version-db-actual ' . implode( ' ', $cmd_args );
 
 			WP_CLI::runcommand(
 				$cmd,
@@ -994,13 +994,13 @@ EOT;
 	 *
 	 * This is an internal command called by 'core version --actual'.
 	 *
-	 * @subcommand version-actual-db
+	 * @subcommand version-db-actual
 	 * @when after_wp_load
 	 *
 	 * @param string[] $args Positional arguments. Unused.
 	 * @param array{extra?: bool} $assoc_args Associative arguments.
 	 */
-	public function version_actual_db( $args = [], $assoc_args = [] ) {
+	public function version_db_actual( $args = [], $assoc_args = [] ) {
 		$details = self::get_wp_details();
 
 		// Get the actual database version from the options table
