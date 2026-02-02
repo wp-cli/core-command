@@ -945,9 +945,10 @@ EOT;
 			foreach ( $assoc_args as $key => $value ) {
 				if ( 'actual' !== $key ) {
 					if ( true === $value ) {
-						$cmd_args[] = "--{$key}";
+						$cmd_args[] = '--' . $key;
 					} elseif ( is_string( $value ) ) {
-						$cmd_args[] = "--{$key}={$value}";
+						// Escape the value to prevent command injection
+						$cmd_args[] = '--' . $key . '=' . escapeshellarg( $value );
 					}
 				}
 			}
@@ -992,7 +993,7 @@ EOT;
 	 * @when after_wp_load
 	 *
 	 * @param string[] $args Positional arguments. Unused.
-	 * @param array $assoc_args Associative arguments passed through from version command.
+	 * @param array{extra?: bool} $assoc_args Associative arguments passed through from version command.
 	 */
 	public function version_db_actual( $args = [], $assoc_args = [] ) {
 		$details = self::get_wp_details();
