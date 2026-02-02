@@ -970,10 +970,6 @@ EOT;
 			return;
 		}
 
-		$match                   = [];
-		$found_version           = preg_match( '/(\d)(\d+)-/', $details['tinymce_version'], $match );
-		$human_readable_tiny_mce = $found_version ? "{$match[1]}.{$match[2]}" : '';
-
 		echo Utils\mustache_render(
 			self::get_template_path( 'versions.mustache' ),
 			[
@@ -982,9 +978,7 @@ EOT;
 				'local-package' => empty( $details['wp_local_package'] )
 					? 'en_US'
 					: $details['wp_local_package'],
-				'mce-version'   => $human_readable_tiny_mce
-					? "{$human_readable_tiny_mce} ({$details['tinymce_version']})"
-					: $details['tinymce_version'],
+				'mce-version'   => self::format_tinymce_version( $details['tinymce_version'] ),
 			]
 		);
 	}
@@ -998,17 +992,13 @@ EOT;
 	 * @when after_wp_load
 	 *
 	 * @param string[] $args Positional arguments. Unused.
-	 * @param array{extra?: bool} $assoc_args Associative arguments.
+	 * @param array $assoc_args Associative arguments passed through from version command.
 	 */
 	public function version_db_actual( $args = [], $assoc_args = [] ) {
 		$details = self::get_wp_details();
 
 		// Get the actual database version from the options table
 		$actual_db_version = get_option( 'db_version' );
-
-		$match                   = [];
-		$found_version           = preg_match( '/(\d)(\d+)-/', $details['tinymce_version'], $match );
-		$human_readable_tiny_mce = $found_version ? "{$match[1]}.{$match[2]}" : '';
 
 		echo Utils\mustache_render(
 			self::get_template_path( 'versions.mustache' ),
@@ -1018,11 +1008,27 @@ EOT;
 				'local-package' => empty( $details['wp_local_package'] )
 					? 'en_US'
 					: $details['wp_local_package'],
-				'mce-version'   => $human_readable_tiny_mce
-					? "{$human_readable_tiny_mce} ({$details['tinymce_version']})"
-					: $details['tinymce_version'],
+				'mce-version'   => self::format_tinymce_version( $details['tinymce_version'] ),
 			]
 		);
+	}
+
+	/**
+	 * Formats the TinyMCE version for display.
+	 *
+	 * @param string $tinymce_version The TinyMCE version string.
+	 * @return string Formatted TinyMCE version.
+	 */
+	private static function format_tinymce_version( $tinymce_version ) {
+		$match                   = [];
+		$found_version           = preg_match( '/(\d)(\d+)-/', $tinymce_version, $match );
+		$human_readable_tiny_mce = $found_version ? "{$match[1]}.{$match[2]}" : '';
+
+		if ( $human_readable_tiny_mce ) {
+			return "{$human_readable_tiny_mce} ({$tinymce_version})";
+		}
+
+		return $tinymce_version;
 	}
 
 	/**
