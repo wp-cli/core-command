@@ -42,7 +42,7 @@ Feature: Find version for WordPress install
   @require-mysql
   Scenario: Verify actual database version shows correct values
     Given a WP install
-    And I run `wp core download --version=5.4 --force`
+    And I run `wp core download --version=6.6 --force`
     And I run `wp option update db_version 45805`
 
     # Without --actual, should show expected version from version.php
@@ -63,7 +63,7 @@ Feature: Find version for WordPress install
   @require-mysql
   Scenario: Verify actual database version in multisite subsite
     Given a WP multisite install
-    And I run `wp core download --version=5.4 --force`
+    And I run `wp core download --version=6.6 --force`
     And I run `wp option update db_version 47018`
     And I run `wp site create --slug=subsite --porcelain`
     And save STDOUT as {SUBSITE_ID}
