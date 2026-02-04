@@ -225,6 +225,39 @@ Feature: Install WordPress core
       http://example.com/subdir
       """
 
+  Scenario: Install with simulated root filesystem WP-CLI executable location
+    Given an empty directory
+    And WP files
+    And wp-config.php
+    And a database
+    And a problematic-server-vars.php file:
+      """
+      <?php
+      // Simulate WP-CLI being executed from root filesystem (e.g., /wp)
+      // This is the problematic scenario that the fix addresses
+      $_SERVER['PHP_SELF'] = '/wp';
+      $_SERVER['SCRIPT_NAME'] = '/wp';
+      $_SERVER['SCRIPT_FILENAME'] = '/wp';
+      """
+
+    When I run `wp core install --url=https://example.com --title=Test --admin_user=wpcli --admin_email=wpcli@example.org --admin_password=password --skip-email --require=problematic-server-vars.php`
+    Then STDOUT should contain:
+      """
+      Success: WordPress installed successfully.
+      """
+
+    When I run `wp option get home`
+    Then STDOUT should be:
+      """
+      https://example.com
+      """
+
+    When I run `wp option get siteurl`
+    Then STDOUT should be:
+      """
+      https://example.com
+      """
+
   @less-than-php-7
   Scenario: Install WordPress with locale set to de_DE on WP < 4.0
     Given an empty directory
