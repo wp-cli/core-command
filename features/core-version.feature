@@ -49,7 +49,7 @@ Feature: Find version for WordPress install
     When I run `wp core version --extra`
     Then STDOUT should contain:
       """
-      Database revision: 47018
+      Database revision: 57155
       """
 
     # With --actual, should show actual database version
@@ -64,7 +64,7 @@ Feature: Find version for WordPress install
   Scenario: Verify actual database version in multisite subsite
     Given a WP multisite install
     And I run `wp core download --version=6.6 --force`
-    And I run `wp option update db_version 47018`
+    And I run `wp option update db_version 57155`
     And I run `wp site create --slug=subsite --porcelain`
     And save STDOUT as {SUBSITE_ID}
     And I run `wp option update db_version 45805 --url=example.com/subsite`
@@ -73,21 +73,21 @@ Feature: Find version for WordPress install
     When I run `wp core version --extra`
     Then STDOUT should contain:
       """
-      Database revision: 47018
+      Database revision: 57155
       """
 
     # Main site shows actual database version with --actual
     When I run `wp core version --extra --actual`
     Then STDOUT should contain:
       """
-      Database revision: 47018
+      Database revision: 57155
       """
 
     # Subsite shows expected version from version.php without --actual
     When I run `wp core version --extra --url=example.com/subsite`
     Then STDOUT should contain:
       """
-      Database revision: 47018
+      Database revision: 57155
       """
 
     # Subsite shows its own actual database version with --actual
