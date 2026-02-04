@@ -717,7 +717,7 @@ class Core_Command extends WP_CLI_Command {
 			// Set SCRIPT_FILENAME to the actual WordPress index.php if available.
 			// This is optional and only set when ABSPATH is defined and index.php exists.
 			// If not set, WordPress can still function using PHP_SELF and SCRIPT_NAME.
-			if ( defined( 'ABSPATH' ) && file_exists( Utils\trailingslashit( ABSPATH ) . 'index.php' ) ) {
+			if ( file_exists( Utils\trailingslashit( ABSPATH ) . 'index.php' ) ) {
 				$_SERVER['SCRIPT_FILENAME'] = Utils\trailingslashit( ABSPATH ) . 'index.php';
 			}
 		}
