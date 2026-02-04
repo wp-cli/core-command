@@ -691,6 +691,29 @@ class Core_Command extends WP_CLI_Command {
 		// which is normally a runtime argument
 		if ( isset( $assoc_args['url'] ) ) {
 			WP_CLI::set_url( $assoc_args['url'] );
+
+			// Fix $_SERVER['PHP_SELF'] and $_SERVER['SCRIPT_NAME'] to prevent incorrect
+			// URL detection by WordPress during installation. When WP-CLI is executed from
+			// the root of the filesystem (e.g., /wp), these variables contain the WP-CLI
+			// executable path rather than the WordPress installation path, which causes
+			// wp_guess_url() to construct incorrect URLs.
+			$url_parts = Utils\parse_url( $assoc_args['url'] );
+			$path      = isset( $url_parts['path'] ) ? $url_parts['path'] : '/';
+			// Ensure path ends with index.php for proper WordPress URL detection
+			if ( '/' === $path || '' === $path ) {
+				$path = '/index.php';
+			} elseif ( '/' === substr( $path, -1 ) ) {
+				$path .= 'index.php';
+			} elseif ( false === strpos( basename( $path ), '.' ) ) {
+				// If path doesn't end with / and has no extension, add /index.php
+				$path = rtrim( $path, '/' ) . '/index.php';
+			}
+			$_SERVER['PHP_SELF']    = $path;
+			$_SERVER['SCRIPT_NAME'] = $path;
+			// Set SCRIPT_FILENAME to the actual WordPress index.php path if it exists
+			if ( defined( 'ABSPATH' ) && file_exists( ABSPATH . 'index.php' ) ) {
+				$_SERVER['SCRIPT_FILENAME'] = ABSPATH . 'index.php';
+			}
 		}
 
 		$public   = true;
