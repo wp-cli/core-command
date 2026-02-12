@@ -67,11 +67,8 @@ class CoreUpgrader extends DefaultCoreUpgrader {
 			$hook_extra
 		);
 
-		/**
-		 * @var false|string|\WP_Error $reply
-		 */
-
 		if ( false !== $reply ) {
+			// @phpstan-ignore return.type
 			return $reply;
 		}
 
@@ -95,6 +92,10 @@ class CoreUpgrader extends DefaultCoreUpgrader {
 				}
 			}
 		);
+
+		/**
+		 * @var array{wpcli_core_update_obj: object{locale: string}} $GLOBALS
+		 */
 
 		$cache     = WP_CLI::get_cache();
 		$update    = $GLOBALS['wpcli_core_update_obj'];
