@@ -691,6 +691,35 @@ class Core_Command extends WP_CLI_Command {
 		// which is normally a runtime argument
 		if ( isset( $assoc_args['url'] ) ) {
 			WP_CLI::set_url( $assoc_args['url'] );
+
+			// Fix $_SERVER['PHP_SELF'] and $_SERVER['SCRIPT_NAME'] to prevent incorrect
+			// URL detection by WordPress during installation. When WP-CLI is executed from
+			// the root of the filesystem (e.g., /wp), these variables contain the WP-CLI
+			// executable path rather than the WordPress installation path, which causes
+			// wp_guess_url() to construct incorrect URLs.
+			$url_parts = Utils\parse_url( $assoc_args['url'] );
+			$path      = isset( $url_parts['path'] ) ? $url_parts['path'] : '/';
+
+			// Ensure path represents a PHP script for proper WordPress URL detection.
+			// If the path doesn't already end with a file (no extension in basename),
+			// append '/index.php' to represent the WordPress entry point.
+			$path = rtrim( $path, '/' );
+			if ( empty( $path ) ) {
+				$path = '/index.php';
+			} elseif ( '' === pathinfo( $path, PATHINFO_EXTENSION ) ) {
+				// Path doesn't end with a file, append /index.php
+				$path .= '/index.php';
+			}
+
+			$_SERVER['PHP_SELF']    = $path;
+			$_SERVER['SCRIPT_NAME'] = $path;
+
+			// Set SCRIPT_FILENAME to the actual WordPress index.php if available.
+			// This is optional and only set when ABSPATH is defined and index.php exists.
+			// If not set, WordPress can still function using PHP_SELF and SCRIPT_NAME.
+			if ( file_exists( Utils\trailingslashit( ABSPATH ) . 'index.php' ) ) {
+				$_SERVER['SCRIPT_FILENAME'] = Utils\trailingslashit( ABSPATH ) . 'index.php';
+			}
 		}
 
 		$public   = true;
