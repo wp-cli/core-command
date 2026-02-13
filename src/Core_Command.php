@@ -28,6 +28,8 @@ use WP_CLI\WpOrgApi;
  *     4.5.2
  *
  * @package wp-cli
+ *
+ * @phpstan-type HTTP_Response array{headers: array<string, string>, body: string, response: array{code:false|int, message: false|string}, cookies: array<string, string>, http_response: mixed}
  */
 class Core_Command extends WP_CLI_Command {
 
@@ -659,6 +661,10 @@ class Core_Command extends WP_CLI_Command {
 	}
 
 	private function do_install( $assoc_args ) {
+		/**
+		 * @var \wpdb $wpdb
+		 */
+		global $wpdb;
 		if ( is_blog_installed() ) {
 			return false;
 		}
@@ -710,7 +716,7 @@ class Core_Command extends WP_CLI_Command {
 			$args['locale']
 		);
 
-		if ( ! empty( $GLOBALS['wpdb']->last_error ) ) {
+		if ( ! empty( $wpdb->last_error ) ) {
 			WP_CLI::error( 'Installation produced database errors, and may have partially or completely failed.' );
 		}
 
@@ -1502,6 +1508,10 @@ EOT;
 			return [];
 		}
 
+		/**
+		 * @var array{wp_version: string} $GLOBALS
+		 */
+
 		$compare_version = str_replace( '-src', '', $GLOBALS['wp_version'] );
 
 		$updates = [
@@ -1552,7 +1562,9 @@ EOT;
 	/**
 	 * Sets or clears the version check error property based on an HTTP response.
 	 *
-	 * @param mixed $response The HTTP response (WP_Error, array, or other).
+	 * @param mixed|\WP_Error $response The HTTP response (WP_Error, array, or other).
+	 *
+	 * @phpstan-param HTTP_Response|WP_Error $response
 	 */
 	private function set_version_check_error( $response ) {
 		if ( is_wp_error( $response ) ) {
@@ -1583,6 +1595,8 @@ EOT;
 	 * @param array                $args     HTTP request arguments.
 	 * @param string               $url      The request URL.
 	 * @return false|array|WP_Error The response, unmodified.
+	 *
+	 * @phpstan-param HTTP_Response|WP_Error|false $response
 	 */
 	public function capture_version_check_error( $response, $args, $url ) {
 		if ( false === strpos( $url, 'api.wordpress.org/core/version-check' ) ) {
@@ -1610,6 +1624,8 @@ EOT;
 	 * @param string         $_class   HTTP transport class name (unused).
 	 * @param array          $_args    HTTP request arguments (unused).
 	 * @param string         $url      URL being requested.
+	 *
+	 * @phpstan-param HTTP_Response|WP_Error $response
 	 */
 	public function capture_version_check_error_from_response( $response, $context, $_class, $_args, $url ) {
 		if ( false === strpos( $url, 'api.wordpress.org/core/version-check' ) ) {
