@@ -1562,7 +1562,7 @@ EOT;
 	/**
 	 * Sets or clears the version check error property based on an HTTP response.
 	 *
-	 * @param array|\WP_Error $response The HTTP response (WP_Error, array, or other).
+	 * @param mixed|\WP_Error $response The HTTP response (WP_Error, array, or other).
 	 *
 	 * @phpstan-param HTTP_Response|WP_Error $response
 	 */

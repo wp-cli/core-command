@@ -93,11 +93,11 @@ class CoreUpgrader extends DefaultCoreUpgrader {
 			}
 		);
 
-		/**
-		 * @var array{wpcli_core_update_obj: object{locale: string}} $GLOBALS
-		 */
+		$cache = WP_CLI::get_cache();
 
-		$cache     = WP_CLI::get_cache();
+		/**
+		 * @var object{locale: string} $update
+		 */
 		$update    = $GLOBALS['wpcli_core_update_obj'];
 		$cache_key = "core/{$filename}-{$update->locale}.{$extension}";
 
