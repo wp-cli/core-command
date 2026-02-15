@@ -351,3 +351,73 @@ Feature: Install WordPress core
     """
     Success: Switched to 'Rockfield' theme.
     """
+
+  Scenario: Core install should provide helpful error when upgrade.php is missing
+    Given an empty directory
+    And WP files
+    And wp-config.php
+    And a database
+
+    When I run `rm wp-admin/includes/upgrade.php`
+    Then the return code should be 0
+
+    When I try `wp core install --url=example.org --title=Test --admin_user=testadmin --admin_email=testadmin@example.com --admin_password=testpass`
+    Then STDERR should contain:
+      """
+      Error: WordPress installation is incomplete. The file
+      """
+    And STDERR should contain:
+      """
+      wp-admin/includes/upgrade.php' is missing.
+      """
+    And the return code should be 1
+
+  Scenario: Core install should provide helpful error when upgrade.php is not readable
+    Given an empty directory
+    And WP files
+    And wp-config.php
+    And a database
+
+    When I run `chmod 000 wp-admin/includes/upgrade.php`
+    Then the return code should be 0
+
+    When I try `wp core install --url=example.org --title=Test --admin_user=testadmin --admin_email=testadmin@example.com --admin_password=testpass`
+    Then STDERR should contain:
+      """
+      Error: Cannot read WordPress installation file
+      """
+    And STDERR should contain:
+      """
+      wp-admin/includes/upgrade.php'. Check file permissions.
+      """
+    And the return code should be 1
+
+    When I run `chmod 644 wp-admin/includes/upgrade.php`
+    Then the return code should be 0
+
+  Scenario: Core install should provide helpful error when WordPress file has fatal error from missing extension
+    Given an empty directory
+    And WP files
+    And wp-config.php
+    And a database
+
+    # Simulate a missing mysqli extension by replacing upgrade.php with code that
+    # triggers a fatal error mimicking what happens when mysqli_connect is called
+    # but the extension is not available. This reproduces the original bug report scenario
+    When I run `echo "<?php trigger_error('Call to undefined function mysqli_connect()', E_USER_ERROR);" > wp-admin/includes/upgrade.php`
+    Then the return code should be 0
+
+    When I try `wp core install --url=example.org --title=Test --admin_user=testadmin --admin_email=testadmin@example.com --admin_password=testpass`
+    Then STDERR should contain:
+      """
+      Error: Failed to load WordPress files for WordPress installation
+      """
+    And STDERR should contain:
+      """
+      This often indicates a missing PHP extension or a corrupted WordPress installation
+      """
+    And STDERR should contain:
+      """
+      Call to undefined function mysqli_connect()
+      """
+    And the return code should be 1

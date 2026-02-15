@@ -680,7 +680,7 @@ class Core_Command extends WP_CLI_Command {
 			add_filter( 'send_site_admin_email_change_email', '__return_false' );
 		}
 
-		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+		$this->require_upgrade_file( 'WordPress installation' );
 
 		$defaults = [
 			'title'          => '',
@@ -736,7 +736,7 @@ class Core_Command extends WP_CLI_Command {
 	private function multisite_convert_( $assoc_args ) {
 		global $wpdb;
 
-		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+		$this->require_upgrade_file( 'multisite conversion' );
 
 		$domain = self::get_clean_basedomain();
 		if ( 'localhost' === $domain && ! empty( $assoc_args['subdomains'] ) ) {
@@ -1232,7 +1232,7 @@ EOT;
 			&& ( $update->version !== $wp_version
 				|| Utils\get_flag_value( $assoc_args, 'force' ) ) ) {
 
-			require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+			$this->require_upgrade_file( 'WordPress core update' );
 
 			// Prevent async translation updates which output HTML.
 			add_action(
@@ -1412,7 +1412,7 @@ EOT;
 			}
 			WP_CLI::success( "WordPress database upgraded on {$success}/{$total} sites." );
 		} else {
-			require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+			$this->require_upgrade_file( 'WordPress database update' );
 
 			/**
 			 * @var string $wp_current_db_version
@@ -1809,6 +1809,73 @@ EOT;
 	}
 
 	/**
+	 * Safely requires the WordPress upgrade.php file with error handling.
+	 *
+	 * This method checks for file existence and readability before requiring,
+	 * and registers a shutdown function to catch fatal errors during file loading
+	 * (e.g., missing PHP extensions or other runtime issues).
+	 *
+	 * @param string $context Context for error messages (e.g., 'installation', 'upgrade', 'database update').
+	 */
+	private function require_upgrade_file( $context = 'WordPress operation' ) {
+		$upgrade_file = ABSPATH . 'wp-admin/includes/upgrade.php';
+
+		if ( ! file_exists( $upgrade_file ) ) {
+			WP_CLI::error( "WordPress installation is incomplete. The file '{$upgrade_file}' is missing." );
+		}
+
+		if ( ! is_readable( $upgrade_file ) ) {
+			WP_CLI::error( "Cannot read WordPress installation file '{$upgrade_file}'. Check file permissions." );
+		}
+
+		// Use a flag to track successful completion and prevent handler from executing after success.
+		$require_completed = false;
+
+		// Register a shutdown function to catch fatal errors during require_once.
+		$shutdown_handler = function () use ( $context, &$require_completed ) {
+			// Only handle errors if require_once did not complete successfully.
+			// @phpstan-ignore-next-line
+			if ( $require_completed ) {
+				return;
+			}
+
+			$error = error_get_last();
+			if (
+				null !== $error
+				&& in_array(
+					$error['type'],
+					[ E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR ],
+					true
+				)
+			) {
+				// Check if error occurred in the upgrade file or files it includes.
+				if (
+					false !== strpos( $error['file'], 'wp-admin/includes/' )
+					|| false !== strpos( $error['file'], 'wp-includes/' )
+				) {
+					WP_CLI::error(
+						sprintf(
+							"Failed to load WordPress files for %s. This often indicates a missing PHP extension or a corrupted WordPress installation.\n\nError: %s in %s on line %d\n\nPlease check that all required PHP extensions are installed and that your WordPress installation is complete.",
+							$context,
+							$error['message'],
+							$error['file'],
+							$error['line']
+						)
+					);
+				}
+			}
+		};
+
+		register_shutdown_function( $shutdown_handler );
+
+		// phpcs:ignore WordPressVIPMinimum.Files.IncludingFile.UsingVariable -- Path comes from WordPress itself.
+		require_once $upgrade_file;
+
+		// Mark as completed to prevent the shutdown handler from executing on unrelated errors.
+		$require_completed = true;
+  }
+ 
+  /**
 	 * Checks if a WP_Error is related to the core_updater.lock.
 	 *
 	 * @param \WP_Error $error The error object to check.
