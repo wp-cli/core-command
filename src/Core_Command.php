@@ -1316,6 +1316,108 @@ EOT;
 	}
 
 	/**
+	 * Checks for the need for WordPress database updates.
+	 *
+	 * Compares the current database version with the version required by WordPress core
+	 * to determine if database updates are needed.
+	 *
+	 * ## OPTIONS
+	 *
+	 * [--network]
+	 * : Check databases for all sites on a network.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     # Check if database update is needed
+	 *     $ wp core check-update-db
+	 *     Success: WordPress database is up to date.
+	 *
+	 *     # Check database update status for all sites on a network
+	 *     $ wp core check-update-db --network
+	 *     Success: WordPress databases are up to date on 5/5 sites.
+	 *
+	 * @subcommand check-update-db
+	 *
+	 * @param string[] $args Positional arguments. Unused.
+	 * @param array{network?: bool} $assoc_args Associative arguments.
+	 */
+	public function check_update_db( $args, $assoc_args ) {
+		global $wpdb, $wp_db_version, $wp_current_db_version;
+
+		$network = Utils\get_flag_value( $assoc_args, 'network' );
+		if ( $network && ! is_multisite() ) {
+			WP_CLI::error( 'This is not a multisite installation.' );
+		}
+
+		if ( $network ) {
+			$iterator_args        = [
+				'table' => $wpdb->blogs,
+				'where' => [
+					'spam'     => 0,
+					'deleted'  => 0,
+					'archived' => 0,
+				],
+			];
+			$it                   = new TableIterator( $iterator_args );
+			$total                = 0;
+			$needs_update         = 0;
+			$sites_needing_update = [];
+
+			/**
+			 * @var object{site_id: int, domain: string, path: string} $blog
+			 */
+			foreach ( $it as $blog ) {
+				++$total;
+				$url = $blog->domain . $blog->path;
+				$cmd = "--url={$url} core check-update-db";
+
+				/**
+				 * @var object{stdout: string, stderr: string, return_code: int} $process
+				 */
+				$process = WP_CLI::runcommand(
+					$cmd,
+					[
+						'return'     => 'all',
+						'exit_error' => false,
+					]
+				);
+				// If return code is 1, it means update is needed
+				if ( 1 === (int) $process->return_code ) {
+					++$needs_update;
+					$sites_needing_update[] = $url;
+				}
+			}
+
+			if ( $needs_update > 0 ) {
+				WP_CLI::log( "WordPress database update needed on {$needs_update}/{$total} sites:" );
+				foreach ( $sites_needing_update as $site_url ) {
+					WP_CLI::log( "  - {$site_url}" );
+				}
+				WP_CLI::halt( 1 );
+			} else {
+				WP_CLI::success( "WordPress databases are up to date on {$total}/{$total} sites." );
+			}
+		} else {
+			require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+
+			/**
+			 * @var string $wp_current_db_version
+			 */
+			// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Replacing WP Core behavior is the goal here.
+			$wp_current_db_version = __get_option( 'db_version' );
+			// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Replacing WP Core behavior is the goal here.
+			$wp_current_db_version = (int) $wp_current_db_version;
+
+			if ( $wp_db_version !== $wp_current_db_version ) {
+				WP_CLI::log( "WordPress database update required from db version {$wp_current_db_version} to {$wp_db_version}." );
+				WP_CLI::halt( 1 );
+			} else {
+				WP_CLI::success( 'WordPress database is up to date.' );
+			}
+		}
+	}
+
+	/**
 	 * Runs the WordPress database update procedure.
 	 *
 	 * ## OPTIONS
