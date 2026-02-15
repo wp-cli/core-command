@@ -401,20 +401,10 @@ Feature: Install WordPress core
     And wp-config.php
     And a database
 
-    # Simulate a missing mysqli extension by injecting a fatal error that mimics
-    # what happens when mysqli_connect is called but the extension is not available
-    # This reproduces the original bug report scenario
-    When I run `echo "<?php trigger_error('Call to undefined function mysqli_connect()', E_USER_ERROR);" > wp-includes/mysqli-check.php`
-    Then the return code should be 0
-
-    # Inject this check at the beginning of upgrade.php to trigger the error during install
-    When I run `echo "<?php require_once ABSPATH . 'wp-includes/mysqli-check.php';" > wp-admin/includes/upgrade-new.php`
-    Then the return code should be 0
-
-    When I run `cat wp-admin/includes/upgrade.php >> wp-admin/includes/upgrade-new.php`
-    Then the return code should be 0
-
-    When I run `mv wp-admin/includes/upgrade-new.php wp-admin/includes/upgrade.php`
+    # Simulate a missing mysqli extension by replacing upgrade.php with code that
+    # triggers a fatal error mimicking what happens when mysqli_connect is called
+    # but the extension is not available. This reproduces the original bug report scenario
+    When I run `echo "<?php trigger_error('Call to undefined function mysqli_connect()', E_USER_ERROR);" > wp-admin/includes/upgrade.php`
     Then the return code should be 0
 
     When I try `wp core install --url=example.org --title=Test --admin_user=testadmin --admin_email=testadmin@example.com --admin_password=testpass`
