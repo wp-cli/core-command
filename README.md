@@ -239,6 +239,8 @@ Transforms an existing single-site installation into a multisite installation.
 wp core multisite-convert [--title=<network-title>] [--base=<url-path>] [--subdomains] [--skip-config]
 ~~~
 
+**Alias:** `install-network`
+
 Creates the multisite database tables, and adds the multisite constants
 to wp-config.php.
 
@@ -343,6 +345,8 @@ Updates WordPress to a newer version.
 ~~~
 wp core update [<zip>] [--minor] [--version=<version>] [--force] [--locale=<locale>] [--format=<format>] [--insecure]
 ~~~
+
+**Alias:** `upgrade`
 
 Defaults to updating WordPress to the latest version.
 
