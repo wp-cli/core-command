@@ -1129,7 +1129,7 @@ EOT;
 	 *     Updating to version 3.1 (en_US)...
 	 *     Downloading update from https://wordpress.org/wordpress-3.1.zip...
 	 *     Unpacking the update...
-	 *     Warning: Checksums not available for WordPress 3.1/en_US. Please cleanup files manually.
+	 *     Cleaning up files...
 	 *     Success: WordPress updated successfully.
 	 *
 	 * @alias upgrade
@@ -1655,15 +1655,13 @@ EOT;
 		}
 
 		$old_checksums = self::get_core_checksums( $version_from, $locale ?: 'en_US', $insecure );
-		if ( ! is_array( $old_checksums ) ) {
-			WP_CLI::warning( "{$old_checksums} Please cleanup files manually." );
-			return;
-		}
-
 		$new_checksums = self::get_core_checksums( $version_to, $locale ?: 'en_US', $insecure );
-		if ( ! is_array( $new_checksums ) ) {
-			WP_CLI::warning( "{$new_checksums} Please cleanup files manually." );
 
+		$has_checksums = is_array( $old_checksums ) && is_array( $new_checksums );
+
+		if ( ! $has_checksums ) {
+			// When checksums are not available, use WordPress core's $_old_files list
+			$this->cleanup_old_files();
 			return;
 		}
 
@@ -1757,6 +1755,240 @@ EOT;
 				WP_CLI::log( 'No files found that need cleaning up.' );
 			}
 		}
+
+		// Additionally, clean up files from $_old_files that are not in checksums
+		// These should be deleted unconditionally as they are known old files
+		$this->cleanup_old_files_not_in_checksums( $old_checksums, $new_checksums );
+	}
+
+	/**
+	 * Clean up old files using WordPress core's $_old_files list.
+	 *
+	 * This method is used when checksums are not available for version comparison.
+	 * It unconditionally deletes files from the $_old_files global array maintained by WordPress core.
+	 */
+	private function cleanup_old_files() {
+		$old_files = $this->get_old_files_list();
+		if ( empty( $old_files ) ) {
+			WP_CLI::log( 'No files found that need cleaning up.' );
+			return;
+		}
+
+		WP_CLI::log( 'Cleaning up files...' );
+
+		$count = $this->remove_old_files_from_list( $old_files );
+
+		if ( $count ) {
+			WP_CLI::log( number_format( $count ) . ' files cleaned up.' );
+		} else {
+			WP_CLI::log( 'No old files were removed.' );
+		}
+	}
+
+	/**
+	 * Clean up old files from $_old_files that are not tracked in checksums.
+	 *
+	 * This method is used as a supplement when checksums ARE available.
+	 * It unconditionally deletes files from $_old_files that are not present in either
+	 * the old or new checksums, as these files cannot be verified for modifications.
+	 *
+	 * @param array $old_checksums Old checksums array.
+	 * @param array $new_checksums New checksums array.
+	 */
+	private function cleanup_old_files_not_in_checksums( $old_checksums, $new_checksums ) {
+		$old_files = $this->get_old_files_list();
+		if ( empty( $old_files ) ) {
+			return;
+		}
+
+		// Combine all files from both checksum arrays
+		$all_checksum_files = array_merge( array_keys( $old_checksums ), array_keys( $new_checksums ) );
+		$all_checksum_files = array_unique( $all_checksum_files );
+
+		// Find files in $_old_files that are not in checksums
+		$files_to_remove = array_diff( $old_files, $all_checksum_files );
+
+		if ( empty( $files_to_remove ) ) {
+			return;
+		}
+
+		$count = $this->remove_old_files_from_list( $files_to_remove );
+
+		if ( $count ) {
+			WP_CLI::log( number_format( $count ) . ' additional old files cleaned up.' );
+		}
+	}
+
+	/**
+	 * Get the list of old files from WordPress core.
+	 *
+	 * @return array Array of old file paths, or empty array if not available.
+	 */
+	private function get_old_files_list() {
+		// Include WordPress core's update file to access the $_old_files list
+		if ( ! file_exists( ABSPATH . 'wp-admin/includes/update-core.php' ) ) {
+			WP_CLI::warning( 'Could not find update-core.php. Please cleanup files manually.' );
+			return array();
+		}
+
+		require_once ABSPATH . 'wp-admin/includes/update-core.php';
+
+		global $_old_files;
+
+		if ( empty( $_old_files ) || ! is_array( $_old_files ) ) {
+			return array();
+		}
+
+		return $_old_files;
+	}
+
+	/**
+	 * Remove old files from a list.
+	 *
+	 * This is a shared helper method that handles the actual removal of files and directories.
+	 *
+	 * @param array $files Array of file paths to remove.
+	 * @return int Number of files/directories successfully removed.
+	 */
+	private function remove_old_files_from_list( $files ) {
+		$count = 0;
+
+		// Cache ABSPATH realpath for performance
+		$abspath_realpath = realpath( ABSPATH );
+		if ( false === $abspath_realpath ) {
+			WP_CLI::debug( 'Failed to resolve ABSPATH realpath', 'core' );
+			return $count;
+		}
+		$abspath_realpath_trailing = Utils\trailingslashit( $abspath_realpath );
+
+		foreach ( $files as $file ) {
+			// wp-content should be considered user data
+			if ( 0 === stripos( $file, 'wp-content' ) ) {
+				continue;
+			}
+
+			$file_path = ABSPATH . $file;
+
+			// For symlinks, validate the symlink itself is within ABSPATH (not where it points)
+			// For other files, validate the real path is within ABSPATH
+			if ( is_link( $file_path ) ) {
+				// Normalize the path to handle any .. sequences
+				$normalized_path = realpath( dirname( $file_path ) );
+				if ( false === $normalized_path ) {
+					WP_CLI::debug( "Skipping symbolic link with invalid parent directory: {$file}", 'core' );
+					continue;
+				}
+				// Ensure the normalized parent directory is within ABSPATH
+				if ( 0 !== strpos( Utils\trailingslashit( $normalized_path ), $abspath_realpath_trailing ) && $normalized_path !== rtrim( $abspath_realpath_trailing, '/' ) ) {
+					WP_CLI::debug( "Skipping symbolic link outside of ABSPATH: {$file}", 'core' );
+					continue;
+				}
+			} else {
+				// Validate the path is within ABSPATH
+				$file_realpath = realpath( $file_path );
+				if ( false === $file_realpath ) {
+					// Skip files with invalid paths
+					WP_CLI::debug( "Skipping file with invalid path: {$file}", 'core' );
+					continue;
+				}
+
+				if ( 0 !== strpos( $file_realpath, $abspath_realpath_trailing ) ) {
+					WP_CLI::debug( "Skipping file outside of ABSPATH: {$file}", 'core' );
+					continue;
+				}
+			}
+
+			// Handle both files and directories
+			if ( file_exists( $file_path ) ) {
+				if ( is_link( $file_path ) ) {
+					// Remove symbolic link without following it
+					if ( unlink( $file_path ) ) {
+						WP_CLI::log( "Symbolic link removed: {$file}" );
+						++$count;
+					} else {
+						WP_CLI::debug( "Failed to remove symbolic link: {$file}", 'core' );
+					}
+				} elseif ( is_dir( $file_path ) ) {
+					// Remove directory recursively
+					if ( $this->remove_directory( $file_path, $abspath_realpath_trailing ) ) {
+						WP_CLI::log( "Directory removed: {$file}" );
+						++$count;
+					} else {
+						WP_CLI::debug( "Failed to remove directory: {$file}", 'core' );
+					}
+				} elseif ( unlink( $file_path ) ) {
+					WP_CLI::log( "File removed: {$file}" );
+					++$count;
+				} else {
+					WP_CLI::debug( "Failed to remove file: {$file}", 'core' );
+				}
+			}
+		}
+
+		return $count;
+	}
+
+	/**
+	 * Recursively remove a directory and its contents.
+	 *
+	 * @param string $dir Directory path to remove.
+	 * @param string $abspath_realpath_trailing Cached ABSPATH realpath with trailing slash for performance.
+	 * @return bool True on success, false on failure.
+	 */
+	private function remove_directory( $dir, $abspath_realpath_trailing ) {
+		$dir_realpath = realpath( $dir );
+		if ( false === $dir_realpath ) {
+			WP_CLI::debug( "Failed to resolve realpath for directory: {$dir}", 'core' );
+			return false;
+		}
+		// Normalize paths with trailing slashes for accurate comparison
+		if ( 0 !== strpos( $dir_realpath, $abspath_realpath_trailing ) ) {
+			WP_CLI::debug( "Attempted to remove directory outside of ABSPATH: {$dir_realpath}", 'core' );
+			return false;
+		}
+		if ( ! is_dir( $dir ) ) {
+			return false;
+		}
+
+		$items = scandir( $dir );
+		if ( false === $items ) {
+			WP_CLI::debug( "Failed to scan directory: {$dir}", 'core' );
+			return false;
+		}
+
+		foreach ( $items as $item ) {
+			if ( '.' === $item || '..' === $item ) {
+				continue;
+			}
+
+			$path = $dir . DIRECTORY_SEPARATOR . $item;
+
+			// Handle symbolic links before checking if it's a directory
+			if ( is_link( $path ) ) {
+				if ( ! unlink( $path ) ) {
+					WP_CLI::debug( "Failed to remove symbolic link: {$path}", 'core' );
+					return false;
+				}
+				continue;
+			}
+
+			if ( is_dir( $path ) ) {
+				if ( ! $this->remove_directory( $path, $abspath_realpath_trailing ) ) {
+					WP_CLI::debug( "Failed to remove subdirectory: {$path}", 'core' );
+					return false;
+				}
+			} elseif ( ! unlink( $path ) ) {
+				WP_CLI::debug( "Failed to remove file in directory: {$path}", 'core' );
+				return false;
+			}
+		}
+
+		if ( ! rmdir( $dir ) ) {
+			WP_CLI::debug( "Failed to remove directory: {$dir}", 'core' );
+			return false;
+		}
+
+		return true;
 	}
 
 	private static function strip_content_dir( $zip_file ) {

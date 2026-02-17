@@ -420,6 +420,91 @@ Feature: Update WordPress core
       </div>
       """
 
+  @require-php-7.2
+  Scenario: Old files from $_old_files are cleaned up when upgrading
+    Given a WP install
+
+    When I run `wp core download --version=6.8 --force`
+
+    # Create files that should be removed according to 6.9 old_files list
+    Given a wp-includes/blocks/post-author/editor.css file:
+      """
+      /* Old CSS file */
+      """
+    And a wp-includes/blocks/post-author/editor.min.css file:
+      """
+      /* Old minified CSS */
+      """
+    And a wp-includes/blocks/post-author/editor-rtl.css file:
+      """
+      /* Old RTL CSS */
+      """
+    And a wp-includes/blocks/post-author/editor-rtl.min.css file:
+      """
+      /* Old RTL minified CSS */
+      """
+    And a wp-includes/SimplePie/src/Core.php file:
+      """
+      <?php
+      // Old SimplePie Core file
+      """
+    And an empty wp-includes/SimplePie/src/Decode directory
+
+    When I run `wp core update --version=6.9 --force`
+    Then STDOUT should contain:
+      """
+      Success: WordPress updated successfully.
+      """
+    And the wp-includes/blocks/post-author/editor.css file should not exist
+    And the wp-includes/blocks/post-author/editor.min.css file should not exist
+    And the wp-includes/blocks/post-author/editor-rtl.css file should not exist
+    And the wp-includes/blocks/post-author/editor-rtl.min.css file should not exist
+    And the wp-includes/SimplePie/src/Core.php file should not exist
+    And the wp-includes/SimplePie/src/Decode directory should not exist
+
+  @require-php-7.2
+  Scenario: Old files cleanup works when checksums unavailable
+    Given a WP install
+
+    When I run `wp core download --version=6.8 --force`
+    Then STDOUT should contain:
+      """
+      Success: WordPress downloaded.
+      """
+
+    # Create files that exist in the $_old_files list from WordPress 6.9
+    Given a wp-includes/blocks/post-author/editor.css file:
+      """
+      /* Old CSS file */
+      """
+    And a wp-includes/blocks/post-author/editor.min.css file:
+      """
+      /* Old minified CSS */
+      """
+
+    # Mock checksum API to return empty response so checksums are unavailable
+    And that HTTP requests to https://api.wordpress.org/core/checksums/1.0/ will respond with:
+      """
+      HTTP/1.1 200
+      Content-Type: application/json
+
+      {}
+      """
+
+    When I try `wp core update --version=6.9 --force`
+    Then STDOUT should contain:
+      """
+      Cleaning up files...
+      """
+    And STDOUT should contain:
+      """
+      Success: WordPress updated successfully.
+      """
+
+    # Verify files from $_old_files were removed
+    And the wp-includes/blocks/post-author/editor.css file should not exist
+    And the wp-includes/blocks/post-author/editor.min.css file should not exist
+
   @require-php-7.0 @require-wp-6.1
   Scenario: Attempting to downgrade without --force shows helpful message
     Given a WP install
