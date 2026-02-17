@@ -28,8 +28,17 @@ use WP_CLI\WpOrgApi;
  *     4.5.2
  *
  * @package wp-cli
+ *
+ * @phpstan-type HTTP_Response array{headers: array<string, string>, body: string, response: array{code:false|int, message: false|string}, cookies: array<string, string>, http_response: mixed}
  */
 class Core_Command extends WP_CLI_Command {
+
+	/**
+	 * Stores HTTP API errors encountered during version check.
+	 *
+	 * @var \WP_Error|null
+	 */
+	private $version_check_error = null;
 
 	/**
 	 * Checks for WordPress updates via Version Check API.
@@ -92,6 +101,14 @@ class Core_Command extends WP_CLI_Command {
 				[ 'version', 'update_type', 'package_url' ]
 			);
 			$formatter->display_items( $updates );
+		} elseif ( $this->version_check_error ) {
+			// If there was an HTTP error during version check, show a warning
+			WP_CLI::warning(
+				sprintf(
+					'Failed to check for updates: %s',
+					$this->version_check_error->get_error_message()
+				)
+			);
 		} else {
 			WP_CLI::success( 'WordPress is at the latest version.' );
 		}
@@ -644,6 +661,10 @@ class Core_Command extends WP_CLI_Command {
 	}
 
 	private function do_install( $assoc_args ) {
+		/**
+		 * @var \wpdb $wpdb
+		 */
+		global $wpdb;
 		if ( is_blog_installed() ) {
 			return false;
 		}
@@ -695,7 +716,7 @@ class Core_Command extends WP_CLI_Command {
 			$args['locale']
 		);
 
-		if ( ! empty( $GLOBALS['wpdb']->last_error ) ) {
+		if ( ! empty( $wpdb->last_error ) ) {
 			WP_CLI::error( 'Installation produced database errors, and may have partially or completely failed.' );
 		}
 
@@ -1243,7 +1264,12 @@ EOT;
 			if ( is_wp_error( $result ) ) {
 				$message = WP_CLI::error_to_string( $result );
 				if ( 'up_to_date' !== $result->get_error_code() ) {
-					WP_CLI::error( $message );
+					// Check if the error is related to the core_updater.lock
+					if ( self::is_lock_error( $result ) ) {
+						WP_CLI::error( rtrim( $message, '.' ) . '. You may need to run `wp option delete core_updater.lock` after verifying another update isn\'t actually running.' );
+					} else {
+						WP_CLI::error( $message );
+					}
 				} else {
 					WP_CLI::success( $message );
 				}
@@ -1278,8 +1304,14 @@ EOT;
 
 				WP_CLI::success( 'WordPress updated successfully.' );
 			}
+			// Check if user attempted to downgrade without --force
+		} elseif ( ! empty( Utils\get_flag_value( $assoc_args, 'version' ) ) && version_compare( Utils\get_flag_value( $assoc_args, 'version' ), $wp_version, '<' ) ) {
+			// Requested version is older than current (downgrade attempt)
+			WP_CLI::log( "WordPress is up to date at version {$wp_version}." );
+			WP_CLI::log( 'The version you requested (' . Utils\get_flag_value( $assoc_args, 'version' ) . ") is older than the current version ({$wp_version})." );
+			WP_CLI::log( 'Use --force to update anyway (e.g., to downgrade to version ' . Utils\get_flag_value( $assoc_args, 'version' ) . ').' );
 		} else {
-			WP_CLI::success( 'WordPress is up to date.' );
+			WP_CLI::success( "WordPress is up to date at version {$wp_version}." );
 		}
 	}
 
@@ -1448,7 +1480,25 @@ EOT;
 	 */
 	private function get_updates( $assoc_args ) {
 		$force_check = Utils\get_flag_value( $assoc_args, 'force-check' );
-		wp_version_check( [], $force_check );
+
+		// Reset error tracking
+		$this->version_check_error = null;
+
+		// Hook into pre_http_request with max priority to capture errors during version check
+		// This is necessary because tests and plugins may use pre_http_request to mock responses
+		add_filter( 'pre_http_request', [ $this, 'capture_version_check_error' ], PHP_INT_MAX, 3 );
+
+		// Also hook into http_api_debug to capture errors from real HTTP requests
+		// This fires when pre_http_request doesn't short-circuit the request
+		add_action( 'http_api_debug', [ $this, 'capture_version_check_error_from_response' ], 10, 5 );
+
+		try {
+			wp_version_check( [], $force_check );
+		} finally {
+			// Ensure the hooks are always removed, even if wp_version_check() throws an exception
+			remove_filter( 'pre_http_request', [ $this, 'capture_version_check_error' ], PHP_INT_MAX );
+			remove_action( 'http_api_debug', [ $this, 'capture_version_check_error_from_response' ], 10 );
+		}
 
 		/**
 		 * @var object{updates: array<object{version: string, locale: string, packages: object{partial?: string, full: string}}>}|false $from_api
@@ -1457,6 +1507,10 @@ EOT;
 		if ( ! $from_api ) {
 			return [];
 		}
+
+		/**
+		 * @var array{wp_version: string} $GLOBALS
+		 */
 
 		$compare_version = str_replace( '-src', '', $GLOBALS['wp_version'] );
 
@@ -1503,6 +1557,87 @@ EOT;
 			}
 		}
 		return array_values( $updates );
+	}
+
+	/**
+	 * Sets or clears the version check error property based on an HTTP response.
+	 *
+	 * @param mixed|\WP_Error $response The HTTP response (WP_Error, array, or other).
+	 *
+	 * @phpstan-param HTTP_Response|WP_Error $response
+	 */
+	private function set_version_check_error( $response ) {
+		if ( is_wp_error( $response ) ) {
+			$this->version_check_error = $response;
+		} elseif ( is_array( $response ) && isset( $response['response']['code'] ) && $response['response']['code'] >= 400 ) {
+			// HTTP error status code (4xx or 5xx) - convert to WP_Error for consistency
+			$this->version_check_error = new \WP_Error(
+				'http_request_failed',
+				sprintf(
+					'HTTP request failed with status %d: %s',
+					$response['response']['code'],
+					isset( $response['response']['message'] ) ? $response['response']['message'] : 'Unknown error'
+				)
+			);
+		} else {
+			// Clear any previous error if we got a successful response.
+			$this->version_check_error = null;
+		}
+	}
+
+	/**
+	 * Handles the pre_http_request filter to capture HTTP errors during version check.
+	 *
+	 * This method signature matches the pre_http_request filter signature.
+	 * Uses PHP_INT_MAX priority to run after test mocking and plugin modifications.
+	 *
+	 * @param false|array|WP_Error $response A preemptive return value of an HTTP request.
+	 * @param array                $args     HTTP request arguments.
+	 * @param string               $url      The request URL.
+	 * @return false|array|WP_Error The response, unmodified.
+	 *
+	 * @phpstan-param HTTP_Response|WP_Error|false $response
+	 */
+	public function capture_version_check_error( $response, $args, $url ) {
+		if ( false === strpos( $url, 'api.wordpress.org/core/version-check' ) ) {
+			return $response;
+		}
+
+		// A `false` response means the request is not being preempted.
+		// In this case, we don't want to change the error status, as the subsequent
+		// `http_api_debug` hook will handle the actual response.
+		if ( false !== $response ) {
+			$this->set_version_check_error( $response );
+		}
+
+		return $response;
+	}
+
+	/**
+	 * Handles the http_api_debug action to capture HTTP errors from real requests.
+	 *
+	 * This fires when pre_http_request doesn't short-circuit the request.
+	 * Uses the http_api_debug action hook signature.
+	 *
+	 * @param array|WP_Error $response HTTP response or WP_Error object.
+	 * @param string         $context  Context of the HTTP request.
+	 * @param string         $_class   HTTP transport class name (unused).
+	 * @param array          $_args    HTTP request arguments (unused).
+	 * @param string         $url      URL being requested.
+	 *
+	 * @phpstan-param HTTP_Response|WP_Error $response
+	 */
+	public function capture_version_check_error_from_response( $response, $context, $_class, $_args, $url ) {
+		if ( false === strpos( $url, 'api.wordpress.org/core/version-check' ) ) {
+			return;
+		}
+
+		// Only capture on response, not pre_response
+		if ( 'response' !== $context ) {
+			return;
+		}
+
+		$this->set_version_check_error( $response );
 	}
 
 	/**
@@ -1903,5 +2038,22 @@ EOT;
 		} else {
 			WP_CLI::error( 'ZipArchive failed to open ZIP file.' );
 		}
+	}
+
+	/**
+	 * Checks if a WP_Error is related to the core_updater.lock.
+	 *
+	 * @param \WP_Error $error The error object to check.
+	 * @return bool True if the error is related to the lock, false otherwise.
+	 */
+	private static function is_lock_error( $error ) {
+		// Check for the 'locked' error code used by WordPress Core
+		if ( 'locked' === $error->get_error_code() ) {
+			return true;
+		}
+
+		// Also check if the error message contains the lock text as a fallback
+		$message = WP_CLI::error_to_string( $error );
+		return false !== stripos( $message, 'another update is currently in progress' );
 	}
 }

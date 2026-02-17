@@ -167,7 +167,7 @@ Feature: Update WordPress core
     When I run `wp core update`
     Then STDOUT should contain:
       """
-      WordPress is up to date
+      WordPress is up to date at version
       """
     And STDOUT should not contain:
       """
@@ -504,3 +504,57 @@ Feature: Update WordPress core
     # Verify files from $_old_files were removed
     And the wp-includes/blocks/post-author/editor.css file should not exist
     And the wp-includes/blocks/post-author/editor.min.css file should not exist
+
+  @require-php-7.0 @require-wp-6.1
+  Scenario: Attempting to downgrade without --force shows helpful message
+    Given a WP install
+
+    When I run `wp core version`
+    Then save STDOUT as {WP_CURRENT_VERSION}
+
+    When I try `wp core update --version=6.0`
+    Then STDOUT should contain:
+      """
+      WordPress is up to date at version
+      """
+    And STDOUT should contain:
+      """
+      is older than the current version
+      """
+    And STDOUT should contain:
+      """
+      Use --force to update anyway
+      """
+    And STDOUT should not contain:
+      """
+      Success:
+      """
+    And the return code should be 0
+
+    When I run `wp core update --version=6.0 --force`
+    Then STDOUT should contain:
+      """
+      Updating to version 6.0
+      """
+    And STDOUT should contain:
+      """
+      Success: WordPress updated successfully.
+      """
+
+  Scenario: Show helpful tip when update is locked
+    Given a WP install
+
+    When I run `wp option update core_updater.lock 100000000000000`
+    And I try `wp core update --version=trunk`
+    Then STDERR should contain:
+      """
+      Another update is currently in progress. You may need to run `wp option delete core_updater.lock` after verifying another update isn't actually running.
+      """
+    And the return code should be 1
+
+    # Clean up the lock
+    When I run `wp option delete core_updater.lock`
+    Then STDOUT should contain:
+      """
+      Success:
+      """
