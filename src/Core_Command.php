@@ -999,7 +999,7 @@ EOT;
 		$details = self::get_wp_details();
 
 		// Get the actual database version from the options table
-		$actual_db_version = get_option( 'db_version' );
+		$actual_db_version = (int) get_option( 'db_version' );
 
 		echo Utils\mustache_render(
 			self::get_template_path( 'versions.mustache' ),
