@@ -47,7 +47,8 @@
             "core multisite-install",
             "core update",
             "core update-db",
-            "core version"
+            "core version",
+            "core version-db-actual"
         ]
     },
     "autoload": {
