@@ -663,40 +663,15 @@ class Core_Command extends WP_CLI_Command {
 			return false;
 		}
 
-		if ( true === Utils\get_flag_value( $assoc_args, 'skip-email' ) ) {
-			if ( ! function_exists( 'wp_new_blog_notification' ) ) {
-				// @phpstan-ignore function.inner
-				function wp_new_blog_notification() {
-					// Silence is golden
-				}
-			}
-			// WP 4.9.0 - skip "Notice of Admin Email Change" email as well (https://core.trac.wordpress.org/ticket/39117).
-			add_filter( 'send_site_admin_email_change_email', '__return_false' );
-		}
-
-		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-
-		$defaults = [
-			'title'          => '',
-			'admin_user'     => '',
-			'admin_email'    => '',
-			'admin_password' => '',
-		];
-
-		$defaults['locale'] = '';
-
-		$args = wp_parse_args( $assoc_args, $defaults );
-
-		// Support prompting for the `--url=<url>`,
-		// which is normally a runtime argument
+		// Fix $_SERVER['PHP_SELF'] and $_SERVER['SCRIPT_NAME'] early to prevent incorrect
+		// URL detection by WordPress during installation. When WP-CLI is executed from
+		// the root of the filesystem (e.g., /wp), these variables contain the WP-CLI
+		// executable path rather than the WordPress installation path, which causes
+		// wp_guess_url() to construct incorrect URLs. This must be done before loading
+		// any WordPress files that might use these values.
 		if ( isset( $assoc_args['url'] ) ) {
 			WP_CLI::set_url( $assoc_args['url'] );
 
-			// Fix $_SERVER['PHP_SELF'] and $_SERVER['SCRIPT_NAME'] to prevent incorrect
-			// URL detection by WordPress during installation. When WP-CLI is executed from
-			// the root of the filesystem (e.g., /wp), these variables contain the WP-CLI
-			// executable path rather than the WordPress installation path, which causes
-			// wp_guess_url() to construct incorrect URLs.
 			$url_parts = Utils\parse_url( $assoc_args['url'] );
 			$path      = isset( $url_parts['path'] ) ? $url_parts['path'] : '/';
 
@@ -721,6 +696,30 @@ class Core_Command extends WP_CLI_Command {
 				$_SERVER['SCRIPT_FILENAME'] = Utils\trailingslashit( ABSPATH ) . 'index.php';
 			}
 		}
+
+		if ( true === Utils\get_flag_value( $assoc_args, 'skip-email' ) ) {
+			if ( ! function_exists( 'wp_new_blog_notification' ) ) {
+				// @phpstan-ignore function.inner
+				function wp_new_blog_notification() {
+					// Silence is golden
+				}
+			}
+			// WP 4.9.0 - skip "Notice of Admin Email Change" email as well (https://core.trac.wordpress.org/ticket/39117).
+			add_filter( 'send_site_admin_email_change_email', '__return_false' );
+		}
+
+		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+
+		$defaults = [
+			'title'          => '',
+			'admin_user'     => '',
+			'admin_email'    => '',
+			'admin_password' => '',
+		];
+
+		$defaults['locale'] = '';
+
+		$args = wp_parse_args( $assoc_args, $defaults );
 
 		$public   = true;
 		$password = $args['admin_password'];
