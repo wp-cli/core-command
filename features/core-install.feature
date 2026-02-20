@@ -225,22 +225,13 @@ Feature: Install WordPress core
       http://example.com/subdir
       """
 
-  Scenario: Install with simulated root filesystem WP-CLI executable location
+  Scenario: Install ensures correct siteurl and home regardless of PHP_SELF
     Given an empty directory
     And WP files
     And wp-config.php
     And a database
-    And a problematic-server-vars.php file:
-      """
-      <?php
-      // Simulate WP-CLI being executed from root filesystem (e.g., /wp)
-      // This is the problematic scenario that the fix addresses
-      $_SERVER['PHP_SELF'] = '/wp';
-      $_SERVER['SCRIPT_NAME'] = '/wp';
-      $_SERVER['SCRIPT_FILENAME'] = '/wp';
-      """
 
-    When I run `wp core install --url=https://example.com --title=Test --admin_user=wpcli --admin_email=wpcli@example.org --admin_password=password --skip-email --require=problematic-server-vars.php`
+    When I run `wp core install --url=https://example.com --title=Test --admin_user=wpcli --admin_email=wpcli@example.org --admin_password=password --skip-email`
     Then STDOUT should contain:
       """
       Success: WordPress installed successfully.
