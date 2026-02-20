@@ -177,6 +177,78 @@ Feature: Install WordPress core
       """
     And the return code should be 0
 
+  Scenario: Verify correct siteurl and home when URL has no path
+    Given an empty directory
+    And WP files
+    And wp-config.php
+    And a database
+
+    When I run `wp core install --url=example.com --title=Test --admin_user=wpcli --admin_email=wpcli@example.org --admin_password=password --skip-email`
+    Then STDOUT should contain:
+      """
+      Success: WordPress installed successfully.
+      """
+
+    When I run `wp option get home`
+    Then STDOUT should be:
+      """
+      http://example.com
+      """
+
+    When I run `wp option get siteurl`
+    Then STDOUT should be:
+      """
+      http://example.com
+      """
+
+  Scenario: Verify correct siteurl and home when URL has a path
+    Given an empty directory
+    And WP files
+    And wp-config.php
+    And a database
+
+    When I run `wp core install --url=example.com/subdir --title=Test --admin_user=wpcli --admin_email=wpcli@example.org --admin_password=password --skip-email`
+    Then STDOUT should contain:
+      """
+      Success: WordPress installed successfully.
+      """
+
+    When I run `wp option get home`
+    Then STDOUT should be:
+      """
+      http://example.com/subdir
+      """
+
+    When I run `wp option get siteurl`
+    Then STDOUT should be:
+      """
+      http://example.com/subdir
+      """
+
+  Scenario: Install ensures correct siteurl and home regardless of PHP_SELF
+    Given an empty directory
+    And WP files
+    And wp-config.php
+    And a database
+
+    When I run `wp core install --url=https://example.com --title=Test --admin_user=wpcli --admin_email=wpcli@example.org --admin_password=password --skip-email`
+    Then STDOUT should contain:
+      """
+      Success: WordPress installed successfully.
+      """
+
+    When I run `wp option get home`
+    Then STDOUT should be:
+      """
+      https://example.com
+      """
+
+    When I run `wp option get siteurl`
+    Then STDOUT should be:
+      """
+      https://example.com
+      """
+
   @less-than-php-7
   Scenario: Install WordPress with locale set to de_DE on WP < 4.0
     Given an empty directory
