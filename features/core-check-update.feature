@@ -70,3 +70,19 @@ Feature: Check for more recent versions
       """
       ---
       """
+
+  Scenario: Check update shows warning when version check API fails
+    Given a WP install
+    And that HTTP requests to https://api.wordpress.org/core/version-check/1.7/ will respond with:
+      """
+      HTTP/1.1 500 Internal Server Error
+      Content-Type: text/plain
+
+      <Error body>
+      """
+
+    When I try `wp core check-update --force-check`
+    Then STDERR should contain:
+      """
+      Warning: Failed to check for updates
+      """
