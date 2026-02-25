@@ -1178,7 +1178,7 @@ EOT;
 			wp_version_check();
 
 			/**
-			 * @var object{updates: array<object{version: string, locale: string}>} $from_api
+			 * @var object{updates: array<object{response: string, version: string, locale: string, download: string, packages: object{partial: string|null, new_bundled: string|null, no_content: string|null, full: string}}>} $from_api
 			 */
 			$from_api = get_site_transient( 'update_core' );
 
@@ -1198,9 +1198,31 @@ EOT;
 			} elseif ( ! empty( $from_api->updates ) ) {
 				list( $update ) = $from_api->updates;
 			}
+
+			// Override the locale in the transient-based update if --locale is explicitly specified.
+			if ( ! empty( $update ) ) {
+				$locale_arg = Utils\get_flag_value( $assoc_args, 'locale' );
+				if ( $locale_arg ) {
+					$new_package = $this->get_download_url( $update->version, $locale_arg );
+					$update      = (object) [
+						'response' => $update->response,
+						'current'  => $update->version,
+						'download' => $new_package,
+						'packages' => (object) [
+							'partial'     => null,
+							'new_bundled' => $update->packages->new_bundled,
+							'no_content'  => null,
+							'full'        => $new_package,
+						],
+						'version'  => $update->version,
+						'locale'   => $locale_arg,
+					];
+				}
+			}
 		} elseif ( Utils\wp_version_compare( $assoc_args['version'], '<' )
 			|| 'nightly' === $assoc_args['version']
-			|| Utils\get_flag_value( $assoc_args, 'force' ) ) {
+			|| Utils\get_flag_value( $assoc_args, 'force' )
+			|| ! empty( $assoc_args['locale'] ) ) {
 
 			// Specific version is given
 			$version = $assoc_args['version'];
@@ -1230,7 +1252,8 @@ EOT;
 
 		if ( ! empty( $update )
 			&& ( $update->version !== $wp_version
-				|| Utils\get_flag_value( $assoc_args, 'force' ) ) ) {
+				|| Utils\get_flag_value( $assoc_args, 'force' )
+				|| ( $update->locale ?: 'en_US' ) !== ( self::get_wp_details()['wp_local_package'] ?: 'en_US' ) ) ) {
 
 			require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
