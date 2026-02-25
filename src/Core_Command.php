@@ -1205,12 +1205,12 @@ EOT;
 				if ( $locale_arg ) {
 					$new_package = $this->get_download_url( $update->version, $locale_arg );
 					$update      = (object) [
-						'response' => $update->response,
+						'response' => $update->response ?? 'upgrade',
 						'current'  => $update->version,
 						'download' => $new_package,
 						'packages' => (object) [
 							'partial'     => null,
-							'new_bundled' => $update->packages->new_bundled,
+							'new_bundled' => $update->packages->new_bundled ?? null,
 							'no_content'  => null,
 							'full'        => $new_package,
 						],
