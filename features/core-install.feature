@@ -177,6 +177,22 @@ Feature: Install WordPress core
       """
     And the return code should be 0
 
+  Scenario: Install WordPress with special characters in the admin password
+    Given an empty directory
+    And WP files
+    And wp-config.php
+    And a database
+
+    When I run `wp core install --url=localhost:8001 --title=Test --admin_user=wpcli --admin_email=wpcli@example.org --admin_password='R^^CzY;G"iZ@]H9b,' --skip-email`
+    Then STDOUT should contain:
+      """
+      Success: WordPress installed successfully.
+      """
+    And the return code should be 0
+
+    When I run `wp user check-password wpcli 'R^^CzY;G"iZ@]H9b,'`
+    Then the return code should be 0
+
   @less-than-php-7
   Scenario: Install WordPress with locale set to de_DE on WP < 4.0
     Given an empty directory
