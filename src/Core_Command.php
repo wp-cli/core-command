@@ -156,6 +156,7 @@ class Core_Command extends WP_CLI_Command {
 	 *     md5 hash verified: c5366d05b521831dd0b29dfc386e56a5
 	 *     Success: WordPress downloaded.
 	 *
+	 * @skipglobalargcheck Reusing `--path` on purpose.
 	 * @when before_wp_load
 	 *
 	 * @param array{0?: string} $args Positional arguments.
@@ -467,6 +468,8 @@ class Core_Command extends WP_CLI_Command {
 	 *     # Install WordPress without disclosing admin_password to bash history
 	 *     $ wp core install --url=example.com --title=Example --admin_user=supervisor --admin_email=info@example.com --prompt=admin_password < admin_password.txt
 	 *
+	 * @skipglobalargcheck Reusing `--url` on purpose.
+	 *
 	 * @param string[] $args Positional arguments. Unused.
 	 * @param array{url: string, title: string, admin_user: string, admin_password?: string, admin_email: string, locale?: string, 'skip-email'?: bool} $assoc_args Associative arguments.
 	 */
@@ -596,6 +599,7 @@ class Core_Command extends WP_CLI_Command {
 	 *     Added multisite constants to wp-config.php.
 	 *     Success: Network installed. Don't forget to set up rewrite rules.
 	 *
+	 * @skipglobalargcheck Reusing `--url` on purpose.
 	 * @subcommand multisite-install
 	 *
 	 * @param string[] $args Positional arguments. Unused.
