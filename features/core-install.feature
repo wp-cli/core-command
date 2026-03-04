@@ -190,7 +190,7 @@ Feature: Install WordPress core
       """
     And the return code should be 0
 
-    When I run `wp user check-password wpcli 'R^^CzY;G"iZ@]H9b,'`
+    When I run `wp user check-password wpcli 'R^^CzY;G"iZ@]H9b,' --escape-chars`
     Then the return code should be 0
 
   @less-than-php-7
