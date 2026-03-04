@@ -704,11 +704,15 @@ class Core_Command extends WP_CLI_Command {
 		}
 
 		$public   = true;
-		$password = $args['admin_password'];
+		$password = wp_slash( $args['admin_password'] );
 
 		if ( ! is_email( $args['admin_email'] ) ) {
 			WP_CLI::error( "The '{$args['admin_email']}' email address is invalid." );
 		}
+
+		/**
+		 * @var string $password
+		 */
 
 		$result = wp_install(
 			$args['title'],
