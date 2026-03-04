@@ -710,6 +710,10 @@ class Core_Command extends WP_CLI_Command {
 			WP_CLI::error( "The '{$args['admin_email']}' email address is invalid." );
 		}
 
+		/**
+		 * @var string $password
+		 */
+
 		$result = wp_install(
 			$args['title'],
 			$args['admin_user'],
