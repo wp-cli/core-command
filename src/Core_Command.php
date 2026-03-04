@@ -1613,20 +1613,27 @@ EOT;
 		// Reset error tracking
 		$this->version_check_error = null;
 
-		// Hook into pre_http_request with max priority to capture errors during version check
-		// This is necessary because tests and plugins may use pre_http_request to mock responses
-		add_filter( 'pre_http_request', [ $this, 'capture_version_check_error' ], PHP_INT_MAX, 3 );
+		// Using closures so that the methods can stay private and aren't accidentally exposed as commands.
 
-		// Also hook into http_api_debug to capture errors from real HTTP requests
-		// This fires when pre_http_request doesn't short-circuit the request
-		add_action( 'http_api_debug', [ $this, 'capture_version_check_error_from_response' ], 10, 5 );
+		$capture_version_check_error = function ( $response, $args, $url ) {
+			return $this->capture_version_check_error( $response, $args, $url );
+		};
+
+		$capture_version_check_error_from_response = function ( $response, $context, $_class, $args, $url ) {
+			return $this->capture_version_check_error_from_response( $response, $context, $_class, $args, $url );
+		};
+
+		add_filter( 'pre_http_request', $capture_version_check_error, PHP_INT_MAX, 3 );
+
+		// This fires when pre_http_request doesn't short-circuit the request.
+		add_action( 'http_api_debug', $capture_version_check_error_from_response, 10, 5 );
 
 		try {
 			wp_version_check( [], $force_check );
 		} finally {
 			// Ensure the hooks are always removed, even if wp_version_check() throws an exception
-			remove_filter( 'pre_http_request', [ $this, 'capture_version_check_error' ], PHP_INT_MAX );
-			remove_action( 'http_api_debug', [ $this, 'capture_version_check_error_from_response' ], 10 );
+			remove_filter( 'pre_http_request', $capture_version_check_error, PHP_INT_MAX );
+			remove_action( 'http_api_debug', $capture_version_check_error_from_response, 10 );
 		}
 
 		/**
@@ -1727,7 +1734,7 @@ EOT;
 	 *
 	 * @phpstan-param HTTP_Response|WP_Error|false $response
 	 */
-	public function capture_version_check_error( $response, $args, $url ) {
+	private function capture_version_check_error( $response, $args, $url ) {
 		if ( false === strpos( $url, 'api.wordpress.org/core/version-check' ) ) {
 			return $response;
 		}
@@ -1756,7 +1763,7 @@ EOT;
 	 *
 	 * @phpstan-param HTTP_Response|WP_Error $response
 	 */
-	public function capture_version_check_error_from_response( $response, $context, $_class, $_args, $url ) {
+	private function capture_version_check_error_from_response( $response, $context, $_class, $_args, $url ) {
 		if ( false === strpos( $url, 'api.wordpress.org/core/version-check' ) ) {
 			return;
 		}
