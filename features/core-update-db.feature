@@ -166,21 +166,22 @@ Feature: Update core's database
     And I run `wp core download --version=5.4 --force`
     And I run `wp option update db_version 45805 --require=disable_sidebar_check.php`
     And I run `wp site option update wpmu_upgrade_site 45805`
-    # Create two sites in network 1 (main site already exists; total 3)
+    # Create 2 sites in network 1 (main site already exists; 3 total in network 1)
     And I run `wp site create --slug=net1-site1`
     And I run `wp site create --slug=net1-site2`
-    # Create two sites that will be moved to a second network
+    # Create 2 sites that will be moved to a second network
     And I run `wp site create --slug=net2-site1 --porcelain`
     And save STDOUT as {NET2_SITE1_ID}
     And I run `wp site create --slug=net2-site2 --porcelain`
     And save STDOUT as {NET2_SITE2_ID}
-    # Register a second network and reassign those two sites to it
-    And I run `wp eval 'global $wpdb; $wpdb->insert( $wpdb->site, [ "domain" => "localhost", "path" => "/network2/" ] ); $n2 = $wpdb->insert_id; $wpdb->update( $wpdb->blogs, [ "site_id" => $n2 ], [ "blog_id" => {NET2_SITE1_ID} ] ); $wpdb->update( $wpdb->blogs, [ "site_id" => $n2 ], [ "blog_id" => {NET2_SITE2_ID} ] );'`
+    # Register a second network (ID=2) and reassign those two blogs to it
+    And I run `wp eval 'global $wpdb; $wpdb->insert( $wpdb->site, [ "domain" => "example.com", "path" => "/network2/" ] );'`
+    And I run `wp eval 'global $wpdb; $wpdb->update( $wpdb->blogs, [ "site_id" => 2 ], [ "blog_id" => {NET2_SITE1_ID} ] ); $wpdb->update( $wpdb->blogs, [ "site_id" => 2 ], [ "blog_id" => {NET2_SITE2_ID} ] );'`
 
     When I run `wp site option get wpmu_upgrade_site`
     Then save STDOUT as {UPDATE_VERSION}
 
-    # Running without --url targets the current (primary) network: 3 sites in network 1
+    # With SITE_ID_CURRENT_SITE=1, only the 3 network-1 sites are processed (not all 5)
     When I run `wp core update-db --network`
     Then STDOUT should contain:
       """
@@ -193,8 +194,10 @@ Feature: Update core's database
       {UPDATE_VERSION}
       """
 
-    # Running with --url targeting a network 2 site should process only network 2's 2 sites
-    When I run `wp core update-db --network --url=localhost/net2-site1/`
+    # Switch wp-config.php to network 2 context; only network 2's 2 sites should be processed
+    And "define( 'SITE_ID_CURRENT_SITE', 1 );" replaced with "define( 'SITE_ID_CURRENT_SITE', 2 );" in the wp-config.php file
+
+    When I run `wp core update-db --network`
     Then STDOUT should contain:
       """
       Success: WordPress database upgraded on 2/2 sites.
