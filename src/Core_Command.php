@@ -1494,14 +1494,16 @@ EOT;
 		}
 
 		if ( $network ) {
-			// Determine the network ID to update
-			// In multinetwork setups, use the current network (determined by --url parameter)
-			$network_id = defined( 'SITE_ID_CURRENT_SITE' ) ? SITE_ID_CURRENT_SITE : null;
-			if ( null === $network_id && function_exists( 'get_current_network_id' ) ) {
+			// Determine the network ID to update.
+			// get_current_network_id() (available since WP 4.9) reflects the network
+			// determined from the --url context, enabling per-network updates in
+			// multinetwork setups. Fall back to SITE_ID_CURRENT_SITE for older WordPress.
+			if ( function_exists( 'get_current_network_id' ) ) {
 				$network_id = get_current_network_id();
-			}
-			if ( ! $network_id ) {
-				$network_id = 1; // Default to primary network
+			} elseif ( defined( 'SITE_ID_CURRENT_SITE' ) ) {
+				$network_id = (int) SITE_ID_CURRENT_SITE;
+			} else {
+				$network_id = 1;
 			}
 
 			$iterator_args = [

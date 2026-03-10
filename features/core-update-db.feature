@@ -153,7 +153,7 @@ Feature: Update core's database
 
   # This test downgrades to an older WordPress version, but the SQLite plugin requires 6.0+
   @require-mysql
-  Scenario: Update db respects current network in multinetwork setup
+  Scenario: Update db targets only the specified network in multinetwork setup
     Given a WP multisite install
     And a disable_sidebar_check.php file:
       """
@@ -166,18 +166,21 @@ Feature: Update core's database
     And I run `wp core download --version=5.4 --force`
     And I run `wp option update db_version 45805 --require=disable_sidebar_check.php`
     And I run `wp site option update wpmu_upgrade_site 45805`
-    And I run `wp site create --slug=foo`
-    And I run `wp site create --slug=bar`
-
-    When I run `wp eval "echo defined('SITE_ID_CURRENT_SITE') ? SITE_ID_CURRENT_SITE : 'not defined';"`
-    Then STDOUT should contain:
-      """
-      1
-      """
+    # Create two sites in network 1 (main site already exists; total 3)
+    And I run `wp site create --slug=net1-site1`
+    And I run `wp site create --slug=net1-site2`
+    # Create two sites that will be moved to a second network
+    And I run `wp site create --slug=net2-site1 --porcelain`
+    And save STDOUT as {NET2_SITE1_ID}
+    And I run `wp site create --slug=net2-site2 --porcelain`
+    And save STDOUT as {NET2_SITE2_ID}
+    # Register a second network and reassign those two sites to it
+    And I run `wp eval 'global $wpdb; $wpdb->insert( $wpdb->site, [ "domain" => "localhost", "path" => "/network2/" ] ); $n2 = $wpdb->insert_id; $wpdb->update( $wpdb->blogs, [ "site_id" => $n2 ], [ "blog_id" => {NET2_SITE1_ID} ] ); $wpdb->update( $wpdb->blogs, [ "site_id" => $n2 ], [ "blog_id" => {NET2_SITE2_ID} ] );'`
 
     When I run `wp site option get wpmu_upgrade_site`
     Then save STDOUT as {UPDATE_VERSION}
 
+    # Running without --url targets the current (primary) network: 3 sites in network 1
     When I run `wp core update-db --network`
     Then STDOUT should contain:
       """
@@ -188,6 +191,13 @@ Feature: Update core's database
     Then STDOUT should not contain:
       """
       {UPDATE_VERSION}
+      """
+
+    # Running with --url targeting a network 2 site should process only network 2's 2 sites
+    When I run `wp core update-db --network --url=localhost/net2-site1/`
+    Then STDOUT should contain:
+      """
+      Success: WordPress database upgraded on 2/2 sites.
       """
 
   Scenario: Ensure update-db sets WP_INSTALLING constant
