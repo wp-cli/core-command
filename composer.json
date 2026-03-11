@@ -40,6 +40,7 @@
         "commands": [
             "core",
             "core check-update",
+            "core check-update-db",
             "core download",
             "core install",
             "core is-installed",

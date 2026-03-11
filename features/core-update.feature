@@ -420,7 +420,6 @@ Feature: Update WordPress core
       </div>
       """
 
-  @require-php-7.2
   Scenario: Old files from $_old_files are cleaned up when upgrading
     Given a WP install
 
@@ -505,7 +504,72 @@ Feature: Update WordPress core
     And the wp-includes/blocks/post-author/editor.css file should not exist
     And the wp-includes/blocks/post-author/editor.min.css file should not exist
 
-  @require-php-7.0 @require-wp-6.1
+  Scenario: Update WordPress locale without --force when version is the same
+    Given a WP install
+    And an empty cache
+
+    # Using `try` in case there are checksum warnings.
+    When I try `wp core download --version=6.5 --locale=de_DE --force`
+    Then STDOUT should contain:
+      """
+      Success: WordPress downloaded.
+      """
+
+    When I run `wp core version --extra`
+    Then STDOUT should contain:
+      """
+      Package language:  de_DE
+      """
+
+    When I run `wp core version`
+    Then save STDOUT as {CURRENT_VERSION}
+
+    # Updating to the same version with a different locale should work without --force.
+    When I run `wp core update --version={CURRENT_VERSION} --locale=en_US`
+    Then STDOUT should contain:
+      """
+      Updating to version {CURRENT_VERSION} (en_US)...
+      """
+    And STDOUT should contain:
+      """
+      Success: WordPress updated successfully.
+      """
+
+    When I run `wp core version --extra`
+    Then STDOUT should contain:
+      """
+      Package language:  en_US
+      """
+
+  Scenario: Update WordPress locale when using --minor
+    Given a WP install
+    And an empty cache
+
+    # Using `try` in case there are checksum warnings.
+    When I try `wp core download --version=6.5 --locale=de_DE --force`
+    Then STDOUT should contain:
+      """
+      Success: WordPress downloaded.
+      """
+
+    When I run `wp core version --extra`
+    Then STDOUT should contain:
+      """
+      Package language:  de_DE
+      """
+
+    When I run `wp core update --minor --locale=en_US`
+    Then STDOUT should contain:
+      """
+      Success: WordPress updated successfully.
+      """
+
+    When I run `wp core version --extra`
+    Then STDOUT should contain:
+      """
+      Package language:  en_US
+      """ 
+  @require-wp-6.1
   Scenario: Attempting to downgrade without --force shows helpful message
     Given a WP install
 
