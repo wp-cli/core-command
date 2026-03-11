@@ -570,7 +570,7 @@ Feature: Update WordPress core
     Then STDOUT should contain:
       """
       Package language:  en_US
-      """ 
+      """
   @require-wp-6.1
   Scenario: Attempting to downgrade without --force shows helpful message
     Given a WP install
