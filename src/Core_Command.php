@@ -156,6 +156,7 @@ class Core_Command extends WP_CLI_Command {
 	 *     md5 hash verified: c5366d05b521831dd0b29dfc386e56a5
 	 *     Success: WordPress downloaded.
 	 *
+	 * @skipglobalargcheck Reusing `--path` on purpose.
 	 * @when before_wp_load
 	 *
 	 * @param array{0?: string} $args Positional arguments.
@@ -467,6 +468,8 @@ class Core_Command extends WP_CLI_Command {
 	 *     # Install WordPress without disclosing admin_password to bash history
 	 *     $ wp core install --url=example.com --title=Example --admin_user=supervisor --admin_email=info@example.com --prompt=admin_password < admin_password.txt
 	 *
+	 * @skipglobalargcheck Reusing `--url` on purpose.
+	 *
 	 * @param string[] $args Positional arguments. Unused.
 	 * @param array{url: string, title: string, admin_user: string, admin_password?: string, admin_email: string, locale?: string, 'skip-email'?: bool} $assoc_args Associative arguments.
 	 */
@@ -596,6 +599,7 @@ class Core_Command extends WP_CLI_Command {
 	 *     Added multisite constants to wp-config.php.
 	 *     Success: Network installed. Don't forget to set up rewrite rules.
 	 *
+	 * @skipglobalargcheck Reusing `--url` on purpose.
 	 * @subcommand multisite-install
 	 *
 	 * @param string[] $args Positional arguments. Unused.
@@ -700,11 +704,15 @@ class Core_Command extends WP_CLI_Command {
 		}
 
 		$public   = true;
-		$password = $args['admin_password'];
+		$password = wp_slash( $args['admin_password'] );
 
 		if ( ! is_email( $args['admin_email'] ) ) {
 			WP_CLI::error( "The '{$args['admin_email']}' email address is invalid." );
 		}
+
+		/**
+		 * @var string $password
+		 */
 
 		$result = wp_install(
 			$args['title'],
@@ -1178,7 +1186,7 @@ EOT;
 			wp_version_check();
 
 			/**
-			 * @var object{updates: array<object{version: string, locale: string}>} $from_api
+			 * @var object{updates: array<object{response: string, version: string, locale: string, download: string, packages: object{partial: string|null, new_bundled: string|null, no_content: string|null, full: string}}>} $from_api
 			 */
 			$from_api = get_site_transient( 'update_core' );
 
@@ -1198,9 +1206,31 @@ EOT;
 			} elseif ( ! empty( $from_api->updates ) ) {
 				list( $update ) = $from_api->updates;
 			}
+
+			// Override the locale in the transient-based update if --locale is explicitly specified.
+			if ( ! empty( $update ) ) {
+				$locale_arg = Utils\get_flag_value( $assoc_args, 'locale' );
+				if ( $locale_arg ) {
+					$new_package = $this->get_download_url( $update->version, $locale_arg );
+					$update      = (object) [
+						'response' => $update->response ?? 'upgrade',
+						'current'  => $update->version,
+						'download' => $new_package,
+						'packages' => (object) [
+							'partial'     => null,
+							'new_bundled' => $update->packages->new_bundled ?? null,
+							'no_content'  => null,
+							'full'        => $new_package,
+						],
+						'version'  => $update->version,
+						'locale'   => $locale_arg,
+					];
+				}
+			}
 		} elseif ( Utils\wp_version_compare( $assoc_args['version'], '<' )
 			|| 'nightly' === $assoc_args['version']
-			|| Utils\get_flag_value( $assoc_args, 'force' ) ) {
+			|| Utils\get_flag_value( $assoc_args, 'force' )
+			|| ! empty( $assoc_args['locale'] ) ) {
 
 			// Specific version is given
 			$version = $assoc_args['version'];
@@ -1230,7 +1260,8 @@ EOT;
 
 		if ( ! empty( $update )
 			&& ( $update->version !== $wp_version
-				|| Utils\get_flag_value( $assoc_args, 'force' ) ) ) {
+				|| Utils\get_flag_value( $assoc_args, 'force' )
+				|| ( $update->locale ?: 'en_US' ) !== ( self::get_wp_details()['wp_local_package'] ?: 'en_US' ) ) ) {
 
 			$this->require_upgrade_file( 'WordPress core update' );
 
@@ -1312,6 +1343,108 @@ EOT;
 			WP_CLI::log( 'Use --force to update anyway (e.g., to downgrade to version ' . Utils\get_flag_value( $assoc_args, 'version' ) . ').' );
 		} else {
 			WP_CLI::success( "WordPress is up to date at version {$wp_version}." );
+		}
+	}
+
+	/**
+	 * Checks for the need for WordPress database updates.
+	 *
+	 * Compares the current database version with the version required by WordPress core
+	 * to determine if database updates are needed.
+	 *
+	 * ## OPTIONS
+	 *
+	 * [--network]
+	 * : Check databases for all sites on a network.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     # Check if database update is needed
+	 *     $ wp core check-update-db
+	 *     Success: WordPress database is up to date.
+	 *
+	 *     # Check database update status for all sites on a network
+	 *     $ wp core check-update-db --network
+	 *     Success: WordPress databases are up to date on 5/5 sites.
+	 *
+	 * @subcommand check-update-db
+	 *
+	 * @param string[] $args Positional arguments. Unused.
+	 * @param array{network?: bool} $assoc_args Associative arguments.
+	 */
+	public function check_update_db( $args, $assoc_args ) {
+		global $wpdb, $wp_db_version, $wp_current_db_version;
+
+		$network = Utils\get_flag_value( $assoc_args, 'network' );
+		if ( $network && ! is_multisite() ) {
+			WP_CLI::error( 'This is not a multisite installation.' );
+		}
+
+		if ( $network ) {
+			$iterator_args        = [
+				'table' => $wpdb->blogs,
+				'where' => [
+					'spam'     => 0,
+					'deleted'  => 0,
+					'archived' => 0,
+				],
+			];
+			$it                   = new TableIterator( $iterator_args );
+			$total                = 0;
+			$needs_update         = 0;
+			$sites_needing_update = [];
+
+			/**
+			 * @var object{site_id: int, domain: string, path: string} $blog
+			 */
+			foreach ( $it as $blog ) {
+				++$total;
+				$url = $blog->domain . $blog->path;
+				$cmd = "--url={$url} core check-update-db";
+
+				/**
+				 * @var object{stdout: string, stderr: string, return_code: int} $process
+				 */
+				$process = WP_CLI::runcommand(
+					$cmd,
+					[
+						'return'     => 'all',
+						'exit_error' => false,
+					]
+				);
+				// If return code is 1, it means update is needed
+				if ( 1 === (int) $process->return_code ) {
+					++$needs_update;
+					$sites_needing_update[] = $url;
+				}
+			}
+
+			if ( $needs_update > 0 ) {
+				WP_CLI::log( "WordPress database update needed on {$needs_update}/{$total} sites:" );
+				foreach ( $sites_needing_update as $site_url ) {
+					WP_CLI::log( "  - {$site_url}" );
+				}
+				WP_CLI::halt( 1 );
+			} else {
+				WP_CLI::success( "WordPress databases are up to date on {$total}/{$total} sites." );
+			}
+		} else {
+			require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+
+			/**
+			 * @var string $wp_current_db_version
+			 */
+			// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Replacing WP Core behavior is the goal here.
+			$wp_current_db_version = __get_option( 'db_version' );
+			// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Replacing WP Core behavior is the goal here.
+			$wp_current_db_version = (int) $wp_current_db_version;
+
+			if ( $wp_db_version !== $wp_current_db_version ) {
+				WP_CLI::log( "WordPress database update required from db version {$wp_current_db_version} to {$wp_db_version}." );
+				WP_CLI::halt( 1 );
+			} else {
+				WP_CLI::success( 'WordPress database is up to date.' );
+			}
 		}
 	}
 
@@ -1484,20 +1617,27 @@ EOT;
 		// Reset error tracking
 		$this->version_check_error = null;
 
-		// Hook into pre_http_request with max priority to capture errors during version check
-		// This is necessary because tests and plugins may use pre_http_request to mock responses
-		add_filter( 'pre_http_request', [ $this, 'capture_version_check_error' ], PHP_INT_MAX, 3 );
+		// Using closures so that the methods can stay private and aren't accidentally exposed as commands.
 
-		// Also hook into http_api_debug to capture errors from real HTTP requests
-		// This fires when pre_http_request doesn't short-circuit the request
-		add_action( 'http_api_debug', [ $this, 'capture_version_check_error_from_response' ], 10, 5 );
+		$capture_version_check_error = function ( $response, $args, $url ) {
+			return $this->capture_version_check_error( $response, $args, $url );
+		};
+
+		$capture_version_check_error_from_response = function ( $response, $context, $_class, $args, $url ) {
+			return $this->capture_version_check_error_from_response( $response, $context, $_class, $args, $url );
+		};
+
+		add_filter( 'pre_http_request', $capture_version_check_error, PHP_INT_MAX, 3 );
+
+		// This fires when pre_http_request doesn't short-circuit the request.
+		add_action( 'http_api_debug', $capture_version_check_error_from_response, 10, 5 );
 
 		try {
 			wp_version_check( [], $force_check );
 		} finally {
 			// Ensure the hooks are always removed, even if wp_version_check() throws an exception
-			remove_filter( 'pre_http_request', [ $this, 'capture_version_check_error' ], PHP_INT_MAX );
-			remove_action( 'http_api_debug', [ $this, 'capture_version_check_error_from_response' ], 10 );
+			remove_filter( 'pre_http_request', $capture_version_check_error, PHP_INT_MAX );
+			remove_action( 'http_api_debug', $capture_version_check_error_from_response, 10 );
 		}
 
 		/**
@@ -1598,7 +1738,7 @@ EOT;
 	 *
 	 * @phpstan-param HTTP_Response|WP_Error|false $response
 	 */
-	public function capture_version_check_error( $response, $args, $url ) {
+	private function capture_version_check_error( $response, $args, $url ) {
 		if ( false === strpos( $url, 'api.wordpress.org/core/version-check' ) ) {
 			return $response;
 		}
@@ -1627,7 +1767,7 @@ EOT;
 	 *
 	 * @phpstan-param HTTP_Response|WP_Error $response
 	 */
-	public function capture_version_check_error_from_response( $response, $context, $_class, $_args, $url ) {
+	private function capture_version_check_error_from_response( $response, $context, $_class, $_args, $url ) {
 		if ( false === strpos( $url, 'api.wordpress.org/core/version-check' ) ) {
 			return;
 		}
