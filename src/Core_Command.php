@@ -1794,14 +1794,15 @@ EOT;
 			return;
 		}
 
+		// Always clean up files from WordPress core's $_old_files list first
+		$this->cleanup_old_files();
+
 		$old_checksums = self::get_core_checksums( $version_from, $locale ?: 'en_US', $insecure );
 		$new_checksums = self::get_core_checksums( $version_to, $locale ?: 'en_US', $insecure );
 
 		$has_checksums = is_array( $old_checksums ) && is_array( $new_checksums );
 
 		if ( ! $has_checksums ) {
-			// When checksums are not available, use WordPress core's $_old_files list
-			$this->cleanup_old_files();
 			return;
 		}
 
@@ -1895,16 +1896,11 @@ EOT;
 				WP_CLI::log( 'No files found that need cleaning up.' );
 			}
 		}
-
-		// Additionally, clean up files from $_old_files that are not in checksums
-		// These should be deleted unconditionally as they are known old files
-		$this->cleanup_old_files_not_in_checksums( $old_checksums, $new_checksums );
 	}
 
 	/**
 	 * Clean up old files using WordPress core's $_old_files list.
 	 *
-	 * This method is used when checksums are not available for version comparison.
 	 * It unconditionally deletes files from the $_old_files global array maintained by WordPress core.
 	 */
 	private function cleanup_old_files() {
@@ -1922,40 +1918,6 @@ EOT;
 			WP_CLI::log( number_format( $count ) . ' files cleaned up.' );
 		} else {
 			WP_CLI::log( 'No old files were removed.' );
-		}
-	}
-
-	/**
-	 * Clean up old files from $_old_files that are not tracked in checksums.
-	 *
-	 * This method is used as a supplement when checksums ARE available.
-	 * It unconditionally deletes files from $_old_files that are not present in either
-	 * the old or new checksums, as these files cannot be verified for modifications.
-	 *
-	 * @param array $old_checksums Old checksums array.
-	 * @param array $new_checksums New checksums array.
-	 */
-	private function cleanup_old_files_not_in_checksums( $old_checksums, $new_checksums ) {
-		$old_files = $this->get_old_files_list();
-		if ( empty( $old_files ) ) {
-			return;
-		}
-
-		// Combine all files from both checksum arrays
-		$all_checksum_files = array_merge( array_keys( $old_checksums ), array_keys( $new_checksums ) );
-		$all_checksum_files = array_unique( $all_checksum_files );
-
-		// Find files in $_old_files that are not in checksums
-		$files_to_remove = array_diff( $old_files, $all_checksum_files );
-
-		if ( empty( $files_to_remove ) ) {
-			return;
-		}
-
-		$count = $this->remove_old_files_from_list( $files_to_remove );
-
-		if ( $count ) {
-			WP_CLI::log( number_format( $count ) . ' additional old files cleaned up.' );
 		}
 	}
 
