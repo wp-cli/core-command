@@ -1968,55 +1968,8 @@ EOT;
 			WP_CLI::error( "Cannot read WordPress installation file '{$upgrade_file}'. Check file permissions." );
 		}
 
-		// Use a flag to track successful completion and prevent handler from executing after success.
-		$require_completed = false;
-
-		// Register a shutdown function to catch fatal errors during require_once.
-		$shutdown_handler = function () use ( $context, &$require_completed ) {
-			// Only handle errors if require_once did not complete successfully.
-			// @phpstan-ignore-next-line
-			if ( $require_completed ) {
-				return;
-			}
-
-			$error = error_get_last();
-			if (
-				null !== $error
-				&& in_array(
-					$error['type'],
-					[ E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR ],
-					true
-				)
-			) {
-				// Check if error occurred in the upgrade file or files it includes.
-				if (
-					false !== strpos( $error['file'], 'wp-admin/includes/' )
-					|| false !== strpos( $error['file'], 'wp-includes/' )
-				) {
-					// Provide a more specific error message for WordPress core file errors
-					// before WP-CLI's generic shutdown handler runs
-					$message = sprintf(
-						"Failed to load WordPress files for %s.\n\nError: %s in %s on line %d\n\nThis error is in WordPress core files, not a plugin or theme.\nIt often indicates a missing PHP extension (like mysqli) or corrupted WordPress installation.\n\nPlease check that all required PHP extensions are installed and that your WordPress installation is complete.",
-						$context,
-						$error['message'],
-						$error['file'],
-						$error['line']
-					);
-
-					// Output directly and exit to avoid WP-CLI's generic plugin/theme suggestion
-					fwrite( STDERR, "Error: {$message}\n" );
-					exit( 1 );
-				}
-			}
-		};
-
-		register_shutdown_function( $shutdown_handler );
-
 		// phpcs:ignore WordPressVIPMinimum.Files.IncludingFile.UsingVariable -- Path comes from WordPress itself.
 		require_once $upgrade_file;
-
-		// Mark as completed to prevent the shutdown handler from executing on unrelated errors.
-		$require_completed = true;
 	}
 
 	/**

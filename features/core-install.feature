@@ -381,18 +381,10 @@ Feature: Install WordPress core
     When I try `wp core install --url=example.org --title=Test --admin_user=testadmin --admin_email=testadmin@example.com --admin_password=testpass`
     Then STDERR should contain:
       """
-      Error: Failed to load WordPress files for WordPress installation
+      Fatal error: Call to undefined function mysqli_connect()
       """
     And STDERR should contain:
       """
-      This error is in WordPress core files, not a plugin or theme
-      """
-    And STDERR should contain:
-      """
-      It often indicates a missing PHP extension (like mysqli)
-      """
-    And STDERR should contain:
-      """
-      Call to undefined function mysqli_connect()
+      Error: There has been a critical error on this website
       """
     And the return code should be 255
