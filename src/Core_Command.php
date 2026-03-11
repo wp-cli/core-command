@@ -2002,7 +2002,7 @@ EOT;
 						$error['file'],
 						$error['line']
 					);
-					
+
 					// Output directly and exit to avoid WP-CLI's generic plugin/theme suggestion
 					fwrite( STDERR, "Error: {$message}\n" );
 					exit( 1 );
@@ -2017,14 +2017,14 @@ EOT;
 
 		// Mark as completed to prevent the shutdown handler from executing on unrelated errors.
 		$require_completed = true;
-  }
- 
-  /**
-	 * Checks if a WP_Error is related to the core_updater.lock.
-	 *
-	 * @param \WP_Error $error The error object to check.
-	 * @return bool True if the error is related to the lock, false otherwise.
-	 */
+	}
+
+	/**
+		* Checks if a WP_Error is related to the core_updater.lock.
+		*
+		* @param \WP_Error $error The error object to check.
+		* @return bool True if the error is related to the lock, false otherwise.
+		*/
 	private static function is_lock_error( $error ) {
 		// Check for the 'locked' error code used by WordPress Core
 		if ( 'locked' === $error->get_error_code() ) {
