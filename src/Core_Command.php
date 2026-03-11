@@ -1879,7 +1879,7 @@ EOT;
 					continue;
 				}
 				// Ensure the normalized parent directory is within ABSPATH
-				if ( 0 !== strpos( Utils\trailingslashit( $normalized_path ), $abspath_realpath_trailing ) && $normalized_path !== rtrim( $abspath_realpath_trailing, '/' ) ) {
+				if ( 0 !== strpos( Utils\trailingslashit( $normalized_path ), $abspath_realpath_trailing ) && rtrim( $abspath_realpath_trailing, '/' ) !== $normalized_path ) {
 					WP_CLI::debug( "Skipping symbolic link outside of ABSPATH: {$file}", 'core' );
 					continue;
 				}
