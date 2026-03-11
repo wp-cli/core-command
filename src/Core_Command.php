@@ -1853,15 +1853,19 @@ EOT;
 					false !== strpos( $error['file'], 'wp-admin/includes/' )
 					|| false !== strpos( $error['file'], 'wp-includes/' )
 				) {
-					WP_CLI::error(
-						sprintf(
-							"Failed to load WordPress files for %s. This often indicates a missing PHP extension or a corrupted WordPress installation.\n\nError: %s in %s on line %d\n\nPlease check that all required PHP extensions are installed and that your WordPress installation is complete.",
-							$context,
-							$error['message'],
-							$error['file'],
-							$error['line']
-						)
+					// Provide a more specific error message for WordPress core file errors
+					// before WP-CLI's generic shutdown handler runs
+					$message = sprintf(
+						"Failed to load WordPress files for %s.\n\nError: %s in %s on line %d\n\nThis error is in WordPress core files, not a plugin or theme.\nIt often indicates a missing PHP extension (like mysqli) or corrupted WordPress installation.\n\nPlease check that all required PHP extensions are installed and that your WordPress installation is complete.",
+						$context,
+						$error['message'],
+						$error['file'],
+						$error['line']
 					);
+					
+					// Output directly and exit to avoid WP-CLI's generic plugin/theme suggestion
+					fwrite( STDERR, "Error: {$message}\n" );
+					exit( 1 );
 				}
 			}
 		};

@@ -414,7 +414,11 @@ Feature: Install WordPress core
       """
     And STDERR should contain:
       """
-      This often indicates a missing PHP extension or a corrupted WordPress installation
+      This error is in WordPress core files, not a plugin or theme
+      """
+    And STDERR should contain:
+      """
+      It often indicates a missing PHP extension (like mysqli)
       """
     And STDERR should contain:
       """
