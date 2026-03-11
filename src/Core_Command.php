@@ -1803,6 +1803,7 @@ EOT;
 		$has_checksums = is_array( $old_checksums ) && is_array( $new_checksums );
 
 		if ( ! $has_checksums ) {
+			WP_CLI::warning( 'Could not retrieve WordPress core checksums; skipping checksum-based cleanup. Files listed in $_old_files were still cleaned up.' );
 			return;
 		}
 
