@@ -395,4 +395,4 @@ Feature: Install WordPress core
       """
       Call to undefined function mysqli_connect()
       """
-    And the return code should be 1
+    And the return code should be 255
