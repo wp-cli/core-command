@@ -484,3 +484,24 @@ Feature: Download WordPress
       Success:
       """
 
+  @require-php-7.4
+  Scenario: Installing beta version using --version=beta
+    Given an empty directory
+    And an empty cache
+
+    When I try `wp core download --version=beta`
+    Then the wp-settings.php file should exist
+    And STDOUT should contain:
+      """
+      Downloading WordPress
+      """
+    And STDOUT should contain:
+      """
+      (en_US)...
+      """
+    And STDOUT should contain:
+      """
+      Success: WordPress downloaded.
+      """
+    And the return code should be 0
+

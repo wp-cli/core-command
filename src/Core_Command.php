@@ -135,7 +135,7 @@ class Core_Command extends WP_CLI_Command {
 	 * : Select which language you want to download.
 	 *
 	 * [--version=<version>]
-	 * : Select which version you want to download. Accepts a version number, 'latest' or 'nightly'.
+	 * : Select which version you want to download. Accepts a version number, 'latest', 'nightly', or 'beta'.
 	 *
 	 * [--skip-content]
 	 * : Download WP without the default themes and plugins.
@@ -226,12 +226,21 @@ class Core_Command extends WP_CLI_Command {
 				$version = 'nightly';
 			}
 
-			// Nightly builds and skip content are only available in .zip format.
-			$extension = ( ( 'nightly' === $version ) || $skip_content )
-				? 'zip'
-				: 'tar.gz';
+			if ( 'beta' === strtolower( $assoc_args['version'] ) ) {
+				$offer        = $this->get_beta_download_offer( $locale, $insecure );
+				$version      = $offer['current'];
+				$download_url = $offer['download'];
+				if ( ! $skip_content ) {
+					$download_url = str_replace( '.zip', '.tar.gz', $download_url );
+				}
+			} else {
+				// Nightly builds and skip content are only available in .zip format.
+				$extension = ( ( 'nightly' === $version ) || $skip_content )
+					? 'zip'
+					: 'tar.gz';
 
-			$download_url = $this->get_download_url( $version, $locale, $extension );
+				$download_url = $this->get_download_url( $version, $locale, $extension );
+			}
 		} else {
 			try {
 				$offer = ( new WpOrgApi( [ 'insecure' => $insecure ] ) )
@@ -1095,7 +1104,7 @@ EOT;
 	 * : Only perform updates for minor releases (e.g. update from WP 4.3 to 4.3.3 instead of 4.4.2).
 	 *
 	 * [--version=<version>]
-	 * : Update to a specific version, instead of to the latest version. Alternatively accepts 'nightly'.
+	 * : Update to a specific version, instead of to the latest version. Alternatively accepts 'nightly' or 'beta'.
 	 *
 	 * [--force]
 	 * : Update even when installed WP version is greater than the requested version.
@@ -1229,6 +1238,7 @@ EOT;
 			}
 		} elseif ( Utils\wp_version_compare( $assoc_args['version'], '<' )
 			|| 'nightly' === $assoc_args['version']
+			|| 'beta' === $assoc_args['version']
 			|| Utils\get_flag_value( $assoc_args, 'force' )
 			|| ! empty( $assoc_args['locale'] ) ) {
 
@@ -1240,22 +1250,45 @@ EOT;
 			 */
 			$locale = Utils\get_flag_value( $assoc_args, 'locale', get_locale() );
 
-			$new_package = $this->get_download_url( $version, $locale );
+			if ( 'beta' === $version ) {
+				$insecure = (bool) Utils\get_flag_value( $assoc_args, 'insecure', false );
+				$offer    = $this->get_beta_download_offer( $locale, $insecure );
+				$version  = $offer['current'];
 
-			$update = (object) [
-				'response' => 'upgrade',
-				'current'  => $assoc_args['version'],
-				'download' => $new_package,
-				'packages' => (object) [
-					'partial'     => null,
-					'new_bundled' => null,
-					'no_content'  => null,
-					'full'        => $new_package,
-				],
-				'version'  => $version,
-				'locale'   => $locale,
-			];
+				/** @var array{full?: string, no_content?: string|null, new_bundled?: string|null, partial?: string|null} $packages */
+				$packages    = isset( $offer['packages'] ) && is_array( $offer['packages'] ) ? $offer['packages'] : [];
+				$new_package = ! empty( $packages['no_content'] ) ? $packages['no_content'] : $offer['download'];
 
+				$update = (object) [
+					'response' => 'upgrade',
+					'current'  => $version,
+					'download' => $new_package,
+					'packages' => (object) [
+						'partial'     => $packages['partial'] ?? null,
+						'new_bundled' => $packages['new_bundled'] ?? null,
+						'no_content'  => $packages['no_content'] ?? null,
+						'full'        => $packages['full'] ?? $offer['download'],
+					],
+					'version'  => $version,
+					'locale'   => $offer['locale'] ?? $locale,
+				];
+			} else {
+				$new_package = $this->get_download_url( $version, $locale );
+
+				$update = (object) [
+					'response' => 'upgrade',
+					'current'  => $assoc_args['version'],
+					'download' => $new_package,
+					'packages' => (object) [
+						'partial'     => null,
+						'new_bundled' => null,
+						'no_content'  => null,
+						'full'        => $new_package,
+					],
+					'version'  => $version,
+					'locale'   => $locale,
+				];
+			}
 		}
 
 		if ( ! empty( $update )
@@ -1603,6 +1636,55 @@ EOT;
 		}
 
 		return "https://{$locale_subdomain}wordpress.org/wordpress-{$version}{$locale_suffix}.{$file_type}";
+	}
+
+	/**
+	 * Gets the download offer for the latest WordPress beta or RC version.
+	 *
+	 * Queries the WordPress.org version-check API with `channel=beta` to retrieve
+	 * the current beta or release candidate download offer.
+	 *
+	 * @param string $locale   Locale to request. Defaults to 'en_US'.
+	 * @param bool   $insecure Whether to retry without certificate validation on TLS handshake failure.
+	 * @return array{current: string, download: string, locale: string, packages: array{full: string, no_content: string|null, new_bundled: string|null, partial: string|null}} Associative array with download offer data.
+	 */
+	private function get_beta_download_offer( $locale = 'en_US', $insecure = false ) {
+		$url = 'https://api.wordpress.org/core/version-check/1.7/?' . http_build_query(
+			[
+				'channel' => 'beta',
+				'locale'  => $locale,
+			],
+			'',
+			'&'
+		);
+
+		$options = [
+			'insecure'      => $insecure,
+			'halt_on_error' => false,
+		];
+
+		/** @var \WpOrg\Requests\Response $response */
+		$response = Utils\http_request( 'GET', $url, null, [ 'Accept' => 'application/json' ], $options );
+
+		if ( ! $response->success || (int) $response->status_code < 200 || (int) $response->status_code >= 300 ) {
+			WP_CLI::error( "Couldn't fetch response from {$url} (HTTP code {$response->status_code})." );
+		}
+
+		/** @var array{offers: array<int, array{current: string, download: string, locale: string, packages: array{full: string, no_content: string|null, new_bundled: string|null, partial: string|null}}>}|null $data */
+		$data = json_decode( $response->body, true );
+
+		if ( ! is_array( $data ) || empty( $data['offers'] ) ) {
+			WP_CLI::error( 'No beta version found.' );
+		}
+
+		/** @var array{current: string, download: string, locale: string, packages: array{full: string, no_content: string|null, new_bundled: string|null, partial: string|null}} $offer */
+		$offer = $data['offers'][0];
+
+		if ( ! is_array( $offer ) || empty( $offer['current'] ) || empty( $offer['download'] ) ) {
+			WP_CLI::error( 'Failed to parse beta version information.' );
+		}
+
+		return $offer;
 	}
 
 	/**

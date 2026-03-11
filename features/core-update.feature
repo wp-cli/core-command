@@ -538,3 +538,22 @@ Feature: Update WordPress core
       """
       Success:
       """
+
+  @require-php-7.4
+  Scenario: Use `--version=beta` to update to the latest beta version
+    Given a WP install
+
+    # Using `try` since checksums might not be available for beta/RC.
+    When I try `wp core update --version=beta --force`
+    Then STDOUT should contain:
+      """
+      Updating to version
+      """
+    And STDOUT should contain:
+      """
+      (en_US)...
+      """
+    And STDOUT should contain:
+      """
+      Success: WordPress updated successfully.
+      """
