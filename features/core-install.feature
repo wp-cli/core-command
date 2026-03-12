@@ -249,50 +249,21 @@ Feature: Install WordPress core
       https://example.com
       """
 
-  @less-than-php-7
-  Scenario: Install WordPress with locale set to de_DE on WP < 4.0
+  Scenario: Install WordPress with special characters in the admin password
     Given an empty directory
-    And an empty cache
+    And WP files
+    And wp-config.php
     And a database
 
-    When I run `wp core download --version=3.7 --locale=de_DE`
-    And save STDOUT 'Downloading WordPress ([\d\.]+)' as {VERSION}
-    And I run `echo {VERSION}`
+    When I run `wp core install --url=localhost:8001 --title=Test --admin_user=wpcli --admin_email=wpcli@example.org --admin_password='R^^CzY;G"iZ@]H9b,' --skip-email`
     Then STDOUT should contain:
-      """
-      3.7
-      """
-    And the wp-settings.php file should exist
-    And the {SUITE_CACHE_DIR}/core/wordpress-{VERSION}-de_DE.tar.gz file should exist
-
-    When I run `wp config create --dbname={DB_NAME} --dbuser={DB_USER} --dbpass={DB_PASSWORD} --dbhost={DB_HOST} --locale=de_DE --skip-check`
-    Then STDOUT should be:
-      """
-      Success: Generated 'wp-config.php' file.
-      """
-
-    # Old versions of WP can generate wpdb database errors if the WP tables don't exist, so STDERR may or may not be empty
-    When I try `wp core install --url=example.org --title=Test --admin_user=testadmin --admin_email=testadmin@example.com --admin_password=newpassword --locale=de_DE --skip-email`
-    Then STDERR should contain:
-      """
-      Warning: The flag --locale=de_DE is being ignored as it requires WordPress 4.0+.
-      """
-    And STDOUT should contain:
       """
       Success: WordPress installed successfully.
       """
+    And the return code should be 0
 
-    When I run `wp core version`
-    Then STDOUT should contain:
-      """
-      3.7
-      """
-
-    When I run `wp taxonomy list`
-    Then STDOUT should contain:
-      """
-      Kategorien
-      """
+    When I run `wp user check-password wpcli 'R^^CzY;G"iZ@]H9b,' --escape-chars`
+    Then the return code should be 0
 
   # This test downgrades to an older WordPress version, but the SQLite plugin requires 6.0+
   @require-mysql
