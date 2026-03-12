@@ -1964,11 +1964,6 @@ EOT;
 		$abspath_realpath_trailing = Utils\trailingslashit( $abspath_realpath );
 
 		foreach ( $files as $file ) {
-			// wp-content should be considered user data.
-			if ( 0 === stripos( $file, 'wp-content' ) ) {
-				continue;
-			}
-
 			$file_path = ABSPATH . $file;
 
 			// Skip entries that don't exist and aren't (broken) symlinks.
