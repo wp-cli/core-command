@@ -2033,7 +2033,6 @@ EOT;
 			WP_CLI::debug( "Failed to resolve realpath for directory: {$dir}", 'core' );
 			return false;
 		}
-		// Normalize paths with trailing slashes for accurate comparison
 		if ( 0 !== strpos( $dir_realpath, $abspath_realpath_trailing ) ) {
 			WP_CLI::debug( "Attempted to remove directory outside of ABSPATH: {$dir_realpath}", 'core' );
 			return false;
@@ -2042,21 +2041,16 @@ EOT;
 			return false;
 		}
 
-		$items = scandir( $dir );
-		if ( false === $items ) {
-			WP_CLI::debug( "Failed to scan directory: {$dir}", 'core' );
-			return false;
-		}
+		$files = new RecursiveIteratorIterator(
+			new RecursiveDirectoryIterator( $dir, RecursiveDirectoryIterator::SKIP_DOTS ),
+			RecursiveIteratorIterator::CHILD_FIRST
+		);
 
-		foreach ( $items as $item ) {
-			if ( '.' === $item || '..' === $item ) {
-				continue;
-			}
-
-			$path = $dir . DIRECTORY_SEPARATOR . $item;
-
-			// Handle symbolic links before checking if it's a directory
-			if ( is_link( $path ) ) {
+		/** @var \SplFileInfo $fileinfo */
+		foreach ( $files as $fileinfo ) {
+			// Use the symlink's own path (not realpath) to avoid following it outside ABSPATH.
+			if ( $fileinfo->isLink() ) {
+				$path = $fileinfo->getPathname();
 				if ( ! unlink( $path ) ) {
 					WP_CLI::debug( "Failed to remove symbolic link: {$path}", 'core' );
 					return false;
@@ -2064,13 +2058,19 @@ EOT;
 				continue;
 			}
 
-			if ( is_dir( $path ) ) {
-				if ( ! $this->remove_directory( $path, $abspath_realpath_trailing ) ) {
-					WP_CLI::debug( "Failed to remove subdirectory: {$path}", 'core' );
+			$path = $fileinfo->getRealPath();
+			if ( false === $path || 0 !== strpos( $path, $abspath_realpath_trailing ) ) {
+				WP_CLI::debug( "Attempted to remove path outside of ABSPATH: {$path}", 'core' );
+				return false;
+			}
+
+			if ( $fileinfo->isDir() ) {
+				if ( ! rmdir( $path ) ) {
+					WP_CLI::debug( "Failed to remove directory: {$path}", 'core' );
 					return false;
 				}
 			} elseif ( ! unlink( $path ) ) {
-				WP_CLI::debug( "Failed to remove file in directory: {$path}", 'core' );
+				WP_CLI::debug( "Failed to remove file: {$path}", 'core' );
 				return false;
 			}
 		}
