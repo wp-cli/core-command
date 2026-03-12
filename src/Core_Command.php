@@ -1956,7 +1956,6 @@ EOT;
 	private function remove_old_files_from_list( $files ) {
 		$count = 0;
 
-		// Cache ABSPATH realpath for performance
 		$abspath_realpath = realpath( ABSPATH );
 		if ( false === $abspath_realpath ) {
 			WP_CLI::debug( 'Failed to resolve ABSPATH realpath', 'core' );
@@ -1965,72 +1964,56 @@ EOT;
 		$abspath_realpath_trailing = Utils\trailingslashit( $abspath_realpath );
 
 		foreach ( $files as $file ) {
-			// wp-content should be considered user data
+			// wp-content should be considered user data.
 			if ( 0 === stripos( $file, 'wp-content' ) ) {
 				continue;
 			}
 
 			$file_path = ABSPATH . $file;
 
-			// Short-circuit early: skip expensive realpath validation if the path
-			// doesn't exist and isn't a (potentially broken) symlink.
+			// Skip entries that don't exist and aren't (broken) symlinks.
 			if ( ! file_exists( $file_path ) && ! is_link( $file_path ) ) {
 				continue;
 			}
 
-			// For symlinks, validate the symlink itself is within ABSPATH (not where it points)
-			// For other files, validate the real path is within ABSPATH
+			// Symlinks: validate and remove without following the link.
 			if ( is_link( $file_path ) ) {
-				// Normalize the path to handle any .. sequences
 				$normalized_path = realpath( dirname( $file_path ) );
-				if ( false === $normalized_path ) {
-					WP_CLI::debug( "Skipping symbolic link with invalid parent directory: {$file}", 'core' );
-					continue;
-				}
-				// Ensure the normalized parent directory is within ABSPATH
-				if ( 0 !== strpos( Utils\trailingslashit( $normalized_path ), $abspath_realpath_trailing ) && rtrim( $abspath_realpath_trailing, '/' ) !== $normalized_path ) {
+				if ( false === $normalized_path
+					|| ( 0 !== strpos( Utils\trailingslashit( $normalized_path ), $abspath_realpath_trailing )
+						&& rtrim( $abspath_realpath_trailing, '/' ) !== $normalized_path )
+				) {
 					WP_CLI::debug( "Skipping symbolic link outside of ABSPATH: {$file}", 'core' );
 					continue;
 				}
-			} else {
-				// Validate the path is within ABSPATH
-				$file_realpath = realpath( $file_path );
-				if ( false === $file_realpath ) {
-					// Skip files with invalid paths
-					WP_CLI::debug( "Skipping file with invalid path: {$file}", 'core' );
-					continue;
-				}
-
-				if ( 0 !== strpos( $file_realpath, $abspath_realpath_trailing ) ) {
-					WP_CLI::debug( "Skipping file outside of ABSPATH: {$file}", 'core' );
-					continue;
-				}
-			}
-
-			// Handle both files and directories
-			if ( file_exists( $file_path ) ) {
-				if ( is_link( $file_path ) ) {
-					// Remove symbolic link without following it
-					if ( unlink( $file_path ) ) {
-						WP_CLI::log( "Symbolic link removed: {$file}" );
-						++$count;
-					} else {
-						WP_CLI::debug( "Failed to remove symbolic link: {$file}", 'core' );
-					}
-				} elseif ( is_dir( $file_path ) ) {
-					// Remove directory recursively
-					if ( $this->remove_directory( $file_path, $abspath_realpath_trailing ) ) {
-						WP_CLI::log( "Directory removed: {$file}" );
-						++$count;
-					} else {
-						WP_CLI::debug( "Failed to remove directory: {$file}", 'core' );
-					}
-				} elseif ( unlink( $file_path ) ) {
-					WP_CLI::log( "File removed: {$file}" );
+				if ( unlink( $file_path ) ) {
+					WP_CLI::log( "Symbolic link removed: {$file}" );
 					++$count;
 				} else {
-					WP_CLI::debug( "Failed to remove file: {$file}", 'core' );
+					WP_CLI::debug( "Failed to remove symbolic link: {$file}", 'core' );
 				}
+				continue;
+			}
+
+			// Regular files/directories: validate real path is within ABSPATH.
+			$file_realpath = realpath( $file_path );
+			if ( false === $file_realpath || 0 !== strpos( $file_realpath, $abspath_realpath_trailing ) ) {
+				WP_CLI::debug( "Skipping file outside of ABSPATH: {$file}", 'core' );
+				continue;
+			}
+
+			if ( is_dir( $file_path ) ) {
+				if ( $this->remove_directory( $file_path, $abspath_realpath_trailing ) ) {
+					WP_CLI::log( "Directory removed: {$file}" );
+					++$count;
+				} else {
+					WP_CLI::debug( "Failed to remove directory: {$file}", 'core' );
+				}
+			} elseif ( unlink( $file_path ) ) {
+				WP_CLI::log( "File removed: {$file}" );
+				++$count;
+			} else {
+				WP_CLI::debug( "Failed to remove file: {$file}", 'core' );
 			}
 		}
 
