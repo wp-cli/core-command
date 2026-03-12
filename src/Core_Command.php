@@ -1972,6 +1972,12 @@ EOT;
 
 			$file_path = ABSPATH . $file;
 
+			// Short-circuit early: skip expensive realpath validation if the path
+			// doesn't exist and isn't a (potentially broken) symlink.
+			if ( ! file_exists( $file_path ) && ! is_link( $file_path ) ) {
+				continue;
+			}
+
 			// For symlinks, validate the symlink itself is within ABSPATH (not where it points)
 			// For other files, validate the real path is within ABSPATH
 			if ( is_link( $file_path ) ) {
