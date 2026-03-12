@@ -1975,8 +1975,7 @@ EOT;
 			if ( is_link( $file_path ) ) {
 				$normalized_path = realpath( dirname( $file_path ) );
 				if ( false === $normalized_path
-					|| ( 0 !== strpos( Utils\trailingslashit( $normalized_path ), $abspath_realpath_trailing )
-						&& rtrim( $abspath_realpath_trailing, '/' ) !== $normalized_path )
+					|| 0 !== strpos( Utils\trailingslashit( $normalized_path ), $abspath_realpath_trailing )
 				) {
 					WP_CLI::debug( "Skipping symbolic link outside of ABSPATH: {$file}", 'core' );
 					continue;
@@ -1992,7 +1991,7 @@ EOT;
 
 			// Regular files/directories: validate real path is within ABSPATH.
 			$file_realpath = realpath( $file_path );
-			if ( false === $file_realpath || 0 !== strpos( $file_realpath, $abspath_realpath_trailing ) ) {
+			if ( false === $file_realpath || 0 !== strpos( Utils\trailingslashit( $file_realpath ), $abspath_realpath_trailing ) ) {
 				WP_CLI::debug( "Skipping file outside of ABSPATH: {$file}", 'core' );
 				continue;
 			}
@@ -2028,7 +2027,7 @@ EOT;
 			WP_CLI::debug( "Failed to resolve realpath for directory: {$dir}", 'core' );
 			return false;
 		}
-		if ( 0 !== strpos( $dir_realpath, $abspath_realpath_trailing ) ) {
+		if ( 0 !== strpos( Utils\trailingslashit( $dir_realpath ), $abspath_realpath_trailing ) ) {
 			WP_CLI::debug( "Attempted to remove directory outside of ABSPATH: {$dir_realpath}", 'core' );
 			return false;
 		}
