@@ -963,34 +963,13 @@ EOT;
 	public function version( $args = [], $assoc_args = [] ) {
 		$use_actual_db_version = Utils\get_flag_value( $assoc_args, 'actual' );
 
-		// If --actual flag is used, delegate to a command that runs after WP load
+		// If --actual flag is used, load WordPress to query the database
 		if ( $use_actual_db_version ) {
 			if ( ! Utils\get_flag_value( $assoc_args, 'extra' ) ) {
 				WP_CLI::error( 'The --actual flag can only be used with --extra.' );
 			}
 
-			// Build the command to run after WP load
-			$cmd_args = [];
-			foreach ( $assoc_args as $key => $value ) {
-				if ( 'actual' !== $key ) {
-					if ( true === $value ) {
-						$cmd_args[] = '--' . $key;
-					} elseif ( is_string( $value ) ) {
-						// Escape the value to prevent command injection
-						$cmd_args[] = '--' . $key . '=' . escapeshellarg( $value );
-					}
-				}
-			}
-			$cmd = 'core version-db-actual ' . implode( ' ', $cmd_args );
-
-			WP_CLI::runcommand(
-				$cmd,
-				[
-					'launch'     => true,
-					'exit_error' => true,
-				]
-			);
-			return;
+			WP_CLI::get_runner()->load_wordpress();
 		}
 
 		$details = self::get_wp_details();
@@ -1000,45 +979,22 @@ EOT;
 			return;
 		}
 
-		echo Utils\mustache_render(
-			self::get_template_path( 'versions.mustache' ),
-			[
-				'wp-version'    => $details['wp_version'],
-				'db-version'    => $details['wp_db_version'],
-				'local-package' => empty( $details['wp_local_package'] )
-					? 'en_US'
-					: $details['wp_local_package'],
-				'mce-version'   => self::format_tinymce_version( $details['tinymce_version'] ),
-			]
-		);
-	}
-
-	/**
-	 * Helper command to display actual database version (runs after WP load).
-	 *
-	 * This is an internal command called by 'core version --actual'.
-	 *
-	 * @subcommand version-db-actual
-	 * @when after_wp_load
-	 *
-	 * @param string[] $args Positional arguments. Unused.
-	 * @param array{extra?: bool} $assoc_args Associative arguments passed through from version command.
-	 */
-	public function version_db_actual( $args = [], $assoc_args = [] ) {
-		$details = self::get_wp_details();
-
-		// Get the actual database version from the options table
-		/**
-		 * @var string $actual_db_version
-		 */
-		$actual_db_version = get_option( 'db_version' );
-		$actual_db_version = (int) $actual_db_version;
+		// Determine which database version to show
+		$db_version = $details['wp_db_version'];
+		if ( $use_actual_db_version ) {
+			// Get the actual database version from the options table
+			/**
+			 * @var string $actual_db_version
+			 */
+			$actual_db_version = get_option( 'db_version' );
+			$db_version        = (int) $actual_db_version;
+		}
 
 		echo Utils\mustache_render(
 			self::get_template_path( 'versions.mustache' ),
 			[
 				'wp-version'    => $details['wp_version'],
-				'db-version'    => $actual_db_version,
+				'db-version'    => $db_version,
 				'local-package' => empty( $details['wp_local_package'] )
 					? 'en_US'
 					: $details['wp_local_package'],
