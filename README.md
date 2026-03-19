@@ -419,7 +419,7 @@ update isn't actually running.
     Downloading update from https://downloads.wordpress.org/release/wordpress-4.5.2-no-content.zip...
     Unpacking the update...
     Cleaning up files...
-    No files found that need cleaning up
+    No old files were removed.
     Success: WordPress updated successfully.
 
     # Update WordPress using zip file.
@@ -433,7 +433,9 @@ update isn't actually running.
     Updating to version 3.1 (en_US)...
     Downloading update from https://wordpress.org/wordpress-3.1.zip...
     Unpacking the update...
-    Warning: Checksums not available for WordPress 3.1/en_US. Please cleanup files manually.
+    Cleaning up files...
+    No old files were removed.
+    Warning: Could not retrieve WordPress core checksums; skipping checksum-based cleanup. Files listed in $_old_files were still cleaned up.
     Success: WordPress updated successfully.
 
 
@@ -522,6 +524,10 @@ Once you’ve done a bit of searching and discovered there isn’t an open or fi
 Want to contribute a new feature? Please first [open a new issue](https://github.com/wp-cli/core-command/issues/new) to discuss whether the feature is a good fit for the project.
 
 Once you've decided to commit the time to seeing your pull request through, [please follow our guidelines for creating a pull request](https://make.wordpress.org/cli/handbook/pull-requests/) to make sure it's a pleasant experience. See "[Setting up](https://make.wordpress.org/cli/handbook/pull-requests/#setting-up)" for details specific to working on this package locally.
+
+### License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
 ## Support
 

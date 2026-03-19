@@ -474,6 +474,12 @@ class Core_Command extends WP_CLI_Command {
 	 * @param array{url: string, title: string, admin_user: string, admin_password?: string, admin_email: string, locale?: string, 'skip-email'?: bool} $assoc_args Associative arguments.
 	 */
 	public function install( $args, $assoc_args ) {
+		// Fix $_SERVER variables early to prevent incorrect URL detection.
+		// See set_server_url_vars() for details.
+		if ( isset( $assoc_args['url'] ) ) {
+			$this->set_server_url_vars( $assoc_args['url'] );
+		}
+
 		if ( $this->do_install( $assoc_args ) ) {
 			WP_CLI::success( 'WordPress installed successfully.' );
 		} else {
@@ -606,6 +612,12 @@ class Core_Command extends WP_CLI_Command {
 	 * @param array{url?: string, base: string, subdomains?: bool, title: string, admin_user: string, admin_password?: string, admin_email: string, 'skip-email'?: bool, 'skip-config'?: bool} $assoc_args Associative arguments.
 	 */
 	public function multisite_install( $args, $assoc_args ) {
+		// Fix $_SERVER variables early to prevent incorrect URL detection.
+		// See set_server_url_vars() for details.
+		if ( isset( $assoc_args['url'] ) ) {
+			$this->set_server_url_vars( $assoc_args['url'] );
+		}
+
 		if ( $this->do_install( $assoc_args ) ) {
 			WP_CLI::log( 'Created single site database tables.' );
 		} else {
@@ -664,6 +676,38 @@ class Core_Command extends WP_CLI_Command {
 		return array_merge( $defaults, $assoc_args );
 	}
 
+	/**
+	 * Fix $_SERVER variables to prevent incorrect URL detection during installation.
+	 *
+	 * When WP-CLI is executed from the root of the filesystem (e.g., /wp), PHP_SELF
+	 * and SCRIPT_NAME contain the WP-CLI executable path rather than the WordPress
+	 * installation path. This causes WordPress's wp_guess_url() to construct incorrect
+	 * URLs. This method overrides these variables based on the provided URL to ensure
+	 * correct home/siteurl values during installation.
+	 *
+	 * @param string $url The URL to use for setting server variables.
+	 */
+	private function set_server_url_vars( $url ) {
+		$url_parts = Utils\parse_url( $url );
+		$path      = isset( $url_parts['path'] ) ? $url_parts['path'] : '/';
+
+		// Ensure path represents a PHP script for proper WordPress URL detection.
+		$path = rtrim( $path, '/' );
+		if ( empty( $path ) ) {
+			$path = '/index.php';
+		} elseif ( '' === pathinfo( $path, PATHINFO_EXTENSION ) ) {
+			$path .= '/index.php';
+		}
+
+		$_SERVER['PHP_SELF']    = $path;
+		$_SERVER['SCRIPT_NAME'] = $path;
+
+		// Set SCRIPT_FILENAME to the actual WordPress index.php if available.
+		if ( file_exists( Utils\trailingslashit( ABSPATH ) . 'index.php' ) ) {
+			$_SERVER['SCRIPT_FILENAME'] = Utils\trailingslashit( ABSPATH ) . 'index.php';
+		}
+	}
+
 	private function do_install( $assoc_args ) {
 		/**
 		 * @var \wpdb $wpdb
@@ -671,6 +715,13 @@ class Core_Command extends WP_CLI_Command {
 		global $wpdb;
 		if ( is_blog_installed() ) {
 			return false;
+		}
+
+		// Fix $_SERVER variables early to prevent incorrect URL detection.
+		// This must be done before loading any WordPress files. See set_server_url_vars().
+		if ( isset( $assoc_args['url'] ) ) {
+			WP_CLI::set_url( $assoc_args['url'] );
+			$this->set_server_url_vars( $assoc_args['url'] );
 		}
 
 		if ( true === Utils\get_flag_value( $assoc_args, 'skip-email' ) ) {
@@ -696,12 +747,6 @@ class Core_Command extends WP_CLI_Command {
 		$defaults['locale'] = '';
 
 		$args = wp_parse_args( $assoc_args, $defaults );
-
-		// Support prompting for the `--url=<url>`,
-		// which is normally a runtime argument
-		if ( isset( $assoc_args['url'] ) ) {
-			WP_CLI::set_url( $assoc_args['url'] );
-		}
 
 		$public   = true;
 		$password = wp_slash( $args['admin_password'] );
@@ -1123,7 +1168,7 @@ EOT;
 	 *     Downloading update from https://downloads.wordpress.org/release/wordpress-4.5.2-no-content.zip...
 	 *     Unpacking the update...
 	 *     Cleaning up files...
-	 *     No files found that need cleaning up
+	 *     No old files were removed.
 	 *     Success: WordPress updated successfully.
 	 *
 	 *     # Update WordPress using zip file.
@@ -1137,7 +1182,9 @@ EOT;
 	 *     Updating to version 3.1 (en_US)...
 	 *     Downloading update from https://wordpress.org/wordpress-3.1.zip...
 	 *     Unpacking the update...
-	 *     Warning: Checksums not available for WordPress 3.1/en_US. Please cleanup files manually.
+	 *     Cleaning up files...
+	 *     No old files were removed.
+	 *     Warning: Could not retrieve WordPress core checksums; skipping checksum-based cleanup. Files listed in $_old_files were still cleaned up.
 	 *     Success: WordPress updated successfully.
 	 *
 	 * @alias upgrade
@@ -1808,16 +1855,16 @@ EOT;
 			return;
 		}
 
+		// Always clean up files from WordPress core's $_old_files list first
+		$this->cleanup_old_files();
+
 		$old_checksums = self::get_core_checksums( $version_from, $locale ?: 'en_US', $insecure );
-		if ( ! is_array( $old_checksums ) ) {
-			WP_CLI::warning( "{$old_checksums} Please cleanup files manually." );
-			return;
-		}
-
 		$new_checksums = self::get_core_checksums( $version_to, $locale ?: 'en_US', $insecure );
-		if ( ! is_array( $new_checksums ) ) {
-			WP_CLI::warning( "{$new_checksums} Please cleanup files manually." );
 
+		$has_checksums = is_array( $old_checksums ) && is_array( $new_checksums );
+
+		if ( ! $has_checksums ) {
+			WP_CLI::warning( 'Could not retrieve WordPress core checksums; skipping checksum-based cleanup. Files listed in $_old_files were still cleaned up.' );
 			return;
 		}
 
@@ -1911,6 +1958,184 @@ EOT;
 				WP_CLI::log( 'No files found that need cleaning up.' );
 			}
 		}
+	}
+
+	/**
+	 * Clean up old files using WordPress core's $_old_files list.
+	 *
+	 * It unconditionally deletes files from the $_old_files global array maintained by WordPress core.
+	 */
+	private function cleanup_old_files() {
+		$old_files = $this->get_old_files_list();
+		if ( empty( $old_files ) ) {
+			WP_CLI::log( 'No files found that need cleaning up.' );
+			return;
+		}
+
+		WP_CLI::log( 'Cleaning up files...' );
+
+		$count = $this->remove_old_files_from_list( $old_files );
+
+		if ( $count ) {
+			WP_CLI::log( number_format( $count ) . ' files cleaned up.' );
+		} else {
+			WP_CLI::log( 'No old files were removed.' );
+		}
+	}
+
+	/**
+	 * Get the list of old files from WordPress core.
+	 *
+	 * @return array Array of old file paths, or empty array if not available.
+	 */
+	private function get_old_files_list() {
+		// Include WordPress core's update file to access the $_old_files list
+		if ( ! file_exists( ABSPATH . 'wp-admin/includes/update-core.php' ) ) {
+			WP_CLI::warning( 'Could not find update-core.php. Please cleanup files manually.' );
+			return array();
+		}
+
+		require_once ABSPATH . 'wp-admin/includes/update-core.php';
+
+		global $_old_files;
+
+		if ( empty( $_old_files ) || ! is_array( $_old_files ) ) {
+			return array();
+		}
+
+		return $_old_files;
+	}
+
+	/**
+	 * Remove old files from a list.
+	 *
+	 * This is a shared helper method that handles the actual removal of files and directories.
+	 *
+	 * @param array $files Array of file paths to remove.
+	 * @return int Number of files/directories successfully removed.
+	 */
+	private function remove_old_files_from_list( $files ) {
+		$count = 0;
+
+		$abspath_realpath = realpath( ABSPATH );
+		if ( false === $abspath_realpath ) {
+			WP_CLI::debug( 'Failed to resolve ABSPATH realpath', 'core' );
+			return $count;
+		}
+		$abspath_realpath_trailing = Utils\trailingslashit( $abspath_realpath );
+
+		foreach ( $files as $file ) {
+			$file_path = ABSPATH . $file;
+
+			// Skip entries that don't exist and aren't (broken) symlinks.
+			if ( ! file_exists( $file_path ) && ! is_link( $file_path ) ) {
+				continue;
+			}
+
+			// Symlinks: validate and remove without following the link.
+			if ( is_link( $file_path ) ) {
+				$normalized_path = realpath( dirname( $file_path ) );
+				if ( false === $normalized_path
+					|| 0 !== strpos( Utils\trailingslashit( $normalized_path ), $abspath_realpath_trailing )
+				) {
+					WP_CLI::debug( "Skipping symbolic link outside of ABSPATH: {$file}", 'core' );
+					continue;
+				}
+				if ( unlink( $file_path ) ) {
+					WP_CLI::log( "Symbolic link removed: {$file}" );
+					++$count;
+				} else {
+					WP_CLI::debug( "Failed to remove symbolic link: {$file}", 'core' );
+				}
+				continue;
+			}
+
+			// Regular files/directories: validate real path is within ABSPATH.
+			$file_realpath = realpath( $file_path );
+			if ( false === $file_realpath || 0 !== strpos( Utils\trailingslashit( $file_realpath ), $abspath_realpath_trailing ) ) {
+				WP_CLI::debug( "Skipping file outside of ABSPATH: {$file}", 'core' );
+				continue;
+			}
+
+			if ( is_dir( $file_path ) ) {
+				if ( $this->remove_directory( $file_path, $abspath_realpath_trailing ) ) {
+					WP_CLI::log( "Directory removed: {$file}" );
+					++$count;
+				} else {
+					WP_CLI::debug( "Failed to remove directory: {$file}", 'core' );
+				}
+			} elseif ( unlink( $file_path ) ) {
+				WP_CLI::log( "File removed: {$file}" );
+				++$count;
+			} else {
+				WP_CLI::debug( "Failed to remove file: {$file}", 'core' );
+			}
+		}
+
+		return $count;
+	}
+
+	/**
+	 * Recursively remove a directory and its contents.
+	 *
+	 * @param string $dir Directory path to remove.
+	 * @param string $abspath_realpath_trailing Cached ABSPATH realpath with trailing slash for performance.
+	 * @return bool True on success, false on failure.
+	 */
+	private function remove_directory( $dir, $abspath_realpath_trailing ) {
+		$dir_realpath = realpath( $dir );
+		if ( false === $dir_realpath ) {
+			WP_CLI::debug( "Failed to resolve realpath for directory: {$dir}", 'core' );
+			return false;
+		}
+		if ( 0 !== strpos( Utils\trailingslashit( $dir_realpath ), $abspath_realpath_trailing ) ) {
+			WP_CLI::debug( "Attempted to remove directory outside of ABSPATH: {$dir_realpath}", 'core' );
+			return false;
+		}
+		if ( ! is_dir( $dir ) ) {
+			return false;
+		}
+
+		$files = new RecursiveIteratorIterator(
+			new RecursiveDirectoryIterator( $dir, RecursiveDirectoryIterator::SKIP_DOTS ),
+			RecursiveIteratorIterator::CHILD_FIRST
+		);
+
+		/** @var \SplFileInfo $fileinfo */
+		foreach ( $files as $fileinfo ) {
+			// Use the symlink's own path (not realpath) to avoid following it outside ABSPATH.
+			if ( $fileinfo->isLink() ) {
+				$path = $fileinfo->getPathname();
+				if ( ! unlink( $path ) ) {
+					WP_CLI::debug( "Failed to remove symbolic link: {$path}", 'core' );
+					return false;
+				}
+				continue;
+			}
+
+			$path = $fileinfo->getRealPath();
+			if ( false === $path || 0 !== strpos( $path, $abspath_realpath_trailing ) ) {
+				WP_CLI::debug( "Attempted to remove path outside of ABSPATH: {$path}", 'core' );
+				return false;
+			}
+
+			if ( $fileinfo->isDir() ) {
+				if ( ! rmdir( $path ) ) {
+					WP_CLI::debug( "Failed to remove directory: {$path}", 'core' );
+					return false;
+				}
+			} elseif ( ! unlink( $path ) ) {
+				WP_CLI::debug( "Failed to remove file: {$path}", 'core' );
+				return false;
+			}
+		}
+
+		if ( ! rmdir( $dir ) ) {
+			WP_CLI::debug( "Failed to remove directory: {$dir}", 'core' );
+			return false;
+		}
+
+		return true;
 	}
 
 	private static function strip_content_dir( $zip_file ) {
