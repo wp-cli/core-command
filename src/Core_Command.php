@@ -474,6 +474,12 @@ class Core_Command extends WP_CLI_Command {
 	 * @param array{url: string, title: string, admin_user: string, admin_password?: string, admin_email: string, locale?: string, 'skip-email'?: bool} $assoc_args Associative arguments.
 	 */
 	public function install( $args, $assoc_args ) {
+		// Fix $_SERVER variables early to prevent incorrect URL detection.
+		// See set_server_url_vars() for details.
+		if ( isset( $assoc_args['url'] ) ) {
+			$this->set_server_url_vars( $assoc_args['url'] );
+		}
+
 		if ( $this->do_install( $assoc_args ) ) {
 			WP_CLI::success( 'WordPress installed successfully.' );
 		} else {
@@ -606,6 +612,12 @@ class Core_Command extends WP_CLI_Command {
 	 * @param array{url?: string, base: string, subdomains?: bool, title: string, admin_user: string, admin_password?: string, admin_email: string, 'skip-email'?: bool, 'skip-config'?: bool} $assoc_args Associative arguments.
 	 */
 	public function multisite_install( $args, $assoc_args ) {
+		// Fix $_SERVER variables early to prevent incorrect URL detection.
+		// See set_server_url_vars() for details.
+		if ( isset( $assoc_args['url'] ) ) {
+			$this->set_server_url_vars( $assoc_args['url'] );
+		}
+
 		if ( $this->do_install( $assoc_args ) ) {
 			WP_CLI::log( 'Created single site database tables.' );
 		} else {
@@ -664,6 +676,38 @@ class Core_Command extends WP_CLI_Command {
 		return array_merge( $defaults, $assoc_args );
 	}
 
+	/**
+	 * Fix $_SERVER variables to prevent incorrect URL detection during installation.
+	 *
+	 * When WP-CLI is executed from the root of the filesystem (e.g., /wp), PHP_SELF
+	 * and SCRIPT_NAME contain the WP-CLI executable path rather than the WordPress
+	 * installation path. This causes WordPress's wp_guess_url() to construct incorrect
+	 * URLs. This method overrides these variables based on the provided URL to ensure
+	 * correct home/siteurl values during installation.
+	 *
+	 * @param string $url The URL to use for setting server variables.
+	 */
+	private function set_server_url_vars( $url ) {
+		$url_parts = Utils\parse_url( $url );
+		$path      = isset( $url_parts['path'] ) ? $url_parts['path'] : '/';
+
+		// Ensure path represents a PHP script for proper WordPress URL detection.
+		$path = rtrim( $path, '/' );
+		if ( empty( $path ) ) {
+			$path = '/index.php';
+		} elseif ( '' === pathinfo( $path, PATHINFO_EXTENSION ) ) {
+			$path .= '/index.php';
+		}
+
+		$_SERVER['PHP_SELF']    = $path;
+		$_SERVER['SCRIPT_NAME'] = $path;
+
+		// Set SCRIPT_FILENAME to the actual WordPress index.php if available.
+		if ( file_exists( Utils\trailingslashit( ABSPATH ) . 'index.php' ) ) {
+			$_SERVER['SCRIPT_FILENAME'] = Utils\trailingslashit( ABSPATH ) . 'index.php';
+		}
+	}
+
 	private function do_install( $assoc_args ) {
 		/**
 		 * @var \wpdb $wpdb
@@ -671,6 +715,13 @@ class Core_Command extends WP_CLI_Command {
 		global $wpdb;
 		if ( is_blog_installed() ) {
 			return false;
+		}
+
+		// Fix $_SERVER variables early to prevent incorrect URL detection.
+		// This must be done before loading any WordPress files. See set_server_url_vars().
+		if ( isset( $assoc_args['url'] ) ) {
+			WP_CLI::set_url( $assoc_args['url'] );
+			$this->set_server_url_vars( $assoc_args['url'] );
 		}
 
 		if ( true === Utils\get_flag_value( $assoc_args, 'skip-email' ) ) {
@@ -696,12 +747,6 @@ class Core_Command extends WP_CLI_Command {
 		$defaults['locale'] = '';
 
 		$args = wp_parse_args( $assoc_args, $defaults );
-
-		// Support prompting for the `--url=<url>`,
-		// which is normally a runtime argument
-		if ( isset( $assoc_args['url'] ) ) {
-			WP_CLI::set_url( $assoc_args['url'] );
-		}
 
 		$public   = true;
 		$password = wp_slash( $args['admin_password'] );
