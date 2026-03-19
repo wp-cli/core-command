@@ -977,6 +977,9 @@ EOT;
 	 * [--extra]
 	 * : Show extended version information.
 	 *
+	 *  Note: to retrieve the database revision for an individual subsite in a Multisite installation,
+	 *  use `wp option get db_version --url=<subsite>`. See also `wp core check-update-db`.
+	 *
 	 * ## EXAMPLES
 	 *
 	 *     # Display the WordPress version
