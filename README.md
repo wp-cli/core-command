@@ -467,6 +467,11 @@ wp core update-db [--network] [--dry-run]
     WordPress database upgraded successfully from db version 35700 to 29630 on example.com/
     Success: WordPress database upgraded on 123/123 sites.
 
+    # Update databases for all sites on a specific network in a multinetwork install.
+    $ wp core update-db --network --url=network2.example.com
+    WordPress database upgraded successfully from db version 35700 to 29630 on network2.example.com/
+    Success: WordPress database upgraded on 50/50 sites.
+
 
 
 ### wp core version
