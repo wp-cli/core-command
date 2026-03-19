@@ -1522,6 +1522,11 @@ EOT;
 	 *     WordPress database upgraded successfully from db version 35700 to 29630 on example.com/
 	 *     Success: WordPress database upgraded on 123/123 sites.
 	 *
+	 *     # Update databases for all sites on a specific network in a multinetwork install.
+	 *     $ wp core update-db --network --url=network2.example.com
+	 *     WordPress database upgraded successfully from db version 35700 to 29630 on network2.example.com/
+	 *     Success: WordPress database upgraded on 50/50 sites.
+	 *
 	 * @subcommand update-db
 	 *
 	 * @param string[] $args Positional arguments. Unused.
@@ -1541,9 +1546,22 @@ EOT;
 		}
 
 		if ( $network ) {
+			// Determine the network ID to update.
+			// get_current_network_id() (available since WP 4.9) reflects the network
+			// determined from the --url context, enabling per-network updates in
+			// multinetwork setups. Fall back to SITE_ID_CURRENT_SITE for older WordPress.
+			if ( function_exists( 'get_current_network_id' ) ) {
+				$network_id = get_current_network_id();
+			} elseif ( defined( 'SITE_ID_CURRENT_SITE' ) ) {
+				$network_id = (int) SITE_ID_CURRENT_SITE;
+			} else {
+				$network_id = 1;
+			}
+
 			$iterator_args = [
 				'table' => $wpdb->blogs,
 				'where' => [
+					'site_id'  => $network_id,
 					'spam'     => 0,
 					'deleted'  => 0,
 					'archived' => 0,
@@ -1552,16 +1570,14 @@ EOT;
 			$it            = new TableIterator( $iterator_args );
 			$success       = 0;
 			$total         = 0;
-			$site_ids      = [];
 
 			/**
 			 * @var object{site_id: int, domain: string, path: string} $blog
 			 */
 			foreach ( $it as $blog ) {
 				++$total;
-				$site_ids[] = $blog->site_id;
-				$url        = $blog->domain . $blog->path;
-				$cmd        = "--url={$url} core update-db";
+				$url = $blog->domain . $blog->path;
+				$cmd = "--url={$url} core update-db";
 				if ( $dry_run ) {
 					$cmd .= ' --dry-run';
 				}
@@ -1591,9 +1607,7 @@ EOT;
 				}
 			}
 			if ( ! $dry_run && $total && $success === $total ) {
-				foreach ( array_unique( $site_ids ) as $site_id ) {
-					update_metadata( 'site', $site_id, 'wpmu_upgrade_site', $wp_db_version );
-				}
+				update_metadata( 'site', $network_id, 'wpmu_upgrade_site', $wp_db_version );
 			}
 			WP_CLI::success( "WordPress database upgraded on {$success}/{$total} sites." );
 		} else {
