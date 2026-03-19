@@ -482,6 +482,11 @@ wp core version [--extra]
 	[--extra]
 		Show extended version information.
 
+		Note: In a Multisite installation, `wp core version --extra` reports the expected database
+		revision from `wp-includes/version.php`, not the per-site `db_version` stored in each
+		subsite's options table. To retrieve a subsite's stored database revision, use
+		`wp option get db_version --url=<subsite>`. See also `wp core check-update-db`.
+
 **EXAMPLES**
 
     # Display the WordPress version
