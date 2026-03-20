@@ -87,7 +87,7 @@ Feature: Download WordPress
       {"translations":[{"language":"de_DE","version":"4.4.2","updated":"2024-01-01 00:00:00","english_name":"German","native_name":"Deutsch","package":"https://downloads.wordpress.org/translation/core/4.4.2/de_DE.zip"}]}
       """
 
-    When I run `wp core download --locale=de_DE --skip-locale-check`
+    When I try `wp core download --locale=de_DE --skip-locale-check`
     Then the wp-settings.php file should exist
     And STDERR should contain:
       """
