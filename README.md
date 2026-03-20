@@ -121,7 +121,7 @@ to determine if database updates are needed.
 Downloads core WordPress files.
 
 ~~~
-wp core download [<download-url>] [--path=<path>] [--locale=<locale>] [--version=<version>] [--skip-content] [--force] [--insecure] [--extract]
+wp core download [<download-url>] [--path=<path>] [--locale=<locale>] [--version=<version>] [--skip-content] [--force] [--insecure] [--extract] [--skip-locale-check]
 ~~~
 
 Downloads and extracts WordPress core files to the specified path. Uses
@@ -155,6 +155,9 @@ Subsequent uses of command will use the local cache if it still exists.
 
 	[--extract]
 		Whether to extract the downloaded file. Defaults to true.
+
+	[--skip-locale-check]
+		If specified, allows downloading an older version of WordPress when the requested locale is not available for the latest release.
 
 **EXAMPLES**
 
