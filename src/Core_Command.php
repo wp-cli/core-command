@@ -4,6 +4,7 @@ use Composer\Semver\Comparator;
 use WP_CLI\Extractor;
 use WP_CLI\Iterators\Table as TableIterator;
 use WP_CLI\Utils;
+use WP_CLI\Path;
 use WP_CLI\Formatter;
 use WP_CLI\Loggers;
 use WP_CLI\WpOrgApi;
@@ -149,6 +150,9 @@ class Core_Command extends WP_CLI_Command {
 	 * [--extract]
 	 * : Whether to extract the downloaded file. Defaults to true.
 	 *
+	 * [--skip-locale-check]
+	 * : If specified, allows downloading an older version of WordPress when the requested locale is not available for the latest release.
+	 *
 	 * ## EXAMPLES
 	 *
 	 *     $ wp core download --locale=nl_NL
@@ -160,7 +164,7 @@ class Core_Command extends WP_CLI_Command {
 	 * @when before_wp_load
 	 *
 	 * @param array{0?: string} $args Positional arguments.
-	 * @param array{path?: string, locale?: string, version?: string, 'skip-content'?: bool, force?: bool, insecure?: bool, extract?: bool} $assoc_args Associative arguments.
+	 * @param array{path?: string, locale?: string, version?: string, 'skip-content'?: bool, force?: bool, insecure?: bool, extract?: bool, 'skip-locale-check'?: bool} $assoc_args Associative arguments.
 	 */
 	public function download( $args, $assoc_args ) {
 		/**
@@ -233,14 +237,22 @@ class Core_Command extends WP_CLI_Command {
 
 			$download_url = $this->get_download_url( $version, $locale, $extension );
 		} else {
+			$wp_org_api = new WpOrgApi( [ 'insecure' => $insecure ] );
 			try {
-				$offer = ( new WpOrgApi( [ 'insecure' => $insecure ] ) )
-					->get_core_download_offer( $locale );
+				$offer = $wp_org_api->get_core_download_offer( $locale );
 			} catch ( Exception $exception ) {
 				WP_CLI::error( $exception );
 			}
 			if ( ! $offer ) {
-				WP_CLI::error( "The requested locale ({$locale}) was not found." );
+				if ( Utils\get_flag_value( $assoc_args, 'skip-locale-check', false ) ) {
+					$offer = $this->find_latest_offer_for_locale( $locale, $insecure );
+					if ( is_array( $offer ) ) {
+						WP_CLI::warning( "The latest WordPress version is not yet available in the {$locale} locale. Downloading version {$offer['current']} instead." );
+					}
+				}
+				if ( ! $offer ) {
+					WP_CLI::error( "The requested locale ({$locale}) was not found." );
+				}
 			}
 			$version      = $offer['current'];
 			$download_url = $offer['download'];
@@ -703,8 +715,8 @@ class Core_Command extends WP_CLI_Command {
 		$_SERVER['SCRIPT_NAME'] = $path;
 
 		// Set SCRIPT_FILENAME to the actual WordPress index.php if available.
-		if ( file_exists( Utils\trailingslashit( ABSPATH ) . 'index.php' ) ) {
-			$_SERVER['SCRIPT_FILENAME'] = Utils\trailingslashit( ABSPATH ) . 'index.php';
+		if ( file_exists( Path::trailingslashit( ABSPATH ) . 'index.php' ) ) {
+			$_SERVER['SCRIPT_FILENAME'] = Path::trailingslashit( ABSPATH ) . 'index.php';
 		}
 	}
 
@@ -1063,7 +1075,7 @@ EOT;
 	 * Gets the template path based on installation type.
 	 */
 	private static function get_template_path( $template ) {
-		$command_root  = Utils\phar_safe_path( dirname( __DIR__ ) );
+		$command_root  = Path::phar_safe( dirname( __DIR__ ) );
 		$template_path = "{$command_root}/templates/{$template}";
 
 		if ( ! file_exists( $template_path ) ) {
@@ -1672,6 +1684,57 @@ EOT;
 	}
 
 	/**
+	 * Finds the latest available WordPress download offer for a given locale by consulting
+	 * the WordPress.org translations API.
+	 *
+	 * Used as a fallback when the primary version-check API does not return an offer for
+	 * the requested locale (e.g., when a new WordPress release hasn't been translated yet).
+	 *
+	 * @param string $locale   Locale to find an offer for.
+	 * @param bool   $insecure Whether to disable SSL verification.
+	 * @return array{current: string, download: string}|false Offer array on success, false on failure.
+	 */
+	private function find_latest_offer_for_locale( $locale, $insecure ) {
+		$headers = [ 'Accept' => 'application/json' ];
+		$options = [
+			'timeout'  => 30,
+			'insecure' => $insecure,
+		];
+
+		try {
+			/** @var \WpOrg\Requests\Response $response */
+			$response = Utils\http_request( 'GET', 'https://api.wordpress.org/translations/core/1.0/', null, $headers, $options );
+		} catch ( Exception $exception ) {
+			return false;
+		}
+
+		if ( $response->status_code < 200 || $response->status_code >= 300 ) {
+			return false;
+		}
+
+		/** @var array{translations: array<int, array{language: string, version: string}>}|null $body */
+		$body = json_decode( $response->body, true );
+
+		if ( ! is_array( $body ) || empty( $body['translations'] ) ) {
+			return false;
+		}
+
+		foreach ( $body['translations'] as $translation ) {
+			if (
+				isset( $translation['language'], $translation['version'] )
+				&& $locale === $translation['language']
+			) {
+				return [
+					'current'  => $translation['version'],
+					'download' => $this->get_download_url( $translation['version'], $locale, 'zip' ),
+				];
+			}
+		}
+
+		return false;
+	}
+
+	/**
 	 * Returns update information.
 	 *
 	 * @param array $assoc_args Associative array of arguments.
@@ -2027,7 +2090,7 @@ EOT;
 			WP_CLI::debug( 'Failed to resolve ABSPATH realpath', 'core' );
 			return $count;
 		}
-		$abspath_realpath_trailing = Utils\trailingslashit( $abspath_realpath );
+		$abspath_realpath_trailing = Path::trailingslashit( $abspath_realpath );
 
 		foreach ( $files as $file ) {
 			$file_path = ABSPATH . $file;
@@ -2041,7 +2104,7 @@ EOT;
 			if ( is_link( $file_path ) ) {
 				$normalized_path = realpath( dirname( $file_path ) );
 				if ( false === $normalized_path
-					|| 0 !== strpos( Utils\trailingslashit( $normalized_path ), $abspath_realpath_trailing )
+					|| 0 !== strpos( Path::trailingslashit( $normalized_path ), $abspath_realpath_trailing )
 				) {
 					WP_CLI::debug( "Skipping symbolic link outside of ABSPATH: {$file}", 'core' );
 					continue;
@@ -2057,7 +2120,7 @@ EOT;
 
 			// Regular files/directories: validate real path is within ABSPATH.
 			$file_realpath = realpath( $file_path );
-			if ( false === $file_realpath || 0 !== strpos( Utils\trailingslashit( $file_realpath ), $abspath_realpath_trailing ) ) {
+			if ( false === $file_realpath || 0 !== strpos( Path::trailingslashit( $file_realpath ), $abspath_realpath_trailing ) ) {
 				WP_CLI::debug( "Skipping file outside of ABSPATH: {$file}", 'core' );
 				continue;
 			}
@@ -2093,7 +2156,7 @@ EOT;
 			WP_CLI::debug( "Failed to resolve realpath for directory: {$dir}", 'core' );
 			return false;
 		}
-		if ( 0 !== strpos( Utils\trailingslashit( $dir_realpath ), $abspath_realpath_trailing ) ) {
+		if ( 0 !== strpos( Path::trailingslashit( $dir_realpath ), $abspath_realpath_trailing ) ) {
 			WP_CLI::debug( "Attempted to remove directory outside of ABSPATH: {$dir_realpath}", 'core' );
 			return false;
 		}

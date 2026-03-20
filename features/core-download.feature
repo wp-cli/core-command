@@ -51,6 +51,74 @@ Feature: Download WordPress
     Then the wp-settings.php file should exist
     And the {SUITE_CACHE_DIR}/core/wordpress-{VERSION}-de_DE.tar.gz file should exist
 
+  Scenario: Error when requested locale is not available for the latest version
+    Given an empty directory
+    And an empty cache
+    And that HTTP requests to https://api.wordpress.org/core/version-check/1.7/ will respond with:
+      """
+      HTTP/1.1 200 OK
+      Content-Type: application/json
+
+      {"offers":[{"response":"upgrade","download":"https://downloads.wordpress.org/release/wordpress-6.9.4.zip","locale":"en_US","packages":{"full":"https://downloads.wordpress.org/release/wordpress-6.9.4.zip","no_content":"https://downloads.wordpress.org/release/wordpress-6.9.4-no-content.zip","new_bundled":"https://downloads.wordpress.org/release/wordpress-6.9.4-new-bundled.zip","partial":false,"rollback":false},"current":"6.9.4","version":"6.9.4","php_version":"7.2.24","mysql_version":"5.5.5","new_bundled":"6.7","partial_version":false}]}
+      """
+
+    When I try `wp core download --locale=de_DE`
+    Then the return code should be 1
+    And STDERR should contain:
+      """
+      Error: The requested locale (de_DE) was not found.
+      """
+
+  Scenario: Download older locale version when latest is not yet available using --skip-locale-check
+    Given an empty directory
+    And an empty cache
+    And that HTTP requests to https://api.wordpress.org/core/version-check/1.7/ will respond with:
+      """
+      HTTP/1.1 200 OK
+      Content-Type: application/json
+
+      {"offers":[{"response":"upgrade","download":"https://downloads.wordpress.org/release/wordpress-6.9.4.zip","locale":"en_US","packages":{"full":"https://downloads.wordpress.org/release/wordpress-6.9.4.zip","no_content":"https://downloads.wordpress.org/release/wordpress-6.9.4-no-content.zip","new_bundled":"https://downloads.wordpress.org/release/wordpress-6.9.4-new-bundled.zip","partial":false,"rollback":false},"current":"6.9.4","version":"6.9.4","php_version":"7.2.24","mysql_version":"5.5.5","new_bundled":"6.7","partial_version":false}]}
+      """
+    And that HTTP requests to https://api.wordpress.org/translations/core/1.0/ will respond with:
+      """
+      HTTP/1.1 200 OK
+      Content-Type: application/json
+
+      {"translations":[{"language":"de_DE","version":"4.4.2","updated":"2024-01-01 00:00:00","english_name":"German","native_name":"Deutsch","package":"https://downloads.wordpress.org/translation/core/4.4.2/de_DE.zip"}]}
+      """
+
+    When I try `wp core download --locale=de_DE --skip-locale-check`
+    Then the wp-settings.php file should exist
+    And STDERR should contain:
+      """
+      Warning: The latest WordPress version is not yet available in the de_DE locale. Downloading version 4.4.2 instead.
+      """
+
+  Scenario: Error when --skip-locale-check is set but no translation exists for locale
+    Given an empty directory
+    And an empty cache
+    And that HTTP requests to https://api.wordpress.org/core/version-check/1.7/ will respond with:
+      """
+      HTTP/1.1 200 OK
+      Content-Type: application/json
+
+      {"offers":[{"response":"upgrade","download":"https://downloads.wordpress.org/release/wordpress-6.9.4.zip","locale":"en_US","packages":{"full":"https://downloads.wordpress.org/release/wordpress-6.9.4.zip","no_content":"https://downloads.wordpress.org/release/wordpress-6.9.4-no-content.zip","new_bundled":"https://downloads.wordpress.org/release/wordpress-6.9.4-new-bundled.zip","partial":false,"rollback":false},"current":"6.9.4","version":"6.9.4","php_version":"7.2.24","mysql_version":"5.5.5","new_bundled":"6.7","partial_version":false}]}
+      """
+    And that HTTP requests to https://api.wordpress.org/translations/core/1.0/ will respond with:
+      """
+      HTTP/1.1 200 OK
+      Content-Type: application/json
+
+      {"translations":[]}
+      """
+
+    When I try `wp core download --locale=de_DE --skip-locale-check`
+    Then the return code should be 1
+    And STDERR should contain:
+      """
+      Error: The requested locale (de_DE) was not found.
+      """
+
   Scenario: Catch download of non-existent WP version
     Given an empty directory
 
