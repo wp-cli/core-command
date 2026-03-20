@@ -4,6 +4,7 @@ use Composer\Semver\Comparator;
 use WP_CLI\Extractor;
 use WP_CLI\Iterators\Table as TableIterator;
 use WP_CLI\Utils;
+use WP_CLI\Path;
 use WP_CLI\Formatter;
 use WP_CLI\Loggers;
 use WP_CLI\WpOrgApi;
@@ -714,8 +715,8 @@ class Core_Command extends WP_CLI_Command {
 		$_SERVER['SCRIPT_NAME'] = $path;
 
 		// Set SCRIPT_FILENAME to the actual WordPress index.php if available.
-		if ( file_exists( Utils\trailingslashit( ABSPATH ) . 'index.php' ) ) {
-			$_SERVER['SCRIPT_FILENAME'] = Utils\trailingslashit( ABSPATH ) . 'index.php';
+		if ( file_exists( Path::trailingslashit( ABSPATH ) . 'index.php' ) ) {
+			$_SERVER['SCRIPT_FILENAME'] = Path::trailingslashit( ABSPATH ) . 'index.php';
 		}
 	}
 
@@ -1074,7 +1075,7 @@ EOT;
 	 * Gets the template path based on installation type.
 	 */
 	private static function get_template_path( $template ) {
-		$command_root  = Utils\phar_safe_path( dirname( __DIR__ ) );
+		$command_root  = Path::phar_safe( dirname( __DIR__ ) );
 		$template_path = "{$command_root}/templates/{$template}";
 
 		if ( ! file_exists( $template_path ) ) {
@@ -2089,7 +2090,7 @@ EOT;
 			WP_CLI::debug( 'Failed to resolve ABSPATH realpath', 'core' );
 			return $count;
 		}
-		$abspath_realpath_trailing = Utils\trailingslashit( $abspath_realpath );
+		$abspath_realpath_trailing = Path::trailingslashit( $abspath_realpath );
 
 		foreach ( $files as $file ) {
 			$file_path = ABSPATH . $file;
@@ -2103,7 +2104,7 @@ EOT;
 			if ( is_link( $file_path ) ) {
 				$normalized_path = realpath( dirname( $file_path ) );
 				if ( false === $normalized_path
-					|| 0 !== strpos( Utils\trailingslashit( $normalized_path ), $abspath_realpath_trailing )
+					|| 0 !== strpos( Path::trailingslashit( $normalized_path ), $abspath_realpath_trailing )
 				) {
 					WP_CLI::debug( "Skipping symbolic link outside of ABSPATH: {$file}", 'core' );
 					continue;
@@ -2119,7 +2120,7 @@ EOT;
 
 			// Regular files/directories: validate real path is within ABSPATH.
 			$file_realpath = realpath( $file_path );
-			if ( false === $file_realpath || 0 !== strpos( Utils\trailingslashit( $file_realpath ), $abspath_realpath_trailing ) ) {
+			if ( false === $file_realpath || 0 !== strpos( Path::trailingslashit( $file_realpath ), $abspath_realpath_trailing ) ) {
 				WP_CLI::debug( "Skipping file outside of ABSPATH: {$file}", 'core' );
 				continue;
 			}
@@ -2155,7 +2156,7 @@ EOT;
 			WP_CLI::debug( "Failed to resolve realpath for directory: {$dir}", 'core' );
 			return false;
 		}
-		if ( 0 !== strpos( Utils\trailingslashit( $dir_realpath ), $abspath_realpath_trailing ) ) {
+		if ( 0 !== strpos( Path::trailingslashit( $dir_realpath ), $abspath_realpath_trailing ) ) {
 			WP_CLI::debug( "Attempted to remove directory outside of ABSPATH: {$dir_realpath}", 'core' );
 			return false;
 		}
