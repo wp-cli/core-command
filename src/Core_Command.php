@@ -149,6 +149,9 @@ class Core_Command extends WP_CLI_Command {
 	 * [--extract]
 	 * : Whether to extract the downloaded file. Defaults to true.
 	 *
+	 * [--skip-locale-check]
+	 * : If specified, allows downloading an older version of WordPress when the requested locale is not available for the latest release.
+	 *
 	 * ## EXAMPLES
 	 *
 	 *     $ wp core download --locale=nl_NL
@@ -160,7 +163,7 @@ class Core_Command extends WP_CLI_Command {
 	 * @when before_wp_load
 	 *
 	 * @param array{0?: string} $args Positional arguments.
-	 * @param array{path?: string, locale?: string, version?: string, 'skip-content'?: bool, force?: bool, insecure?: bool, extract?: bool} $assoc_args Associative arguments.
+	 * @param array{path?: string, locale?: string, version?: string, 'skip-content'?: bool, force?: bool, insecure?: bool, extract?: bool, 'skip-locale-check'?: bool} $assoc_args Associative arguments.
 	 */
 	public function download( $args, $assoc_args ) {
 		/**
@@ -233,14 +236,22 @@ class Core_Command extends WP_CLI_Command {
 
 			$download_url = $this->get_download_url( $version, $locale, $extension );
 		} else {
+			$wp_org_api = new WpOrgApi( [ 'insecure' => $insecure ] );
 			try {
-				$offer = ( new WpOrgApi( [ 'insecure' => $insecure ] ) )
-					->get_core_download_offer( $locale );
+				$offer = $wp_org_api->get_core_download_offer( $locale );
 			} catch ( Exception $exception ) {
 				WP_CLI::error( $exception );
 			}
 			if ( ! $offer ) {
-				WP_CLI::error( "The requested locale ({$locale}) was not found." );
+				if ( Utils\get_flag_value( $assoc_args, 'skip-locale-check', false ) ) {
+					$offer = $this->find_latest_offer_for_locale( $locale, $insecure );
+					if ( is_array( $offer ) ) {
+						WP_CLI::warning( "The latest WordPress version is not yet available in the {$locale} locale. Downloading version {$offer['current']} instead." );
+					}
+				}
+				if ( ! $offer ) {
+					WP_CLI::error( "The requested locale ({$locale}) was not found." );
+				}
 			}
 			$version      = $offer['current'];
 			$download_url = $offer['download'];
@@ -1669,6 +1680,57 @@ EOT;
 		}
 
 		return "https://{$locale_subdomain}wordpress.org/wordpress-{$version}{$locale_suffix}.{$file_type}";
+	}
+
+	/**
+	 * Finds the latest available WordPress download offer for a given locale by consulting
+	 * the WordPress.org translations API.
+	 *
+	 * Used as a fallback when the primary version-check API does not return an offer for
+	 * the requested locale (e.g., when a new WordPress release hasn't been translated yet).
+	 *
+	 * @param string $locale   Locale to find an offer for.
+	 * @param bool   $insecure Whether to disable SSL verification.
+	 * @return array{current: string, download: string}|false Offer array on success, false on failure.
+	 */
+	private function find_latest_offer_for_locale( $locale, $insecure ) {
+		$headers = [ 'Accept' => 'application/json' ];
+		$options = [
+			'timeout'  => 30,
+			'insecure' => $insecure,
+		];
+
+		try {
+			/** @var \WpOrg\Requests\Response $response */
+			$response = Utils\http_request( 'GET', 'https://api.wordpress.org/translations/core/1.0/', null, $headers, $options );
+		} catch ( Exception $exception ) {
+			return false;
+		}
+
+		if ( $response->status_code < 200 || $response->status_code >= 300 ) {
+			return false;
+		}
+
+		/** @var array{translations: array<int, array{language: string, version: string}>}|null $body */
+		$body = json_decode( $response->body, true );
+
+		if ( ! is_array( $body ) || empty( $body['translations'] ) ) {
+			return false;
+		}
+
+		foreach ( $body['translations'] as $translation ) {
+			if (
+				isset( $translation['language'], $translation['version'] )
+				&& $locale === $translation['language']
+			) {
+				return [
+					'current'  => $translation['version'],
+					'download' => $this->get_download_url( $translation['version'], $locale, 'zip' ),
+				];
+			}
+		}
+
+		return false;
 	}
 
 	/**
