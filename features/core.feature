@@ -27,6 +27,7 @@ Feature: Manage WordPress installation
     When I try `wp core is-installed --network`
     Then the return code should be 1
 
+    # The SQLite object cache drop-in might produce a "no such table: wp_options" STDERR during installation.
     When I try `wp core install`
     Then the return code should be 1
     And STDERR should contain:
@@ -34,8 +35,10 @@ Feature: Manage WordPress installation
       missing --url parameter (The address of the new site.)
       """
 
-    When I run `wp core install --url='localhost:8001' --title='Test' --admin_user=wpcli --admin_email=admin@example.com --admin_password=1`
+    # The SQLite object cache drop-in might produce a "no such table: wp_options" STDERR during installation.
+    When I try `wp core install --url='localhost:8001' --title='Test' --admin_user=wpcli --admin_email=admin@example.com --admin_password=1`
     Then STDOUT should not be empty
+    And the return code should be 0
 
     When I run `wp eval 'echo home_url();'`
     Then STDOUT should be:
@@ -60,8 +63,10 @@ Feature: Manage WordPress installation
       admin@example.com
       """
 
-    When I run `wp core install --prompt < session`
+    # The SQLite object cache drop-in might produce a "no such table: wp_options" STDERR during installation.
+    When I try `wp core install --prompt < session`
     Then STDOUT should not be empty
+    And the return code should be 0
 
     When I run `wp eval 'echo home_url();'`
     Then STDOUT should be:
@@ -80,8 +85,10 @@ Feature: Manage WordPress installation
       admin@example.com
       """
 
-    When I run `wp core install --url=localhost:8001 --title=Test --admin_user=wpcli --prompt=admin_password,admin_email < session`
+    # The SQLite object cache drop-in might produce a "no such table: wp_options" STDERR during installation.
+    When I try `wp core install --url=localhost:8001 --title=Test --admin_user=wpcli --prompt=admin_password,admin_email < session`
     Then STDOUT should not be empty
+    And the return code should be 0
 
     When I run `wp eval 'echo home_url();'`
     Then STDOUT should be:
@@ -95,7 +102,8 @@ Feature: Manage WordPress installation
     And wp-config.php
     And a database
 
-    When I run `wp core install --url='https://localhost' --title='Test' --admin_user=wpcli --admin_email=admin@example.com --admin_password=1`
+    # The SQLite object cache drop-in might produce a "no such table: wp_options" STDERR during installation.
+    When I try `wp core install --url='https://localhost' --title='Test' --admin_user=wpcli --admin_email=admin@example.com --admin_password=1`
     Then the return code should be 0
 
     When I run `wp eval 'echo home_url();'`
@@ -110,7 +118,8 @@ Feature: Manage WordPress installation
     And wp-config.php
     And a database
 
-    When I run `wp core install --url='https://localhost:8443' --title='Test' --admin_user=wpcli --admin_email=admin@example.com --admin_password=1`
+    # The SQLite object cache drop-in might produce a "no such table: wp_options" STDERR during installation.
+    When I try `wp core install --url='https://localhost:8443' --title='Test' --admin_user=wpcli --admin_email=admin@example.com --admin_password=1`
     Then the return code should be 0
 
     When I run `wp eval 'echo home_url();'`
@@ -139,6 +148,7 @@ Feature: Manage WordPress installation
       """
 
     # Can complain that it's already installed, but don't exit with an error code
+    # The SQLite object cache drop-in might produce a "no such table: wp_options" STDERR during installation.
     When I try `wp core install --url='localhost:8001' --title='Test' --admin_user=wpcli --admin_email=admin@example.com --admin_password=1`
     Then the return code should be 0
 
@@ -172,6 +182,7 @@ Feature: Manage WordPress installation
     When I run `wp core is-installed --network`
     Then the return code should be 0
 
+    # The SQLite object cache drop-in might produce a "no such table: wp_options" STDERR during installation.
     When I try `wp core install-network --title='test network'`
     Then the return code should be 1
 
@@ -187,7 +198,8 @@ Feature: Manage WordPress installation
     And wp-config.php
     And a database
 
-    When I run `wp core multisite-install --url=foobar.org --title=Test --admin_user=wpcli --admin_email=admin@example.com --admin_password=1`
+    # The SQLite object cache drop-in might produce a "no such table: wp_options" STDERR during installation.
+    When I try `wp core multisite-install --url=foobar.org --title=Test --admin_user=wpcli --admin_email=admin@example.com --admin_password=1`
     Then STDOUT should be:
       """
       Created single site database tables.
@@ -195,7 +207,7 @@ Feature: Manage WordPress installation
       Added multisite constants to 'wp-config.php'.
       Success: Network installed. Don't forget to set up rewrite rules (and a .htaccess file, if using Apache).
       """
-    And STDERR should be empty
+    And the return code should be 0
 
     When I run `wp eval 'echo $GLOBALS["current_site"]->domain;'`
     Then STDOUT should be:
@@ -204,6 +216,7 @@ Feature: Manage WordPress installation
       """
 
     # Can complain that it's already installed, but don't exit with an error code
+    # The SQLite object cache drop-in might produce a "no such table: wp_options" STDERR during installation.
     When I try `wp core multisite-install --url=foobar.org --title=Test --admin_user=wpcli --admin_email=admin@example.com --admin_password=1`
     Then the return code should be 0
 
@@ -228,8 +241,10 @@ Feature: Manage WordPress installation
       WordPress database error Table
       """
 
-    When I run `wp core multisite-install --title=Test --admin_user=wpcli --admin_email=admin@example.com --admin_password=1`
+    # The SQLite object cache drop-in might produce a "no such table: wp_options" STDERR during installation.
+    When I try `wp core multisite-install --title=Test --admin_user=wpcli --admin_email=admin@example.com --admin_password=1`
     Then STDOUT should not be empty
+    And the return code should be 0
 
     When I run `wp eval 'echo $GLOBALS["current_site"]->domain;'`
     Then STDOUT should be:
@@ -243,6 +258,7 @@ Feature: Manage WordPress installation
     And wp-config.php
     And a database
 
+    # The SQLite object cache drop-in might produce a "no such table: wp_options" STDERR during installation.
     When I try `wp core multisite-install --url=http://localhost/ --title=Test --admin_user=wpcli --admin_email=admin@example.com --admin_password=1 --subdomains`
     Then STDERR should contain:
       """
@@ -269,8 +285,10 @@ Feature: Manage WordPress installation
       user: wpcli
       """
 
-    When I run `wp core install --url='localhost:8001' --title='Test' --admin_user=wpcli --admin_email=admin@example.com --admin_password=1`
+    # The SQLite object cache drop-in might produce a "no such table: wp_options" STDERR during installation.
+    When I try `wp core install --url='localhost:8001' --title='Test' --admin_user=wpcli --admin_email=admin@example.com --admin_password=1`
     Then STDOUT should not be empty
+    And the return code should be 0
 
     When I run `wp eval 'echo home_url();'`
     Then STDOUT should be:
@@ -358,11 +376,13 @@ Feature: Manage WordPress installation
 
     When I run `wp db create`
     # extra/no-mail.php not present as mu-plugin so skip sending email else will fail on Travis with "sh: 1: -t: not found"
-    And I run `wp core install --url=example.com --title="WP Example" --admin_user=wpcli --admin_password=wpcli --admin_email=wpcli@example.com --skip-email`
+    # The SQLite object cache drop-in might produce a "no such table: wp_options" STDERR during installation.
+    And I try `wp core install --url=example.com --title="WP Example" --admin_user=wpcli --admin_password=wpcli --admin_email=wpcli@example.com --skip-email`
     Then STDOUT should contain:
       """
       Success: WordPress installed successfully.
       """
+    And the return code should be 0
 
     When I run `wp option get home`
     Then STDOUT should be:
