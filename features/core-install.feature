@@ -45,11 +45,13 @@ Feature: Install WordPress core
       Success: Generated 'wp-config.php' file.
       """
 
-    When I run `wp core install --url=example.org --title=Test --admin_user=testadmin --admin_email=testadmin@example.com --admin_password=newpassword`
+    # The SQLite object cache drop-in might produce a "no such table: wp_options" STDERR during installation.
+    When I try `wp core install --url=example.org --title=Test --admin_user=testadmin --admin_email=testadmin@example.com --admin_password=newpassword`
     Then STDOUT should contain:
       """
       Success: WordPress installed successfully.
       """
+    And the return code should be 0
 
     When I run `wp user list --field=user_login`
     Then STDOUT should be:
@@ -119,11 +121,13 @@ Feature: Install WordPress core
       Success: Generated 'wp-config.php' file.
       """
 
-    When I run `wp core install --url=example.org --title=Test --admin_user=testadmin --admin_email=testadmin@example.com --admin_password=newpassword`
+    # The SQLite object cache drop-in might produce a "no such table: wp_options" STDERR during installation.
+    When I try `wp core install --url=example.org --title=Test --admin_user=testadmin --admin_email=testadmin@example.com --admin_password=newpassword`
     Then STDOUT should contain:
       """
       Success: WordPress installed successfully.
       """
+    And the return code should be 0
 
     When I run `wp user list --field=user_login`
     Then STDOUT should be:
@@ -165,7 +169,7 @@ Feature: Install WordPress core
     And wp-config.php
     And a database
 
-    # Old versions of WP can generate wpdb database errors if the WP tables don't exist, so STDERR may or may not be empty
+    # The SQLite object cache drop-in might produce a "no such table: wp_options" STDERR during installation.
     When I try `wp core install --url=localhost:8001 --title=Test --admin_user=wpcli --admin_email=wpcli@example.org`
     Then STDOUT should contain:
       """
@@ -183,11 +187,13 @@ Feature: Install WordPress core
     And wp-config.php
     And a database
 
-    When I run `wp core install --url=example.com --title=Test --admin_user=wpcli --admin_email=wpcli@example.org --admin_password=password --skip-email`
+    # The SQLite object cache drop-in might produce a "no such table: wp_options" STDERR during installation.
+    When I try `wp core install --url=example.com --title=Test --admin_user=wpcli --admin_email=wpcli@example.org --admin_password=password --skip-email`
     Then STDOUT should contain:
       """
       Success: WordPress installed successfully.
       """
+    And the return code should be 0
 
     When I run `wp option get home`
     Then STDOUT should be:
@@ -207,11 +213,13 @@ Feature: Install WordPress core
     And wp-config.php
     And a database
 
-    When I run `wp core install --url=example.com/subdir --title=Test --admin_user=wpcli --admin_email=wpcli@example.org --admin_password=password --skip-email`
+    # The SQLite object cache drop-in might produce a "no such table: wp_options" STDERR during installation.
+    When I try `wp core install --url=example.com/subdir --title=Test --admin_user=wpcli --admin_email=wpcli@example.org --admin_password=password --skip-email`
     Then STDOUT should contain:
       """
       Success: WordPress installed successfully.
       """
+    And the return code should be 0
 
     When I run `wp option get home`
     Then STDOUT should be:
@@ -231,11 +239,13 @@ Feature: Install WordPress core
     And wp-config.php
     And a database
 
-    When I run `wp core install --url=https://example.com --title=Test --admin_user=wpcli --admin_email=wpcli@example.org --admin_password=password --skip-email`
+    # The SQLite object cache drop-in might produce a "no such table: wp_options" STDERR during installation.
+    When I try `wp core install --url=https://example.com --title=Test --admin_user=wpcli --admin_email=wpcli@example.org --admin_password=password --skip-email`
     Then STDOUT should contain:
       """
       Success: WordPress installed successfully.
       """
+    And the return code should be 0
 
     When I run `wp option get home`
     Then STDOUT should be:
@@ -255,7 +265,8 @@ Feature: Install WordPress core
     And wp-config.php
     And a database
 
-    When I run `wp core install --url=localhost:8001 --title=Test --admin_user=wpcli --admin_email=wpcli@example.org --admin_password='R^^CzY;G"iZ@]H9b,' --skip-email`
+    # The SQLite object cache drop-in might produce a "no such table: wp_options" STDERR during installation.
+    When I try `wp core install --url=localhost:8001 --title=Test --admin_user=wpcli --admin_email=wpcli@example.org --admin_password='R^^CzY;G"iZ@]H9b,' --skip-email`
     Then STDOUT should contain:
       """
       Success: WordPress installed successfully.
@@ -288,12 +299,13 @@ Feature: Install WordPress core
       Success: Generated 'wp-config.php' file.
       """
 
-    # Old versions of WP can generate wpdb database errors if the WP tables don't exist, so STDERR may or may not be empty
-    When I run `wp core install --url=example.org --title=Test --admin_user=testadmin --admin_email=testadmin@example.com --admin_password=newpassword --locale=de_DE --skip-email`
+    # The SQLite object cache drop-in might produce a "no such table: wp_options" STDERR during installation.
+    When I try `wp core install --url=example.org --title=Test --admin_user=testadmin --admin_email=testadmin@example.com --admin_password=newpassword --locale=de_DE --skip-email`
     Then STDOUT should contain:
       """
       Success: WordPress installed successfully.
       """
+    And the return code should be 0
 
     When I run `wp core version`
     Then STDOUT should contain:
@@ -313,7 +325,7 @@ Feature: Install WordPress core
     And wp-config.php
     And a database
 
-    # Old versions of WP can generate wpdb database errors if the WP tables don't exist, so STDERR may or may not be empty
+    # The SQLite object cache drop-in might produce a "no such table: wp_options" STDERR during installation.
     When I try `wp core multisite-install --url=foobar.org --title=Test --admin_user=wpcli --admin_email=admin@example.com`
     Then STDOUT should contain:
       """
@@ -331,11 +343,13 @@ Feature: Install WordPress core
     And wp-config.php
     And a database
 
-    When I run `wp core multisite-install --url=foobar.org --title=Test --admin_user=wpcli --admin_email=admin@example.com --admin_password=password --skip-config`
+    # The SQLite object cache drop-in might produce a "no such table: wp_options" STDERR during installation.
+    When I try `wp core multisite-install --url=foobar.org --title=Test --admin_user=wpcli --admin_email=admin@example.com --admin_password=password --skip-config`
     Then STDOUT should contain:
       """
       Addition of multisite constants to 'wp-config.php' skipped. You need to add them manually:
       """
+    And the return code should be 0
 
   @require-mysql
   Scenario: Install WordPress multisite with existing multisite constants in wp-config file
@@ -360,13 +374,15 @@ Feature: Install WordPress core
       Success: Generated 'wp-config.php' file.
       """
 
-    When I run `wp core multisite-install --url=foobar.org --title=Test --admin_user=wpcli --admin_email=admin@example.com --admin_password=password --skip-config`
+    # The SQLite object cache drop-in might produce a "no such table: wp_options" STDERR during installation.
+    When I try `wp core multisite-install --url=foobar.org --title=Test --admin_user=wpcli --admin_email=admin@example.com --admin_password=password --skip-config`
     Then STDOUT should be:
       """
       Created single site database tables.
       Set up multisite database tables.
       Success: Network installed. Don't forget to set up rewrite rules (and a .htaccess file, if using Apache).
       """
+    And the return code should be 0
 
     When I run `wp db query "select * from wp_sitemeta where meta_key = 'site_admins' and meta_value = ''"`
     Then STDOUT should be:
