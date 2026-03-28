@@ -15,7 +15,7 @@ Feature: Update WordPress core
       6.2
       """
 
-    When I run `wget http://wordpress.org/wordpress-6.2.zip --quiet`
+    When I run `curl -sS -L --fail -o wordpress-6.2.zip https://wordpress.org/wordpress-6.2.zip`
     And I run `wp core update wordpress-6.2.zip`
     Then STDOUT should be:
       """
@@ -46,7 +46,7 @@ Feature: Update WordPress core
       6.6
       """
 
-    When I run `wget http://wordpress.org/wordpress-6.8.zip --quiet`
+    When I run `curl -sS -L --fail -o wordpress-6.8.zip https://wordpress.org/wordpress-6.8.zip`
     And I run `wp core update wordpress-6.8.zip --format=json`
     Then STDOUT should be:
       """
@@ -67,7 +67,7 @@ Feature: Update WordPress core
       6.6
       """
 
-    When I run `wget http://wordpress.org/wordpress-6.8.zip --quiet`
+    When I run `curl -sS -L --fail -o wordpress-6.8.zip https://wordpress.org/wordpress-6.8.zip`
     And I run `wp core update wordpress-6.8.zip --format=csv`
     Then STDOUT should be:
       """
@@ -89,7 +89,7 @@ Feature: Update WordPress core
       6.6
       """
 
-    When I run `wget http://wordpress.org/wordpress-6.8.zip --quiet`
+    When I run `curl -sS -L --fail -o wordpress-6.8.zip https://wordpress.org/wordpress-6.8.zip`
     And I run `wp core update wordpress-6.8.zip --format=table`
     Then STDOUT should end with a table containing rows:
       | name | old_version | new_version | status  |
@@ -357,7 +357,7 @@ Feature: Update WordPress core
     Given a WP install
 
     # May produce warnings if checksums cannot be retrieved.
-    When I try `wp core upgrade --force http://wordpress.org/nightly-builds/wordpress-latest.zip`
+    When I try `wp core upgrade --force https://wordpress.org/nightly-builds/wordpress-latest.zip`
     Then STDOUT should contain:
       """
       Success:
@@ -368,7 +368,7 @@ Feature: Update WordPress core
       """
 
     # May produce warnings if checksums cannot be retrieved.
-    When I try `wp core upgrade --force http://wordpress.org/nightly-builds/wordpress-latest.zip`
+    When I try `wp core upgrade --force https://wordpress.org/nightly-builds/wordpress-latest.zip`
     Then STDOUT should contain:
       """
       Success:
