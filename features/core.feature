@@ -209,7 +209,12 @@ Feature: Manage WordPress installation
       """
     And the return code should be 0
 
-    When I run `wp eval "echo \$GLOBALS['current_site']->domain;"`
+    Given a current-site-domain.php file:
+      """
+      <?php
+      echo $GLOBALS['current_site']->domain;
+      """
+    When I run `wp eval-file current-site-domain`
     Then STDOUT should be:
       """
       foobar.org
