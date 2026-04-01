@@ -214,7 +214,7 @@ Feature: Manage WordPress installation
       <?php
       echo $GLOBALS['current_site']->domain;
       """
-    When I run `wp eval-file current-site-domain`
+    When I run `wp eval-file current-site-domain.php`
     Then STDOUT should be:
       """
       foobar.org
