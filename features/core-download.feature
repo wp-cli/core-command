@@ -386,6 +386,10 @@ Feature: Download WordPress
       """
     And the return code should be 1
 
+  @skip-windows
+  Scenario: Fail if path can't be created (root-level-directory)
+    Given an empty directory
+
     When I try `wp core download --path=/root-level-directory`
     Then STDERR should contain:
       """

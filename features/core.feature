@@ -301,6 +301,7 @@ Feature: Manage WordPress installation
       http://localhost:8001
       """
 
+  @skip-windows
   Scenario: Test output in a multisite install with custom base path
     Given a WP install
 
