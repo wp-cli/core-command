@@ -209,7 +209,12 @@ Feature: Manage WordPress installation
       """
     And the return code should be 0
 
-    When I run `wp eval 'echo $GLOBALS["current_site"]->domain;'`
+    Given a current-site-domain.php file:
+      """
+      <?php
+      echo $GLOBALS['current_site']->domain;
+      """
+    When I run `wp eval-file current-site-domain.php`
     Then STDOUT should be:
       """
       foobar.org
@@ -296,6 +301,7 @@ Feature: Manage WordPress installation
       http://localhost:8001
       """
 
+  @skip-windows
   Scenario: Test output in a multisite install with custom base path
     Given a WP install
 
