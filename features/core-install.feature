@@ -1,7 +1,7 @@
 Feature: Install WordPress core
 
-  # TODO: Requires investigation for SQLite support.
-  # See https://github.com/wp-cli/core-command/issues/244
+  # Not compatible with SQLite: each WordPress install uses its own separate SQLite database
+  # file, so cross-install table sharing via CUSTOM_USER_TABLE is not possible with SQLite.
   @require-mysql
   Scenario: Two WordPress installs sharing the same user table won't update existing user
     Given an empty directory
@@ -86,8 +86,8 @@ Feature: Install WordPress core
       wp_users
       """
 
-  # TODO: Requires investigation for SQLite support.
-  # See https://github.com/wp-cli/core-command/issues/244
+  # Not compatible with SQLite: each WordPress install uses its own separate SQLite database
+  # file, so cross-install table sharing via CUSTOM_USER_TABLE is not possible with SQLite.
   @require-mysql
   Scenario: Two WordPress installs sharing the same user table will create new user
     Given an empty directory
