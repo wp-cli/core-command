@@ -1559,7 +1559,7 @@ EOT;
 
 		if ( $network ) {
 			// Determine the network ID to update.
-			// get_current_network_id reflects the network determined from the --url context
+			// get_current_network_id() reflects the network determined from the --url context,
 			// enabling per-network updates in multinetwork setups.
 			$network_id = get_current_network_id();
 
