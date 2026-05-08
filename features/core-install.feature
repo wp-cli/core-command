@@ -326,7 +326,7 @@ Feature: Install WordPress core
     And a database
 
     # The SQLite object cache drop-in might produce a "no such table: wp_options" STDERR during installation.
-    When I try `wp core multisite-install --url=foobar.org --title=Test --admin_user=wpcli --admin_email=admin@example.com`
+    When I try `wp core multisite-install --url=foobar.org --title=Test --admin_user=wpcli --admin_email=admin@example.com --locale=de_DE`
     Then STDOUT should contain:
       """
       Admin password:

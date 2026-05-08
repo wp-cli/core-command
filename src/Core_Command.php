@@ -601,6 +601,9 @@ class Core_Command extends WP_CLI_Command {
 	 * --admin_email=<email>
 	 * : The email address for the admin user.
 	 *
+	 * [--locale=<locale>]
+	 * : The locale/language for the installation (e.g. `de_DE`). Default is `en_US`.
+	 *
 	 * [--skip-email]
 	 * : Don't send an email notification to the new admin user.
 	 *
@@ -621,7 +624,7 @@ class Core_Command extends WP_CLI_Command {
 	 * @subcommand multisite-install
 	 *
 	 * @param string[] $args Positional arguments. Unused.
-	 * @param array{url?: string, base: string, subdomains?: bool, title: string, admin_user: string, admin_password?: string, admin_email: string, 'skip-email'?: bool, 'skip-config'?: bool} $assoc_args Associative arguments.
+	 * @param array{url?: string, base: string, subdomains?: bool, title: string, admin_user: string, admin_password?: string, admin_email: string, locale?: string, 'skip-email'?: bool, 'skip-config'?: bool} $assoc_args Associative arguments.
 	 */
 	public function multisite_install( $args, $assoc_args ) {
 		// Fix $_SERVER variables early to prevent incorrect URL detection.
