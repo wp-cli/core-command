@@ -312,7 +312,7 @@ for more details about how multisite works.
 Installs WordPress multisite from scratch.
 
 ~~~
-wp core multisite-install [--url=<url>] [--base=<url-path>] [--subdomains] --title=<site-title> --admin_user=<username> [--admin_password=<password>] --admin_email=<email> [--skip-email] [--skip-config]
+wp core multisite-install [--url=<url>] [--base=<url-path>] [--subdomains] --title=<site-title> --admin_user=<username> [--admin_password=<password>] --admin_email=<email> [--locale=<locale>] [--skip-email] [--skip-config]
 ~~~
 
 Creates the WordPress tables in the database using the URL, title, and
@@ -350,6 +350,9 @@ file with the appropriate multisite rewrite rules.
 
 	--admin_email=<email>
 		The email address for the admin user.
+
+	[--locale=<locale>]
+		The locale/language for the installation (e.g. `de_DE`). Default is `en_US`.
 
 	[--skip-email]
 		Don't send an email notification to the new admin user.
