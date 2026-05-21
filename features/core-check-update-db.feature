@@ -43,6 +43,7 @@ Feature: Check if WordPress database update is needed
       Success: WordPress database is up to date.
       """
 
+  @require-php-7.4
   Scenario: Check if database update is needed across network
     Given a WP multisite install
     And a disable_sidebar_check.php file:
