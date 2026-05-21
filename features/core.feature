@@ -335,7 +335,7 @@ Feature: Manage WordPress installation
 
   # `wp db create` does not yet work on SQLite,
   # See https://github.com/wp-cli/db-command/issues/234
-  @require-php-7.0 @require-mysql
+  @require-php-7.4 @require-mysql
   Scenario: Install WordPress in a subdirectory
     Given an empty directory
     And a wp-config.php file:
