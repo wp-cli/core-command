@@ -161,7 +161,7 @@ Feature: Update WordPress core
       Downloading
       """
 
-  @require-php-7.0
+  @require-php-7.4
   Scenario: Don't run update when up-to-date
     Given a WP install
     And I run `wp core update`
@@ -387,6 +387,7 @@ Feature: Update WordPress core
       Success:
       """
 
+  @require-php-7.4
   Scenario: No HTML output from async translation updates during core update
     Given a WP install
     And an empty cache
