@@ -226,7 +226,7 @@ Feature: Update WordPress core
       """
     And the {SUITE_CACHE_DIR}/core directory should contain:
       """
-      wordpress-6.5.2-en_US.tar.gz
+      wordpress-6.5.2-en_US.zip
       wordpress-6.5.5-partial-1-en_US.zip
       """
 
@@ -246,8 +246,8 @@ Feature: Update WordPress core
       """
     And the {SUITE_CACHE_DIR}/core directory should contain:
       """
-      wordpress-6.4.1-en_US.tar.gz
-      wordpress-6.5.2-en_US.tar.gz
+      wordpress-6.4.1-en_US.zip
+      wordpress-6.5.2-en_US.zip
       wordpress-6.5.5-no-content-en_US.zip
       wordpress-6.5.5-partial-1-en_US.zip
       """

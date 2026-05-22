@@ -291,7 +291,7 @@ Feature: Install WordPress core
       5.6
       """
     And the wp-settings.php file should exist
-    And the {SUITE_CACHE_DIR}/core/wordpress-{VERSION}-de_DE.tar.gz file should exist
+    And the {SUITE_CACHE_DIR}/core/wordpress-{VERSION}-de_DE.zip file should exist
 
     When I run `wp config create --dbname={DB_NAME} --dbuser={DB_USER} --dbpass={DB_PASSWORD} --dbhost={DB_HOST} --locale=de_DE --skip-check`
     Then STDOUT should be:
