@@ -230,12 +230,7 @@ class Core_Command extends WP_CLI_Command {
 				$version = 'nightly';
 			}
 
-			// Nightly builds and skip content are only available in .zip format.
-			$extension = ( ( 'nightly' === $version ) || $skip_content )
-				? 'zip'
-				: 'tar.gz';
-
-			$download_url = $this->get_download_url( $version, $locale, $extension );
+			$download_url = $this->get_download_url( $version, $locale );
 		} else {
 			$wp_org_api = new WpOrgApi( [ 'insecure' => $insecure ] );
 			try {
@@ -256,9 +251,6 @@ class Core_Command extends WP_CLI_Command {
 			}
 			$version      = $offer['current'];
 			$download_url = $offer['download'];
-			if ( ! $skip_content ) {
-				$download_url = str_replace( '.zip', '.tar.gz', $download_url );
-			}
 		}
 
 		if ( 'nightly' === $version && 'en_US' !== $locale ) {
@@ -277,18 +269,7 @@ class Core_Command extends WP_CLI_Command {
 			WP_CLI::log( "Downloading WordPress {$version} ({$locale})..." );
 		}
 
-		$path_parts = pathinfo( $download_url );
-		$extension  = 'tar.gz';
-		if ( isset( $path_parts['extension'] ) && 'zip' === $path_parts['extension'] ) {
-			$extension = 'zip';
-			if ( $extract && ! class_exists( 'ZipArchive' ) ) {
-				WP_CLI::error( 'Extracting a zip file requires ZipArchive.' );
-			}
-		}
-
-		if ( $skip_content && 'zip' !== $extension ) {
-			WP_CLI::error( 'Skip content is only available for ZIP files.' );
-		}
+		$extension = 'zip';
 
 		$cache = WP_CLI::get_cache();
 		if ( $from_url ) {
@@ -316,8 +297,6 @@ class Core_Command extends WP_CLI_Command {
 		}
 
 		if ( ! $cache_file || $bad_cache ) {
-			// We need to use a temporary file because piping from cURL to tar is flaky
-			// on MinGW (and probably in other environments too).
 			$temp = Utils\get_temp_dir() . uniqid( 'wp_' ) . ".{$extension}";
 			register_shutdown_function(
 				function () use ( $temp ) {
@@ -1652,21 +1631,16 @@ EOT;
 	}
 
 	/**
-	 * Gets download url based on version, locale and desired file type.
+	 * Gets download url based on version and locale.
 	 *
 	 * @param $version
 	 * @param string $locale
-	 * @param string $file_type
 	 * @return string
 	 */
-	private function get_download_url( $version, $locale = 'en_US', $file_type = 'zip' ) {
+	private function get_download_url( $version, $locale = 'en_US' ) {
 
 		if ( 'nightly' === $version ) {
-			if ( 'zip' === $file_type ) {
-				return 'https://wordpress.org/nightly-builds/wordpress-latest.zip';
-			} else {
-				WP_CLI::error( 'Nightly builds are only available in .zip format.' );
-			}
+			return 'https://wordpress.org/nightly-builds/wordpress-latest.zip';
 		}
 
 		$locale_subdomain = 'en_US' === $locale ? '' : substr( $locale, 0, 2 ) . '.';
@@ -1676,7 +1650,7 @@ EOT;
 			$version = substr( $version, 0, -2 );
 		}
 
-		return "https://{$locale_subdomain}wordpress.org/wordpress-{$version}{$locale_suffix}.{$file_type}";
+		return "https://{$locale_subdomain}wordpress.org/wordpress-{$version}{$locale_suffix}.zip";
 	}
 
 	/**
@@ -1722,7 +1696,7 @@ EOT;
 			) {
 				return [
 					'current'  => $translation['version'],
-					'download' => $this->get_download_url( $translation['version'], $locale, 'zip' ),
+					'download' => $this->get_download_url( $translation['version'], $locale ),
 				];
 			}
 		}

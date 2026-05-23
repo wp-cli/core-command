@@ -15,7 +15,7 @@ Feature: Download WordPress
     When I run `wp core download`
     And save STDOUT 'Downloading WordPress ([\d\.]+)' as {VERSION}
     Then the wp-settings.php file should exist
-    And the {SUITE_CACHE_DIR}/core/wordpress-{VERSION}-en_US.tar.gz file should exist
+    And the {SUITE_CACHE_DIR}/core/wordpress-{VERSION}-en_US.zip file should exist
 
     When I run `mkdir inner`
     And I run `cd inner && wp core download`
@@ -40,7 +40,7 @@ Feature: Download WordPress
     Then the wp-settings.php file should exist
     And STDOUT should contain:
       """
-      Using cached file '{SUITE_CACHE_DIR}/core/wordpress-{VERSION}-en_US.tar.gz'...
+      Using cached file '{SUITE_CACHE_DIR}/core/wordpress-{VERSION}-en_US.zip'...
       """
 
   Scenario: Localized install
@@ -49,7 +49,7 @@ Feature: Download WordPress
     When I run `wp core download --version=4.4.2 --locale=de_DE`
     And save STDOUT 'Downloading WordPress ([\d\.]+)' as {VERSION}
     Then the wp-settings.php file should exist
-    And the {SUITE_CACHE_DIR}/core/wordpress-{VERSION}-de_DE.tar.gz file should exist
+    And the {SUITE_CACHE_DIR}/core/wordpress-{VERSION}-de_DE.zip file should exist
 
   Scenario: Error when requested locale is not available for the latest version
     Given an empty directory
@@ -150,7 +150,7 @@ Feature: Download WordPress
     When I run `wp core download --version=4.4.1`
     Then STDOUT should contain:
       """
-      md5 hash verified: 1907d1dbdac7a009d89224a516496b8d
+      md5 hash verified: 0c87de03eb3d76467cd0d3ab7268f1fd
       Success: WordPress downloaded.
       """
 
@@ -328,7 +328,7 @@ Feature: Download WordPress
     And STDOUT should contain:
       """
       Downloading WordPress 4.6-RC2 (en_US)...
-      md5 hash verified: 90c93a15092b2d5d4c960ec1fc183e07
+      md5 hash verified: dbf4a8fe1c54d1e3e28532402da9a743
       Success: WordPress downloaded.
       """
 
@@ -344,8 +344,8 @@ Feature: Download WordPress
 
     When I run `wp core version`
     Then save STDOUT as {VERSION}
-    And the {SUITE_CACHE_DIR}/core/wordpress-latest-en_US.tar.gz file should not exist
-    And the {SUITE_CACHE_DIR}/core/wordpress-{VERSION}-en_US.tar.gz file should exist
+    And the {SUITE_CACHE_DIR}/core/wordpress-latest-en_US.zip file should not exist
+    And the {SUITE_CACHE_DIR}/core/wordpress-{VERSION}-en_US.zip file should exist
 
   Scenario: Fail if path can't be created
     Given an empty directory
@@ -503,14 +503,14 @@ Feature: Download WordPress
 
     When I run `wp core download --version=4.5 --locale=de_DE`
     Then the wp-content directory should exist
-    And the wordpress-4.5-de_DE.tar.gz file should not exist
+    And the wordpress-4.5-de_DE.zip file should not exist
 
   Scenario: Core download with extract parameter should unzip the download file
     Given an empty directory
 
     When I run `wp core download --version=4.5 --locale=de_DE --extract`
     Then the wp-content directory should exist
-    And the wordpress-4.5-de_DE.tar.gz file should not exist
+    And the wordpress-4.5-de_DE.zip file should not exist
 
   Scenario: Core download with extract parameter should unzip the download file (already cached)
     Given an empty directory
@@ -519,23 +519,23 @@ Feature: Download WordPress
     And I run `rm -rf *`
     And I run `wp core download --version=4.5 --locale=de_DE --extract`
     Then the wp-content directory should exist
-    And the wordpress-4.5-de_DE.tar.gz file should not exist
+    And the wordpress-4.5-de_DE.zip file should not exist
 
   Scenario: Core download with no-extract should not unzip the download file
     Given an empty directory
 
     When I run `wp core download --version=4.5 --locale=de_DE --no-extract`
     Then the wp-content directory should not exist
-    And the wordpress-4.5-de_DE.tar.gz file should exist
+    And the wordpress-4.5-de_DE.zip file should exist
 
   Scenario: Core download with no-extract should not unzip the download file (already cached)
     Given an empty directory
 
     When I run `wp core download --version=4.5 --locale=de_DE --no-extract`
-    And I run `rm -rf wordpress-4.5-de_DE.tar.gz`
+    And I run `rm -rf wordpress-4.5-de_DE.zip`
     And I run `wp core download --version=4.5 --locale=de_DE --no-extract`
     Then the wp-content directory should not exist
-    And the wordpress-4.5-de_DE.tar.gz file should exist
+    And the wordpress-4.5-de_DE.zip file should exist
 
   Scenario: Error when using both --skip-content and --no-extract
     Given an empty directory
