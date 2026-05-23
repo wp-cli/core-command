@@ -271,9 +271,6 @@ class Core_Command extends WP_CLI_Command {
 		}
 
 		$extension = 'zip';
-		if ( $extract && ! class_exists( 'ZipArchive' ) ) {
-			WP_CLI::error( 'Extracting a zip file requires ZipArchive.' );
-		}
 
 		$cache = WP_CLI::get_cache();
 		if ( $from_url ) {
