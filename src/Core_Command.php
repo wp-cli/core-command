@@ -298,8 +298,6 @@ class Core_Command extends WP_CLI_Command {
 		}
 
 		if ( ! $cache_file || $bad_cache ) {
-			// We need to use a temporary file because piping from cURL to tar is flaky
-			// on MinGW (and probably in other environments too).
 			$temp = Utils\get_temp_dir() . uniqid( 'wp_' ) . ".{$extension}";
 			register_shutdown_function(
 				function () use ( $temp ) {
