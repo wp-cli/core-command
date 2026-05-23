@@ -327,36 +327,34 @@ class Core_Command extends WP_CLI_Command {
 			}
 
 			$extension = '';
-			if ( file_exists( $temp ) ) {
-				$mime = function_exists( 'mime_content_type' ) ? mime_content_type( $temp ) : '';
-				if ( 'application/zip' === $mime || 'application/x-zip-compressed' === $mime ) {
-					$extension = 'zip';
-				} elseif ( 'application/x-gzip' === $mime || 'application/gzip' === $mime ) {
-					$extension = 'tar.gz';
-				} else {
-					// Fallback to magic bytes.
-					$handle = @fopen( $temp, 'rb' );
-					if ( $handle ) {
-						$bytes = fread( $handle, 2 );
-						fclose( $handle );
-						if ( 'PK' === $bytes ) {
-							$extension = 'zip';
-						} elseif ( "\x1f\x8b" === $bytes ) {
-							$extension = 'tar.gz';
-						}
+			$mime      = function_exists( 'mime_content_type' ) ? mime_content_type( $temp ) : '';
+			if ( 'application/zip' === $mime || 'application/x-zip-compressed' === $mime ) {
+				$extension = 'zip';
+			} elseif ( 'application/x-gzip' === $mime || 'application/gzip' === $mime ) {
+				$extension = 'tar.gz';
+			} else {
+				// Fallback to magic bytes.
+				$handle = @fopen( $temp, 'rb' );
+				if ( $handle ) {
+					$bytes = fread( $handle, 2 );
+					fclose( $handle );
+					if ( 'PK' === $bytes ) {
+						$extension = 'zip';
+					} elseif ( "\x1f\x8b" === $bytes ) {
+						$extension = 'tar.gz';
 					}
 				}
+			}
 
-				// Deep validation for tar.gz archives: verify ustar magic string in decompressed stream.
-				if ( 'tar.gz' === $extension && function_exists( 'gzopen' ) ) {
-					// phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- Silence potential gzopen warnings on corrupt streams.
-					$gz = @gzopen( $temp, 'rb' );
-					if ( $gz ) {
-						$header = gzread( $gz, 262 );
-						gzclose( $gz );
-						if ( ! is_string( $header ) || 'ustar' !== substr( $header, 257, 5 ) ) {
-							$extension = '';
-						}
+			// Deep validation for tar.gz archives: verify ustar magic string in decompressed stream.
+			if ( 'tar.gz' === $extension && function_exists( 'gzopen' ) ) {
+				// phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- Silence potential gzopen warnings on corrupt streams.
+				$gz = @gzopen( $temp, 'rb' );
+				if ( $gz ) {
+					$header = gzread( $gz, 262 );
+					gzclose( $gz );
+					if ( ! is_string( $header ) || 'ustar' !== substr( $header, 257, 5 ) ) {
+						$extension = '';
 					}
 				}
 			}
