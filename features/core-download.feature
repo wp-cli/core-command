@@ -561,20 +561,20 @@ Feature: Download WordPress
 
     When I run `wp core download https://downloads.wordpress.org/release/wordpress-7.0.tar.gz --force`
     Then the {RUN_DIR} directory should contain:
-    """
-    index.php
-    license.txt
-    """
+      """
+      index.php
+      license.txt
+      """
 
   Scenario: Extracts provided zip files
     Given an empty directory
 
     When I run `wp core download https://downloads.wordpress.org/release/wordpress-7.0.zip --force`
     Then the {RUN_DIR} directory should contain:
-    """
-    index.php
-    license.txt
-    """
+      """
+      index.php
+      license.txt
+      """
 
   Scenario: Error when downloading an unsupported archive format
     Given an empty directory
