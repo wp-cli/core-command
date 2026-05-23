@@ -346,16 +346,18 @@ class Core_Command extends WP_CLI_Command {
 				}
 			}
 
-			// Deep validation for tar.gz archives: verify ustar magic string in decompressed stream.
+			// Deep validation for tar.gz archives: verify it's a valid, readable gzip stream.
 			if ( 'tar.gz' === $extension && function_exists( 'gzopen' ) ) {
 				// phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- Silence potential gzopen warnings on corrupt streams.
 				$gz = @gzopen( $temp, 'rb' );
 				if ( $gz ) {
 					$header = gzread( $gz, 262 );
 					gzclose( $gz );
-					if ( ! is_string( $header ) || 'ustar' !== substr( $header, 257, 5 ) ) {
+					if ( ! is_string( $header ) || strlen( $header ) < 1 ) {
 						$extension = '';
 					}
+				} else {
+					$extension = '';
 				}
 			}
 
@@ -367,10 +369,17 @@ class Core_Command extends WP_CLI_Command {
 			if ( ! rename( $temp, $actual_temp ) ) {
 				// Fallback to copy + unlink.
 				if ( copy( $temp, $actual_temp ) ) {
-					unlink( $temp );
-					$temp = $actual_temp;
-				} else {
-					WP_CLI::error( 'Failed to rename the downloaded temporary file.' );
+					$old_temp = $temp;
+					$temp     = $actual_temp;
+					if ( ! unlink( $old_temp ) ) {
+						register_shutdown_function(
+							function () use ( $old_temp ) {
+								if ( file_exists( $old_temp ) ) {
+									unlink( $old_temp );
+								}
+							}
+						);
+					}
 				}
 			} else {
 				$temp = $actual_temp;
