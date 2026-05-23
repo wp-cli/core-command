@@ -556,3 +556,40 @@ Feature: Download WordPress
       Success:
       """
 
+  Scenario: Extracts provided tar.gz files
+    Given an empty directory
+
+    When I run `wp core download https://downloads.wordpress.org/release/wordpress-7.0.tar.gz --force`
+    Then the {RUN_DIR} directory should contain:
+    """
+    index.php
+    license.txt
+    """
+
+  Scenario: Extracts provided zip files
+    Given an empty directory
+
+    When I run `wp core download https://downloads.wordpress.org/release/wordpress-7.0.zip --force`
+    Then the {RUN_DIR} directory should contain:
+    """
+    index.php
+    license.txt
+    """
+
+  Scenario: Error when downloading an unsupported archive format
+    Given an empty directory
+    And that HTTP requests to http://example.com/unsupported.txt will respond with:
+      """
+      HTTP/1.1 200 OK
+      Content-Type: text/plain
+
+      This is not a zip or tarball file.
+      """
+
+    When I try `wp core download http://example.com/unsupported.txt --force`
+    Then STDERR should contain:
+      """
+      Error: Unsupported archive format. The downloaded file is not a valid zip or tar.gz archive.
+      """
+    And the return code should be 1
+

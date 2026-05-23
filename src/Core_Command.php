@@ -297,11 +297,11 @@ class Core_Command extends WP_CLI_Command {
 		}
 
 		if ( ! $cache_file || $bad_cache ) {
-			$temp = Utils\get_temp_dir() . uniqid( 'wp_' ) . ".{$extension}";
+			$temp = Utils\get_temp_dir() . uniqid( 'wp_' ) . '.tmp';
 			register_shutdown_function(
-				function () use ( $temp ) {
+				function () use ( &$temp ) {
 					if ( file_exists( $temp ) ) {
-						unlink( $temp );
+						@unlink( $temp );
 					}
 				}
 			);
@@ -320,6 +320,37 @@ class Core_Command extends WP_CLI_Command {
 				WP_CLI::error( 'Release not found. Double-check locale or version.' );
 			} elseif ( 20 !== (int) substr( (string) $response->status_code, 0, 2 ) ) {
 				WP_CLI::error( "Couldn't access download URL (HTTP code {$response->status_code})." );
+			}
+
+			$extension = '';
+			if ( file_exists( $temp ) ) {
+				$mime = function_exists( 'mime_content_type' ) ? mime_content_type( $temp ) : '';
+				if ( 'application/zip' === $mime || 'application/x-zip-compressed' === $mime ) {
+					$extension = 'zip';
+				} elseif ( 'application/x-gzip' === $mime || 'application/gzip' === $mime ) {
+					$extension = 'tar.gz';
+				} else {
+					// Fallback to magic bytes.
+					$handle = @fopen( $temp, 'rb' );
+					if ( $handle ) {
+						$bytes = fread( $handle, 2 );
+						fclose( $handle );
+						if ( 'PK' === $bytes ) {
+							$extension = 'zip';
+						} elseif ( "\x1f\x8b" === $bytes ) {
+							$extension = 'tar.gz';
+						}
+					}
+				}
+			}
+
+			if ( ! in_array( $extension, [ 'zip', 'tar.gz' ], true ) ) {
+				WP_CLI::error( 'Unsupported archive format. The downloaded file is not a valid zip or tar.gz archive.' );
+			}
+
+			$actual_temp = substr( $temp, 0, -4 ) . ".{$extension}";
+			if ( rename( $temp, $actual_temp ) ) {
+				$temp = $actual_temp;
 			}
 
 			if ( 'nightly' !== $version ) {
