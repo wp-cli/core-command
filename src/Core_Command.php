@@ -230,7 +230,6 @@ class Core_Command extends WP_CLI_Command {
 				$version = 'nightly';
 			}
 
-			$extension    = 'zip';
 			$download_url = $this->get_download_url( $version, $locale );
 		} else {
 			$wp_org_api = new WpOrgApi( [ 'insecure' => $insecure ] );
