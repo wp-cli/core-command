@@ -322,6 +322,10 @@ class Core_Command extends WP_CLI_Command {
 				WP_CLI::error( "Couldn't access download URL (HTTP code {$response->status_code})." );
 			}
 
+			if ( ! file_exists( $temp ) || ! is_readable( $temp ) ) {
+				WP_CLI::error( "Downloaded file could not be written to or read from disk: {$temp}" );
+			}
+
 			$extension = '';
 			if ( file_exists( $temp ) ) {
 				$mime = function_exists( 'mime_content_type' ) ? mime_content_type( $temp ) : '';
