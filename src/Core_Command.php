@@ -301,7 +301,7 @@ class Core_Command extends WP_CLI_Command {
 			register_shutdown_function(
 				function () use ( &$temp ) {
 					if ( file_exists( $temp ) ) {
-						@unlink( $temp );
+						unlink( $temp );
 					}
 				}
 			);
