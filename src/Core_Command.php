@@ -368,18 +368,19 @@ class Core_Command extends WP_CLI_Command {
 			$actual_temp = substr( $temp, 0, -4 ) . ".{$extension}";
 			if ( ! rename( $temp, $actual_temp ) ) {
 				// Fallback to copy + unlink.
-				if ( copy( $temp, $actual_temp ) ) {
-					$old_temp = $temp;
-					$temp     = $actual_temp;
-					if ( ! unlink( $old_temp ) ) {
-						register_shutdown_function(
-							function () use ( $old_temp ) {
-								if ( file_exists( $old_temp ) ) {
-									unlink( $old_temp );
-								}
+				if ( ! copy( $temp, $actual_temp ) ) {
+					WP_CLI::error( 'Failed to copy the downloaded file.' );
+				}
+				$old_temp = $temp;
+				$temp     = $actual_temp;
+				if ( ! unlink( $old_temp ) ) {
+					register_shutdown_function(
+						function () use ( $old_temp ) {
+							if ( file_exists( $old_temp ) ) {
+								unlink( $old_temp );
 							}
-						);
-					}
+						}
+					);
 				}
 			} else {
 				$temp = $actual_temp;
