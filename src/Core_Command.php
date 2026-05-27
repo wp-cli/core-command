@@ -502,7 +502,7 @@ class Core_Command extends WP_CLI_Command {
 	 * --admin_user=<username>
 	 * : The name of the admin user.
 	 *
-	 * [--admin_password=<password>]
+	 * [--admin_password|admin_pass=<password>]
 	 * : The password for the admin user. Defaults to randomly generated string.
 	 *
 	 * --admin_email=<email>
