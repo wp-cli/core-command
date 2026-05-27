@@ -173,7 +173,7 @@ Subsequent uses of command will use the local cache if it still exists.
 Runs the standard WordPress installation process.
 
 ~~~
-wp core install --url=<url> --title=<site-title> --admin_user=<username> [--admin_password=<password>] --admin_email=<email> [--locale=<locale>] [--skip-email]
+wp core install --url=<url> --title=<site-title> --admin_user=<username> [--admin_password|admin_pass=<password>] --admin_email=<email> [--locale=<locale>] [--skip-email]
 ~~~
 
 Creates the WordPress tables in the database using the URL, title, and
@@ -201,7 +201,7 @@ user_login doesn't exist, a new user will be created.
 	--admin_user=<username>
 		The name of the admin user.
 
-	[--admin_password=<password>]
+	[--admin_password|admin_pass=<password>]
 		The password for the admin user. Defaults to randomly generated string.
 
 	--admin_email=<email>
