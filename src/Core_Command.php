@@ -1510,7 +1510,7 @@ EOT;
 			foreach ( $it as $blog ) {
 				++$total;
 				$url = $blog->domain . $blog->path;
-				$cmd = "--url={$url} core check-update-db";
+				$cmd = Utils\esc_cmd( '--url=%s core check-update-db', $url );
 
 				/**
 				 * @var object{stdout: string, stderr: string, return_code: int} $process
@@ -1628,7 +1628,7 @@ EOT;
 			foreach ( $it as $blog ) {
 				++$total;
 				$url = $blog->domain . $blog->path;
-				$cmd = "--url={$url} core update-db";
+				$cmd = Utils\esc_cmd( '--url=%s core update-db', $url );
 				if ( $dry_run ) {
 					$cmd .= ' --dry-run';
 				}

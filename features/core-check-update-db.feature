@@ -98,3 +98,12 @@ Feature: Check if WordPress database update is needed
       Error: This is not a multisite installation.
       """
     And the return code should be 1
+
+  Scenario: Check database update on network installation safely handles site domain/path with special characters
+    Given a WP multisite install
+    And I run `wp db query "INSERT INTO wp_blogs (site_id, domain, path, registered, last_updated) VALUES (1, 'example.com', '/x\\\$(touch /tmp/wpcli_test_check_db_marker)/', NOW(), NOW());"`
+
+    When I run `wp core check-update-db --network`
+    Then the return code should be 0
+    And the /tmp/wpcli_test_check_db_marker file should not exist
+
