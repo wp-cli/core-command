@@ -271,13 +271,11 @@ Feature: Manage WordPress installation
       """
     And the return code should be 1
 
-  # SQLite compat blocked by https://github.com/wp-cli/wp-cli-tests/pull/188.
-  @require-mysql
   Scenario: Custom wp-content directory
     Given a WP install
     And a custom wp-content directory
 
-    When I run `wp plugin status akismet`
+    When I run `wp plugin get akismet`
     Then STDOUT should not be empty
 
   Scenario: User defined in wp-cli.yml
