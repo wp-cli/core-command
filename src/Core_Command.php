@@ -213,7 +213,7 @@ class Core_Command extends WP_CLI_Command {
 			WP_CLI::error( 'Cannot use both --skip-content and --no-extract at the same time.' );
 		}
 
-		$download_url = array_shift( $args );
+		$download_url = (string) array_shift( $args );
 		$from_url     = ! empty( $download_url );
 
 		if ( $from_url ) {
@@ -225,7 +225,7 @@ class Core_Command extends WP_CLI_Command {
 				WP_CLI::error( 'Skip content and locale options are not available for URL downloads.' );
 			}
 		} elseif ( isset( $assoc_args['version'] ) && 'latest' !== $assoc_args['version'] ) {
-			$version = $assoc_args['version'];
+			$version = (string) $assoc_args['version'];
 			if ( in_array( strtolower( $version ), [ 'trunk', 'nightly' ], true ) ) {
 				$version = 'nightly';
 			}
@@ -249,6 +249,7 @@ class Core_Command extends WP_CLI_Command {
 					WP_CLI::error( "The requested locale ({$locale}) was not found." );
 				}
 			}
+			/** @var array{current: string, download: string} $offer */
 			$version      = $offer['current'];
 			$download_url = $offer['download'];
 		}
@@ -1946,10 +1947,10 @@ EOT;
 	/**
 	 * Clean up extra files.
 	 *
-	 * @param string $version_from Starting version that the installation was updated from.
-	 * @param string $version_to   Target version that the installation is updated to.
-	 * @param string $locale       Locale of the installation.
-	 * @param bool   $insecure     Whether to retry without certificate validation on TLS handshake failure.
+	 * @param string|null $version_from Starting version that the installation was updated from.
+	 * @param string|null $version_to   Target version that the installation is updated to.
+	 * @param string      $locale       Locale of the installation.
+	 * @param bool        $insecure     Whether to retry without certificate validation on TLS handshake failure.
 	 */
 	private function cleanup_extra_files( $version_from, $version_to, $locale, $insecure ) {
 		if ( ! $version_from || ! $version_to ) {
