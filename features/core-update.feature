@@ -100,6 +100,16 @@ Feature: Update WordPress core
   Scenario: Update to the latest minor release (PHP 7.2 compatible with WP >= 4.9)
     Given a WP install
     And I try `wp theme install twentytwenty --activate`
+    # The Version Check API only offers in-branch (minor) updates to a subset of
+    # sites, bucketed by the site URL, so the response is mocked to stay stable.
+    # The packages are real, so the update itself is still performed for real.
+    And that HTTP requests to https://api.wordpress.org/core/version-check/1.7/ will respond with:
+      """
+      HTTP/1.1 200 OK
+      Content-Type: application/json
+
+      {"offers":[{"response":"upgrade","download":"https://downloads.wordpress.org/release/wordpress-6.3.zip","locale":"en_US","packages":{"full":"https://downloads.wordpress.org/release/wordpress-6.3.zip","no_content":false,"new_bundled":false,"partial":false,"rollback":false},"current":"6.3","version":"6.3","php_version":"7.0.0","mysql_version":"5.0"},{"response":"autoupdate","download":"https://downloads.wordpress.org/release/wordpress-6.2.11.zip","locale":"en_US","packages":{"full":"https://downloads.wordpress.org/release/wordpress-6.2.11.zip","no_content":false,"new_bundled":false,"partial":false,"rollback":false},"current":"6.2.11","version":"6.2.11","php_version":"7.0.0","mysql_version":"5.0"}]}
+      """
 
     When I run `wp core download --version=6.2.5 --force`
     Then STDOUT should contain:
@@ -111,7 +121,7 @@ Feature: Update WordPress core
     When I try `wp core update --minor`
     Then STDOUT should contain:
       """
-      Updating to version {WP_VERSION-6.2-latest}
+      Updating to version 6.2.11
       """
     And STDOUT should contain:
       """
@@ -128,7 +138,7 @@ Feature: Update WordPress core
     When I run `wp core version`
     Then STDOUT should be:
       """
-      {WP_VERSION-6.2-latest}
+      6.2.11
       """
 
   # This test downgrades to an older WordPress version, but the SQLite plugin requires 6.4+
@@ -547,6 +557,16 @@ Feature: Update WordPress core
   Scenario: Update WordPress locale when using --minor
     Given a WP install
     And an empty cache
+    # The Version Check API only offers in-branch (minor) updates to a subset of
+    # sites, bucketed by the site URL, so the response is mocked to stay stable.
+    # The packages are real, so the update itself is still performed for real.
+    And that HTTP requests to https://api.wordpress.org/core/version-check/1.7/ will respond with:
+      """
+      HTTP/1.1 200 OK
+      Content-Type: application/json
+
+      {"offers":[{"response":"autoupdate","download":"https://downloads.wordpress.org/release/wordpress-6.5.10.zip","locale":"en_US","packages":{"full":"https://downloads.wordpress.org/release/wordpress-6.5.10.zip","no_content":false,"new_bundled":false,"partial":false,"rollback":false},"current":"6.5.10","version":"6.5.10","php_version":"7.0.0","mysql_version":"5.0"}]}
+      """
 
     # Using `try` in case there are checksum warnings.
     When I try `wp core download --version=6.5 --locale=de_DE --force`
