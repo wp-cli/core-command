@@ -7,9 +7,12 @@ Feature: Update core's database
     And a disable_sidebar_check.php file:
       """
       <?php
-      WP_CLI::add_wp_hook( 'init', static function () {
-        remove_action( 'after_switch_theme', '_wp_sidebars_changed' );
-      } );
+      WP_CLI::add_wp_hook(
+          'init',
+          static function () {
+              remove_action( 'after_switch_theme', '_wp_sidebars_changed' );
+          }
+      );
       """
     And I try `wp theme install twentytwenty --activate`
     And I run `wp core download --version=5.4 --force`
@@ -34,9 +37,12 @@ Feature: Update core's database
     And a disable_sidebar_check.php file:
       """
       <?php
-      WP_CLI::add_wp_hook( 'init', static function () {
-        remove_action( 'after_switch_theme', '_wp_sidebars_changed' );
-      } );
+      WP_CLI::add_wp_hook(
+          'init',
+          static function () {
+              remove_action( 'after_switch_theme', '_wp_sidebars_changed' );
+          }
+      );
       """
     And I try `wp theme install twentytwenty --activate`
     And I run `wp core download --version=5.4 --force`
@@ -62,9 +68,12 @@ Feature: Update core's database
     And a disable_sidebar_check.php file:
       """
       <?php
-      WP_CLI::add_wp_hook( 'init', static function () {
-        remove_action( 'after_switch_theme', '_wp_sidebars_changed' );
-      } );
+      WP_CLI::add_wp_hook(
+          'init',
+          static function () {
+              remove_action( 'after_switch_theme', '_wp_sidebars_changed' );
+          }
+      );
       """
     And I try `wp theme install twentytwenty --activate`
     And I run `wp core download --version=5.4 --force`
@@ -104,9 +113,12 @@ Feature: Update core's database
     And a disable_sidebar_check.php file:
       """
       <?php
-      WP_CLI::add_wp_hook( 'init', static function () {
-        remove_action( 'after_switch_theme', '_wp_sidebars_changed' );
-      } );
+      WP_CLI::add_wp_hook(
+          'init',
+          static function () {
+              remove_action( 'after_switch_theme', '_wp_sidebars_changed' );
+          }
+      );
       """
     And I try `wp theme install twentytwenty --activate`
     And I run `wp core download --version=5.4 --force`
@@ -158,9 +170,12 @@ Feature: Update core's database
     And a disable_sidebar_check.php file:
       """
       <?php
-      WP_CLI::add_wp_hook( 'init', static function () {
-        remove_action( 'after_switch_theme', '_wp_sidebars_changed' );
-      } );
+      WP_CLI::add_wp_hook(
+          'init',
+          static function () {
+              remove_action( 'after_switch_theme', '_wp_sidebars_changed' );
+          }
+      );
       """
     And I try `wp theme install twentytwenty --activate`
     And I run `wp core download --version=5.4 --force`
@@ -204,9 +219,12 @@ Feature: Update core's database
     And a before.php file:
       """
       <?php
-      WP_CLI::add_hook( 'before_invoke:core update-db', function(){
-        WP_CLI::log( 'WP_INSTALLING: ' . var_export( WP_INSTALLING, true ) );
-      });
+      WP_CLI::add_hook(
+          'before_invoke:core update-db',
+          function () {
+              WP_CLI::log( 'WP_INSTALLING: ' . var_export( WP_INSTALLING, true ) );
+          }
+      );
       """
 
     When I run `wp --require=before.php core update-db`

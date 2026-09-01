@@ -189,33 +189,36 @@ Feature: Update WordPress core
     And a wp-content/mu-plugins/upgrade-override.php file:
       """
       <?php
-      add_filter( 'pre_site_transient_update_core', function(){
-        return (object) array(
-          'updates' => array(
-              (object) array(
-                'response' => 'autoupdate',
-                'download' => 'https://downloads.wordpress.org/release/wordpress-6.5.5.zip',
-                'locale' => 'en_US',
-                'packages' => (object) array(
-                  'full' => 'https://downloads.wordpress.org/release/wordpress-6.5.5.zip',
-                  'no_content' => 'https://downloads.wordpress.org/release/wordpress-6.5.5-no-content.zip',
-                  'new_bundled' => 'https://downloads.wordpress.org/release/wordpress-6.5.5-new-bundled.zip',
-                  'partial' => 'https://downloads.wordpress.org/release/wordpress-6.5.5-partial-1.zip',
-                  'rollback' => 'https://downloads.wordpress.org/release/wordpress-6.5.5-rollback-1.zip',
-                ),
-                'current' => '6.5.5',
-                'version' => '6.5.5',
-                'php_version' => '8.2.1',
-                'mysql_version' => '5.0',
-                'new_bundled' => '6.4',
-                'partial_version' => '6.5.2',
-                'support_email' => 'updatehelp42@wordpress.org',
-                'new_files' => '',
-             ),
-          ),
-          'version_checked' => '6.5.5', // Needed to avoid PHP notice in `wp_version_check()`.
-        );
-      });
+      add_filter(
+          'pre_site_transient_update_core',
+          function () {
+              return (object) array(
+                  'updates' => array(
+                      (object) array(
+                          'response' => 'autoupdate',
+                          'download' => 'https://downloads.wordpress.org/release/wordpress-6.5.5.zip',
+                          'locale' => 'en_US',
+                          'packages' => (object) array(
+                              'full' => 'https://downloads.wordpress.org/release/wordpress-6.5.5.zip',
+                              'no_content' => 'https://downloads.wordpress.org/release/wordpress-6.5.5-no-content.zip',
+                              'new_bundled' => 'https://downloads.wordpress.org/release/wordpress-6.5.5-new-bundled.zip',
+                              'partial' => 'https://downloads.wordpress.org/release/wordpress-6.5.5-partial-1.zip',
+                              'rollback' => 'https://downloads.wordpress.org/release/wordpress-6.5.5-rollback-1.zip',
+                          ),
+                          'current' => '6.5.5',
+                          'version' => '6.5.5',
+                          'php_version' => '8.2.1',
+                          'mysql_version' => '5.0',
+                          'new_bundled' => '6.4',
+                          'partial_version' => '6.5.2',
+                          'support_email' => 'updatehelp42@wordpress.org',
+                          'new_files' => '',
+                      ),
+                  ),
+                  'version_checked' => '6.5.5', // Needed to avoid PHP notice in `wp_version_check()`.
+              );
+          }
+      );
       """
 
     When I run `wp core download --version=6.5.2 --force`
