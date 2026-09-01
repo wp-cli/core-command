@@ -44,7 +44,7 @@ Feature: Check for more recent versions
       <?php
       global $wp_version;
 
-      $obj = new stdClass;
+      $obj = new stdClass();
       $obj->updates = [];
       $obj->last_checked = strtotime( '1 January 2099' );
       $obj->version_checked = $wp_version;

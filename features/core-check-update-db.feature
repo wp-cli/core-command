@@ -7,9 +7,12 @@ Feature: Check if WordPress database update is needed
     And a disable_sidebar_check.php file:
       """
       <?php
-      WP_CLI::add_wp_hook( 'init', static function () {
-        remove_action( 'after_switch_theme', '_wp_sidebars_changed' );
-      } );
+      WP_CLI::add_wp_hook(
+          'init',
+          static function () {
+              remove_action( 'after_switch_theme', '_wp_sidebars_changed' );
+          }
+      );
       """
     And I try `wp theme install twentytwenty --activate`
     And I run `wp core download --version=5.4 --force`
@@ -49,9 +52,12 @@ Feature: Check if WordPress database update is needed
     And a disable_sidebar_check.php file:
       """
       <?php
-      WP_CLI::add_wp_hook( 'init', static function () {
-        remove_action( 'after_switch_theme', '_wp_sidebars_changed' );
-      } );
+      WP_CLI::add_wp_hook(
+          'init',
+          static function () {
+              remove_action( 'after_switch_theme', '_wp_sidebars_changed' );
+          }
+      );
       """
     And I try `wp theme install twentytwenty --activate`
     And I run `wp core download --version=6.6 --force`
