@@ -298,7 +298,7 @@ class Core_Command extends WP_CLI_Command {
 		}
 
 		if ( ! $cache_file || $bad_cache ) {
-			$temp = Utils\get_temp_dir() . uniqid( 'wp_' ) . '.tmp';
+			$temp = Utils\make_temp_file( 'wp_', '.tmp' );
 			register_shutdown_function(
 				function () use ( &$temp ) {
 					if ( file_exists( $temp ) ) {
@@ -2242,7 +2242,7 @@ EOT;
 	}
 
 	private static function strip_content_dir( $zip_file ) {
-		$new_zip_file = Utils\get_temp_dir() . uniqid( 'wp_' ) . '.zip';
+		$new_zip_file = Utils\make_temp_file( 'wp_', '.zip' );
 		register_shutdown_function(
 			function () use ( $new_zip_file ) {
 				if ( file_exists( $new_zip_file ) ) {
