@@ -917,7 +917,7 @@ EOT;
 			$wp_config_path = Utils\locate_wp_config();
 			if ( true === Utils\get_flag_value( $assoc_args, 'skip-config' ) ) {
 				WP_CLI::log( "Addition of multisite constants to 'wp-config.php' skipped. You need to add them manually:\n{$ms_config}" );
-			} elseif ( is_writable( $wp_config_path ) && self::modify_wp_config( $ms_config ) ) {
+			} elseif ( false !== $wp_config_path && is_writable( $wp_config_path ) && self::modify_wp_config( $ms_config ) ) {
 				WP_CLI::log( "Added multisite constants to 'wp-config.php'." );
 			} else {
 				WP_CLI::warning( "Multisite constants could not be written to 'wp-config.php'. You may need to add them manually:\n{$ms_config}" );
@@ -996,6 +996,9 @@ EOT;
 
 	private static function modify_wp_config( $content ) {
 		$wp_config_path = Utils\locate_wp_config();
+		if ( false === $wp_config_path ) {
+			return false;
+		}
 
 		$token           = "/* That's all, stop editing!";
 		$config_contents = (string) file_get_contents( $wp_config_path );
