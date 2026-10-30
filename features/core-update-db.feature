@@ -79,14 +79,13 @@ Feature: Update core's database
     And I run `wp core download --version=5.4 --force`
     And I run `wp option update db_version 45805 --require=disable_sidebar_check.php`
     And I run `wp site option update wpmu_upgrade_site 45805`
-    And I run `wp site create --slug=foo`
-    And I run `wp site create --slug=bar`
-    And I run `wp site create --slug=burrito --porcelain`
-    And save STDOUT as {BURRITO_ID}
-    And I run `wp site create --slug=taco --porcelain`
-    And save STDOUT as {TACO_ID}
-    And I run `wp site create --slug=pizza --porcelain`
-    And save STDOUT as {PIZZA_ID}
+    And these sites:
+      | slug    | save       |
+      | foo     |            |
+      | bar     |            |
+      | burrito | BURRITO_ID |
+      | taco    | TACO_ID    |
+      | pizza   | PIZZA_ID   |
     And I run `wp site archive {BURRITO_ID}`
     And I run `wp site spam {TACO_ID}`
     And I run `wp site delete {PIZZA_ID} --yes`
@@ -124,14 +123,13 @@ Feature: Update core's database
     And I run `wp core download --version=5.4 --force`
     And I run `wp option update db_version 45805 --require=disable_sidebar_check.php`
     And I run `wp site option update wpmu_upgrade_site 45805`
-    And I run `wp site create --slug=foo`
-    And I run `wp site create --slug=bar`
-    And I run `wp site create --slug=burrito --porcelain`
-    And save STDOUT as {BURRITO_ID}
-    And I run `wp site create --slug=taco --porcelain`
-    And save STDOUT as {TACO_ID}
-    And I run `wp site create --slug=pizza --porcelain`
-    And save STDOUT as {PIZZA_ID}
+    And these sites:
+      | slug    | save       |
+      | foo     |            |
+      | bar     |            |
+      | burrito | BURRITO_ID |
+      | taco    | TACO_ID    |
+      | pizza   | PIZZA_ID   |
     And I run `wp site archive {BURRITO_ID}`
     And I run `wp site spam {TACO_ID}`
     And I run `wp site delete {PIZZA_ID} --yes`
@@ -182,13 +180,15 @@ Feature: Update core's database
     And I run `wp option update db_version 45805 --require=disable_sidebar_check.php`
     And I run `wp site option update wpmu_upgrade_site 45805`
     # Create 2 additional sites in network 1 (main site already exists; 3 total in network 1)
-    And I run `wp site create --slug=net1-site1`
-    And I run `wp site create --slug=net1-site2`
+    And these sites:
+      | slug       |
+      | net1-site1 |
+      | net1-site2 |
     # Create 2 sites that will be moved to a second network (5 sites total)
-    And I run `wp site create --slug=net2-site1 --porcelain`
-    And save STDOUT as {NET2_SITE1_ID}
-    And I run `wp site create --slug=net2-site2 --porcelain`
-    And save STDOUT as {NET2_SITE2_ID}
+    And these sites:
+      | slug       | save          |
+      | net2-site1 | NET2_SITE1_ID |
+      | net2-site2 | NET2_SITE2_ID |
     # Register a second network (ID=2) and reassign those two blogs to it
     And I run `wp eval 'global $wpdb; $wpdb->insert( $wpdb->site, [ "domain" => "example.com", "path" => "/network2/" ] );'`
     And I run `wp eval 'global $wpdb; $wpdb->update( $wpdb->blogs, [ "site_id" => 2 ], [ "blog_id" => {NET2_SITE1_ID} ] ); $wpdb->update( $wpdb->blogs, [ "site_id" => 2 ], [ "blog_id" => {NET2_SITE2_ID} ] );'`

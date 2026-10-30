@@ -63,14 +63,13 @@ Feature: Check if WordPress database update is needed
     And I run `wp core download --version=6.6 --force`
     And I run `wp option update db_version 57155 --require=disable_sidebar_check.php`
     And I run `wp site option update wpmu_upgrade_site 57155`
-    And I run `wp site create --slug=foo`
-    And I run `wp site create --slug=bar`
-    And I run `wp site create --slug=burrito --porcelain`
-    And save STDOUT as {BURRITO_ID}
-    And I run `wp site create --slug=taco --porcelain`
-    And save STDOUT as {TACO_ID}
-    And I run `wp site create --slug=pizza --porcelain`
-    And save STDOUT as {PIZZA_ID}
+    And these sites:
+      | slug    | save       |
+      | foo     |            |
+      | bar     |            |
+      | burrito | BURRITO_ID |
+      | taco    | TACO_ID    |
+      | pizza   | PIZZA_ID   |
     And I run `wp site archive {BURRITO_ID}`
     And I run `wp site spam {TACO_ID}`
     And I run `wp site delete {PIZZA_ID} --yes`
