@@ -62,7 +62,11 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "scripts": {
-        "behat": "run-behat-tests",
+        "behat": [
+            "@php -r \"echo \\\"opcache loaded: \\\", var_export(extension_loaded(\\\"Zend OPcache\\\"), true), \\\" enable_cli: \\\", var_export(ini_get(\\\"opcache.enable_cli\\\"), true), PHP_EOL;\"",
+            "@putenv WP_CLI_TEST_LOG_RUN_TIMES=error_log,25,5",
+            "run-behat-tests"
+        ],
         "behat-rerun": "rerun-behat-tests",
         "lint": "run-linter-tests",
         "lint-gherkin": "run-gherkin-lint-tests",
