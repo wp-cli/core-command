@@ -20,7 +20,7 @@
         "wp-cli/db-command": "^1.3 || ^2 || ^3",
         "wp-cli/entity-command": "^1.3 || ^2 || ^3",
         "wp-cli/extension-command": "^1.2 || ^2 || ^3",
-        "wp-cli/wp-cli-tests": "dev-main#9298472990ea1237596345fd5cb8a37c53372495 as 5.1.99"
+        "wp-cli/wp-cli-tests": "dev-perf/child-process-php-settings#5915cb030c1a52f4fcbc14fde938b6003faf4e92 as 5.1.99"
     },
     "config": {
         "process-timeout": 7200,
@@ -62,7 +62,11 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "scripts": {
-        "behat": "run-behat-tests",
+        "behat": [
+            "@php -r \"echo \\\"opcache loaded: \\\", var_export(extension_loaded(\\\"Zend OPcache\\\"), true), \\\" enable_cli: \\\", var_export(ini_get(\\\"opcache.enable_cli\\\"), true), PHP_EOL;\"",
+            "@putenv WP_CLI_TEST_LOG_RUN_TIMES=error_log,25,5",
+            "run-behat-tests"
+        ],
         "behat-rerun": "rerun-behat-tests",
         "lint": "run-linter-tests",
         "lint-gherkin": "run-gherkin-lint-tests",
