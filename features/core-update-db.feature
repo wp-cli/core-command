@@ -77,8 +77,10 @@ Feature: Update core's database
       """
     And I try `wp theme install twentytwenty --activate`
     And I run `wp core download --version=5.4 --force`
-    And I run `wp option update db_version 45805 --require=disable_sidebar_check.php`
-    And I run `wp site option update wpmu_upgrade_site 45805`
+    And these setup commands:
+      | command                                                               |
+      | wp option update db_version 45805 --require=disable_sidebar_check.php |
+      | wp site option update wpmu_upgrade_site 45805                         |
     And I run `wp site create --slug=foo`
     And I run `wp site create --slug=bar`
     And I run `wp site create --slug=burrito --porcelain`
@@ -122,8 +124,10 @@ Feature: Update core's database
       """
     And I try `wp theme install twentytwenty --activate`
     And I run `wp core download --version=5.4 --force`
-    And I run `wp option update db_version 45805 --require=disable_sidebar_check.php`
-    And I run `wp site option update wpmu_upgrade_site 45805`
+    And these setup commands:
+      | command                                                               |
+      | wp option update db_version 45805 --require=disable_sidebar_check.php |
+      | wp site option update wpmu_upgrade_site 45805                         |
     And I run `wp site create --slug=foo`
     And I run `wp site create --slug=bar`
     And I run `wp site create --slug=burrito --porcelain`
@@ -179,8 +183,10 @@ Feature: Update core's database
       """
     And I try `wp theme install twentytwenty --activate`
     And I run `wp core download --version=5.4 --force`
-    And I run `wp option update db_version 45805 --require=disable_sidebar_check.php`
-    And I run `wp site option update wpmu_upgrade_site 45805`
+    And these setup commands:
+      | command                                                               |
+      | wp option update db_version 45805 --require=disable_sidebar_check.php |
+      | wp site option update wpmu_upgrade_site 45805                         |
     # Create 2 additional sites in network 1 (main site already exists; 3 total in network 1)
     And I run `wp site create --slug=net1-site1`
     And I run `wp site create --slug=net1-site2`
@@ -190,8 +196,10 @@ Feature: Update core's database
     And I run `wp site create --slug=net2-site2 --porcelain`
     And save STDOUT as {NET2_SITE2_ID}
     # Register a second network (ID=2) and reassign those two blogs to it
-    And I run `wp eval 'global $wpdb; $wpdb->insert( $wpdb->site, [ "domain" => "example.com", "path" => "/network2/" ] );'`
-    And I run `wp eval 'global $wpdb; $wpdb->update( $wpdb->blogs, [ "site_id" => 2 ], [ "blog_id" => {NET2_SITE1_ID} ] ); $wpdb->update( $wpdb->blogs, [ "site_id" => 2 ], [ "blog_id" => {NET2_SITE2_ID} ] );'`
+    And these setup commands:
+      | command                                                                                                                                                                                           |
+      | wp eval 'global $wpdb; $wpdb->insert( $wpdb->site, [ "domain" => "example.com", "path" => "/network2/" ] );'                                                                                      |
+      | wp eval 'global $wpdb; $wpdb->update( $wpdb->blogs, [ "site_id" => 2 ], [ "blog_id" => {NET2_SITE1_ID} ] ); $wpdb->update( $wpdb->blogs, [ "site_id" => 2 ], [ "blog_id" => {NET2_SITE2_ID} ] );' |
 
     When I run `wp site option get wpmu_upgrade_site`
     Then save STDOUT as {UPDATE_VERSION}

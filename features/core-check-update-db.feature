@@ -61,8 +61,10 @@ Feature: Check if WordPress database update is needed
       """
     And I try `wp theme install twentytwenty --activate`
     And I run `wp core download --version=6.6 --force`
-    And I run `wp option update db_version 57155 --require=disable_sidebar_check.php`
-    And I run `wp site option update wpmu_upgrade_site 57155`
+    And these setup commands:
+      | command                                                               |
+      | wp option update db_version 57155 --require=disable_sidebar_check.php |
+      | wp site option update wpmu_upgrade_site 57155                         |
     And I run `wp site create --slug=foo`
     And I run `wp site create --slug=bar`
     And I run `wp site create --slug=burrito --porcelain`
