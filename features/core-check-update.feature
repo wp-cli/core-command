@@ -4,7 +4,10 @@ Feature: Check for more recent versions
   @require-mysql
   Scenario: Check for update via Version Check API
     Given a WP install
-    And I try `wp theme install twentytwenty --activate`
+    And these installed and active themes:
+      """
+      twentytwenty
+      """
 
     When I run `wp core download --version=5.8 --force`
     Then STDOUT should not be empty
