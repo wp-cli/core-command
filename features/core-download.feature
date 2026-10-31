@@ -611,6 +611,23 @@ Feature: Download WordPress
       Not an archive.
       """
 
+  @skip-windows
+  Scenario: Core download with no-extract keeps the permissions of an archive it replaces
+    Given an empty directory
+    And an empty cache
+    And a wordpress-4.5-de_DE.zip file:
+      """
+      An older copy of the archive.
+      """
+
+    When I run `chmod 600 wordpress-4.5-de_DE.zip`
+    And I run `wp core download --version=4.5 --locale=de_DE --no-extract`
+    And I run `php -r 'printf( "%o", fileperms( "wordpress-4.5-de_DE.zip" ) & 0777 );'`
+    Then STDOUT should be:
+      """
+      600
+      """
+
   Scenario: Core download with no-extract should not unzip the download file (already cached)
     Given an empty directory
 
