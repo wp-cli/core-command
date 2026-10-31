@@ -552,6 +552,82 @@ Feature: Download WordPress
       """
     And the return code should be 1
 
+  Scenario: Core download with no-extract does not name an archive after its URL
+    Given an empty directory
+    And that HTTP requests to http://example.com/payload.php.md5 will respond with:
+      """
+      HTTP/1.1 200 OK
+      Content-Type: text/plain
+
+      3c58c7ed6e95bcf8fadbadc3cc2ca52b
+      """
+    And that HTTP requests to http://example.com/payload.php will respond with:
+      """
+      HTTP/1.1 200 OK
+      Content-Type: application/octet-stream
+
+      PK This only needs to look like a zip archive.
+      """
+
+    # The mocked responses make the HTTP library emit warnings, so STDERR is not checked.
+    When I try `wp core download http://example.com/payload.php --no-extract`
+    Then STDOUT should contain:
+      """
+      Success: WordPress downloaded.
+      """
+    And the return code should be 0
+    And the payload.php file should not exist
+    And the {RUN_DIR} directory should contain:
+      """
+      .zip
+      """
+
+  @skip-windows
+  Scenario: Core download with no-extract replaces a symlink at the archive path instead of writing through it
+    Given an empty directory
+    And an empty cache
+    And a victim.txt file:
+      """
+      Not an archive.
+      """
+
+    When I run `ln -s victim.txt wordpress-4.5-de_DE.zip`
+    And I run `wp core download --version=4.5 --locale=de_DE --no-extract`
+    Then the victim.txt file should be:
+      """
+      Not an archive.
+      """
+    And the wordpress-4.5-de_DE.zip file should exist
+
+    When I run `rm wordpress-4.5-de_DE.zip`
+    And I run `ln -s victim.txt wordpress-4.5-de_DE.zip`
+    And I run `wp core download --version=4.5 --locale=de_DE --no-extract`
+    Then STDOUT should contain:
+      """
+      Using cached file
+      """
+    And the victim.txt file should be:
+      """
+      Not an archive.
+      """
+
+  @skip-windows
+  Scenario: Core download with no-extract keeps the permissions of an archive it replaces
+    Given an empty directory
+    And an empty cache
+    And a wordpress-4.5-de_DE.zip file:
+      """
+      An older copy of the archive.
+      """
+
+    When I run `chmod 600 wordpress-4.5-de_DE.zip`
+    And I run `wp core download --version=4.5 --locale=de_DE --no-extract`
+    And I run `php -r 'printf( "%o", fileperms( "wordpress-4.5-de_DE.zip" ) & 0777 );'`
+    Then STDOUT should be:
+      """
+      600
+      """
+
   Scenario: Core download with no-extract should not unzip the download file (already cached)
     Given an empty directory
 
