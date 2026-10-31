@@ -523,6 +523,7 @@ Feature: Download WordPress
 
   Scenario: Core download with no-extract should not unzip the download file
     Given an empty directory
+    And an empty cache
 
     When I run `wp core download --version=4.5 --locale=de_DE --no-extract`
     Then the wp-content directory should not exist
