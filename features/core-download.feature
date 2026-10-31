@@ -523,10 +523,34 @@ Feature: Download WordPress
 
   Scenario: Core download with no-extract should not unzip the download file
     Given an empty directory
+    And an empty cache
 
     When I run `wp core download --version=4.5 --locale=de_DE --no-extract`
     Then the wp-content directory should not exist
     And the wordpress-4.5-de_DE.zip file should exist
+
+  Scenario: Core download with no-extract reports when the archive cannot be saved
+    Given an empty directory
+    And an empty cache
+    And a wordpress-4.5-de_DE.zip/placeholder.txt file:
+      """
+      A directory in the way of the archive.
+      """
+
+    When I try `wp core download --version=4.5 --locale=de_DE --no-extract`
+    Then STDERR should contain:
+      """
+      Error: Couldn't copy WordPress archive to
+      """
+    And the return code should be 1
+
+    When I run `wp core download --version=4.5 --locale=de_DE --no-extract --path=other`
+    And I try `wp core download --version=4.5 --locale=de_DE --no-extract`
+    Then STDERR should contain:
+      """
+      Error: Couldn't copy WordPress archive to
+      """
+    And the return code should be 1
 
   Scenario: Core download with no-extract should not unzip the download file (already cached)
     Given an empty directory
