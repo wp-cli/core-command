@@ -14,7 +14,10 @@ Feature: Check if WordPress database update is needed
           }
       );
       """
-    And I try `wp theme install twentytwenty --activate`
+    And these installed and active themes:
+      """
+      twentytwenty
+      """
     And I run `wp core download --version=5.4 --force`
     And I run `wp option update db_version 45805 --require=disable_sidebar_check.php`
 
@@ -59,7 +62,10 @@ Feature: Check if WordPress database update is needed
           }
       );
       """
-    And I try `wp theme install twentytwenty --activate`
+    And these installed and active themes:
+      """
+      twentytwenty
+      """
     And I run `wp core download --version=6.6 --force`
     And I run `wp option update db_version 57155 --require=disable_sidebar_check.php`
     And I run `wp site option update wpmu_upgrade_site 57155`

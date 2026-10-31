@@ -4,7 +4,10 @@ Feature: Update WordPress core
   @require-mysql
   Scenario: Update from a ZIP file
     Given a WP install
-    And I try `wp theme install twentytwenty --activate`
+    And these installed and active themes:
+      """
+      twentytwenty
+      """
 
     When I run `wp core download --version=6.2 --force`
     Then STDOUT should not be empty
@@ -35,7 +38,10 @@ Feature: Update WordPress core
   @require-php-7.0
   Scenario: Output in JSON format
     Given a WP install
-    And I try `wp theme install twentytwenty --activate`
+    And these installed and active themes:
+      """
+      twentytwenty
+      """
 
     When I run `wp core download --version=6.6 --force`
     Then STDOUT should not be empty
@@ -56,7 +62,10 @@ Feature: Update WordPress core
   @require-php-7.0
   Scenario: Output in CSV format
     Given a WP install
-    And I try `wp theme install twentytwenty --activate`
+    And these installed and active themes:
+      """
+      twentytwenty
+      """
 
     When I run `wp core download --version=6.6 --force`
     Then STDOUT should not be empty
@@ -78,7 +87,10 @@ Feature: Update WordPress core
   @require-php-7.0
   Scenario: Output in table format
     Given a WP install
-    And I try `wp theme install twentytwenty --activate`
+    And these installed and active themes:
+      """
+      twentytwenty
+      """
 
     When I run `wp core download --version=6.6 --force`
     Then STDOUT should not be empty
@@ -99,7 +111,10 @@ Feature: Update WordPress core
   @require-mysql
   Scenario: Update to the latest minor release (PHP 7.2 compatible with WP >= 4.9)
     Given a WP install
-    And I try `wp theme install twentytwenty --activate`
+    And these installed and active themes:
+      """
+      twentytwenty
+      """
 
     When I run `wp core download --version=6.2.5 --force`
     Then STDOUT should contain:
@@ -135,7 +150,10 @@ Feature: Update WordPress core
   @require-mysql
   Scenario: Core update from cache
     Given a WP install
-    And I try `wp theme install twentytwenty --activate`
+    And these installed and active themes:
+      """
+      twentytwenty
+      """
     And an empty cache
 
     When I run `wp core update --version=6.2.5 --force`
@@ -184,7 +202,10 @@ Feature: Update WordPress core
 
   Scenario: Ensure cached partial upgrades aren't used in full upgrade
     Given a WP install
-    And I try `wp theme install twentytwenty --activate`
+    And these installed and active themes:
+      """
+      twentytwenty
+      """
     And an empty cache
     And a wp-content/mu-plugins/upgrade-override.php file:
       """
@@ -259,7 +280,10 @@ Feature: Update WordPress core
   @less-than-php-7.3 @require-mysql
   Scenario: Make sure files are cleaned up
     Given a WP install
-    And I try `wp theme install twentytwenty --activate`
+    And these installed and active themes:
+      """
+      twentytwenty
+      """
 
     When I run `wp core update --version=4.4 --force`
     Then the wp-includes/rest-api.php file should exist
@@ -296,7 +320,10 @@ Feature: Update WordPress core
   @require-mysql
   Scenario: Make sure files are cleaned up with mixed case
     Given a WP install
-    And I try `wp theme install twentytwenty --activate`
+    And these installed and active themes:
+      """
+      twentytwenty
+      """
 
     When I run `wp core update --version=5.8 --force`
     Then the wp-includes/Requests/Transport/cURL.php file should exist
