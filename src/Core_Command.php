@@ -292,8 +292,8 @@ class Core_Command extends WP_CLI_Command {
 					WP_CLI::warning( 'Extraction failed, downloading a new copy...' );
 					$bad_cache = true;
 				}
-			} else {
-				copy( $cache_file, $download_dir . basename( $cache_file ) );
+			} elseif ( ! copy( $cache_file, $download_dir . basename( $cache_file ) ) ) {
+				WP_CLI::error( "Couldn't copy WordPress archive to '{$download_dir}" . basename( $cache_file ) . "'." );
 			}
 		}
 
@@ -419,7 +419,9 @@ class Core_Command extends WP_CLI_Command {
 				if ( '' === $archive_name || '.' === $archive_name ) {
 					$archive_name = basename( $temp );
 				}
-				copy( $temp, $download_dir . $archive_name );
+				if ( ! copy( $temp, $download_dir . $archive_name ) ) {
+					WP_CLI::error( "Couldn't copy WordPress archive to '{$download_dir}{$archive_name}'." );
+				}
 			}
 
 			// Do not use the cache for nightly builds or for downloaded URLs
