@@ -20,7 +20,7 @@
         "wp-cli/db-command": "^1.3 || ^2 || ^3",
         "wp-cli/entity-command": "^1.3 || ^2 || ^3",
         "wp-cli/extension-command": "^1.2 || ^2 || ^3",
-        "wp-cli/wp-cli-tests": "dev-main#9298472990ea1237596345fd5cb8a37c53372495 as 5.1.99"
+        "wp-cli/wp-cli-tests": "dev-perf/docker-workers#c5497c6b65eee7f068ea40e4924ec290194edf31 as 5.1.99"
     },
     "config": {
         "process-timeout": 7200,
@@ -62,7 +62,11 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "scripts": {
-        "behat": "run-behat-tests",
+        "behat": [
+            "@putenv WP_CLI_TEST_PARALLEL=4",
+            "@putenv WP_CLI_TEST_DOCKER=1",
+            "run-behat-tests"
+        ],
         "behat-rerun": "rerun-behat-tests",
         "lint": "run-linter-tests",
         "lint-gherkin": "run-gherkin-lint-tests",
