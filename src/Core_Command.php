@@ -2276,6 +2276,14 @@ EOT;
 			fclose( $output );
 		}
 
+		// Keep the permissions of an archive that is replaced, as copying over it would have.
+		if ( $copied && ! is_link( $destination ) && is_file( $destination ) ) {
+			$mode = fileperms( $destination );
+			if ( false !== $mode ) {
+				chmod( $partial, $mode & 0777 );
+			}
+		}
+
 		// Moving the file into place replaces whatever is at the destination, rather than writing through a symlink there.
 		// phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- Failures are reported below.
 		if ( ! $copied || ! @rename( $partial, $destination ) ) {
