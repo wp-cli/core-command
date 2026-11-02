@@ -14,7 +14,10 @@ Feature: Update core's database
           }
       );
       """
-    And I try `wp theme install twentytwenty --activate`
+    And these installed and active themes:
+      """
+      twentytwenty
+      """
     And I run `wp core download --version=5.4 --force`
     And I run `wp option update db_version 45805 --require=disable_sidebar_check.php`
 
@@ -44,7 +47,10 @@ Feature: Update core's database
           }
       );
       """
-    And I try `wp theme install twentytwenty --activate`
+    And these installed and active themes:
+      """
+      twentytwenty
+      """
     And I run `wp core download --version=5.4 --force`
     And I run `wp option update db_version 45805 --require=disable_sidebar_check.php`
 
@@ -75,7 +81,10 @@ Feature: Update core's database
           }
       );
       """
-    And I try `wp theme install twentytwenty --activate`
+    And these installed and active themes:
+      """
+      twentytwenty
+      """
     And I run `wp core download --version=5.4 --force`
     And I run `wp option update db_version 45805 --require=disable_sidebar_check.php`
     And I run `wp site option update wpmu_upgrade_site 45805`
@@ -120,7 +129,10 @@ Feature: Update core's database
           }
       );
       """
-    And I try `wp theme install twentytwenty --activate`
+    And these installed and active themes:
+      """
+      twentytwenty
+      """
     And I run `wp core download --version=5.4 --force`
     And I run `wp option update db_version 45805 --require=disable_sidebar_check.php`
     And I run `wp site option update wpmu_upgrade_site 45805`
@@ -177,7 +189,10 @@ Feature: Update core's database
           }
       );
       """
-    And I try `wp theme install twentytwenty --activate`
+    And these installed and active themes:
+      """
+      twentytwenty
+      """
     And I run `wp core download --version=5.4 --force`
     And I run `wp option update db_version 45805 --require=disable_sidebar_check.php`
     And I run `wp site option update wpmu_upgrade_site 45805`
