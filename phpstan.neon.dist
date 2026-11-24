@@ -12,3 +12,13 @@ parameters:
     - identifier: missingType.iterableValue
     - identifier: missingType.parameter
     - identifier: missingType.return
+
+    # johnbillion/wp-compat checks every WordPress symbol against the WordPress 4.9
+    # baseline that wp-cli-tests configures, and reports anything newer.
+
+    # WordPress 6.0 only formalized the already documented `...$args` parameter of
+    # `apply_filters()` by adding it to the function signature. Additional arguments
+    # were collected through `func_get_args()` before that.
+    -
+      identifier: WPCompat.parameterNotAvailable.applyfilters.args
+      path: src/WP_CLI/Core/CoreUpgrader.php

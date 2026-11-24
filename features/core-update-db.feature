@@ -7,11 +7,17 @@ Feature: Update core's database
     And a disable_sidebar_check.php file:
       """
       <?php
-      WP_CLI::add_wp_hook( 'init', static function () {
-        remove_action( 'after_switch_theme', '_wp_sidebars_changed' );
-      } );
+      WP_CLI::add_wp_hook(
+          'init',
+          static function () {
+              remove_action( 'after_switch_theme', '_wp_sidebars_changed' );
+          }
+      );
       """
-    And I try `wp theme install twentytwenty --activate`
+    And these installed and active themes:
+      """
+      twentytwenty
+      """
     And I run `wp core download --version=5.4 --force`
     And I run `wp option update db_version 45805 --require=disable_sidebar_check.php`
 
@@ -34,11 +40,17 @@ Feature: Update core's database
     And a disable_sidebar_check.php file:
       """
       <?php
-      WP_CLI::add_wp_hook( 'init', static function () {
-        remove_action( 'after_switch_theme', '_wp_sidebars_changed' );
-      } );
+      WP_CLI::add_wp_hook(
+          'init',
+          static function () {
+              remove_action( 'after_switch_theme', '_wp_sidebars_changed' );
+          }
+      );
       """
-    And I try `wp theme install twentytwenty --activate`
+    And these installed and active themes:
+      """
+      twentytwenty
+      """
     And I run `wp core download --version=5.4 --force`
     And I run `wp option update db_version 45805 --require=disable_sidebar_check.php`
 
@@ -62,11 +74,17 @@ Feature: Update core's database
     And a disable_sidebar_check.php file:
       """
       <?php
-      WP_CLI::add_wp_hook( 'init', static function () {
-        remove_action( 'after_switch_theme', '_wp_sidebars_changed' );
-      } );
+      WP_CLI::add_wp_hook(
+          'init',
+          static function () {
+              remove_action( 'after_switch_theme', '_wp_sidebars_changed' );
+          }
+      );
       """
-    And I try `wp theme install twentytwenty --activate`
+    And these installed and active themes:
+      """
+      twentytwenty
+      """
     And I run `wp core download --version=5.4 --force`
     And I run `wp option update db_version 45805 --require=disable_sidebar_check.php`
     And I run `wp site option update wpmu_upgrade_site 45805`
@@ -104,11 +122,17 @@ Feature: Update core's database
     And a disable_sidebar_check.php file:
       """
       <?php
-      WP_CLI::add_wp_hook( 'init', static function () {
-        remove_action( 'after_switch_theme', '_wp_sidebars_changed' );
-      } );
+      WP_CLI::add_wp_hook(
+          'init',
+          static function () {
+              remove_action( 'after_switch_theme', '_wp_sidebars_changed' );
+          }
+      );
       """
-    And I try `wp theme install twentytwenty --activate`
+    And these installed and active themes:
+      """
+      twentytwenty
+      """
     And I run `wp core download --version=5.4 --force`
     And I run `wp option update db_version 45805 --require=disable_sidebar_check.php`
     And I run `wp site option update wpmu_upgrade_site 45805`
@@ -158,11 +182,17 @@ Feature: Update core's database
     And a disable_sidebar_check.php file:
       """
       <?php
-      WP_CLI::add_wp_hook( 'init', static function () {
-        remove_action( 'after_switch_theme', '_wp_sidebars_changed' );
-      } );
+      WP_CLI::add_wp_hook(
+          'init',
+          static function () {
+              remove_action( 'after_switch_theme', '_wp_sidebars_changed' );
+          }
+      );
       """
-    And I try `wp theme install twentytwenty --activate`
+    And these installed and active themes:
+      """
+      twentytwenty
+      """
     And I run `wp core download --version=5.4 --force`
     And I run `wp option update db_version 45805 --require=disable_sidebar_check.php`
     And I run `wp site option update wpmu_upgrade_site 45805`
@@ -175,8 +205,10 @@ Feature: Update core's database
     And I run `wp site create --slug=net2-site2 --porcelain`
     And save STDOUT as {NET2_SITE2_ID}
     # Register a second network (ID=2) and reassign those two blogs to it
-    And I run `wp eval 'global $wpdb; $wpdb->insert( $wpdb->site, [ "domain" => "example.com", "path" => "/network2/" ] );'`
-    And I run `wp eval 'global $wpdb; $wpdb->update( $wpdb->blogs, [ "site_id" => 2 ], [ "blog_id" => {NET2_SITE1_ID} ] ); $wpdb->update( $wpdb->blogs, [ "site_id" => 2 ], [ "blog_id" => {NET2_SITE2_ID} ] );'`
+    And these setup commands:
+      | command                                                                                                                                                                                           |
+      | wp eval 'global $wpdb; $wpdb->insert( $wpdb->site, [ "domain" => "example.com", "path" => "/network2/" ] );'                                                                                      |
+      | wp eval 'global $wpdb; $wpdb->update( $wpdb->blogs, [ "site_id" => 2 ], [ "blog_id" => {NET2_SITE1_ID} ] ); $wpdb->update( $wpdb->blogs, [ "site_id" => 2 ], [ "blog_id" => {NET2_SITE2_ID} ] );' |
 
     When I run `wp site option get wpmu_upgrade_site`
     Then save STDOUT as {UPDATE_VERSION}
@@ -204,9 +236,12 @@ Feature: Update core's database
     And a before.php file:
       """
       <?php
-      WP_CLI::add_hook( 'before_invoke:core update-db', function(){
-        WP_CLI::log( 'WP_INSTALLING: ' . var_export( WP_INSTALLING, true ) );
-      });
+      WP_CLI::add_hook(
+          'before_invoke:core update-db',
+          function () {
+              WP_CLI::log( 'WP_INSTALLING: ' . var_export( WP_INSTALLING, true ) );
+          }
+      );
       """
 
     When I run `wp --require=before.php core update-db`

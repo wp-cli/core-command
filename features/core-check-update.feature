@@ -4,7 +4,10 @@ Feature: Check for more recent versions
   @require-mysql
   Scenario: Check for update via Version Check API
     Given a WP install
-    And I try `wp theme install twentytwenty --activate`
+    And these installed and active themes:
+      """
+      twentytwenty
+      """
     # The Version Check API only offers in-branch (minor) updates to a subset of
     # sites, bucketed by the site URL, so the response is mocked to stay stable.
     And that HTTP requests to https://api.wordpress.org/core/version-check/1.7/ will respond with:
@@ -65,7 +68,7 @@ Feature: Check for more recent versions
       <?php
       global $wp_version;
 
-      $obj = new stdClass;
+      $obj = new stdClass();
       $obj->updates = [];
       $obj->last_checked = strtotime( '1 January 2099' );
       $obj->version_checked = $wp_version;

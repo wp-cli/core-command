@@ -4,7 +4,10 @@ Feature: Update WordPress core
   @require-mysql
   Scenario: Update from a ZIP file
     Given a WP install
-    And I try `wp theme install twentytwenty --activate`
+    And these installed and active themes:
+      """
+      twentytwenty
+      """
 
     When I run `wp core download --version=6.2 --force`
     Then STDOUT should not be empty
@@ -35,7 +38,10 @@ Feature: Update WordPress core
   @require-php-7.0
   Scenario: Output in JSON format
     Given a WP install
-    And I try `wp theme install twentytwenty --activate`
+    And these installed and active themes:
+      """
+      twentytwenty
+      """
 
     When I run `wp core download --version=6.6 --force`
     Then STDOUT should not be empty
@@ -56,7 +62,10 @@ Feature: Update WordPress core
   @require-php-7.0
   Scenario: Output in CSV format
     Given a WP install
-    And I try `wp theme install twentytwenty --activate`
+    And these installed and active themes:
+      """
+      twentytwenty
+      """
 
     When I run `wp core download --version=6.6 --force`
     Then STDOUT should not be empty
@@ -78,7 +87,10 @@ Feature: Update WordPress core
   @require-php-7.0
   Scenario: Output in table format
     Given a WP install
-    And I try `wp theme install twentytwenty --activate`
+    And these installed and active themes:
+      """
+      twentytwenty
+      """
 
     When I run `wp core download --version=6.6 --force`
     Then STDOUT should not be empty
@@ -99,7 +111,10 @@ Feature: Update WordPress core
   @require-mysql
   Scenario: Update to the latest minor release (PHP 7.2 compatible with WP >= 4.9)
     Given a WP install
-    And I try `wp theme install twentytwenty --activate`
+    And these installed and active themes:
+      """
+      twentytwenty
+      """
     # The Version Check API only offers in-branch (minor) updates to a subset of
     # sites, bucketed by the site URL, so the response is mocked to stay stable.
     # The packages are real, so the update itself is still performed for real.
@@ -145,7 +160,10 @@ Feature: Update WordPress core
   @require-mysql
   Scenario: Core update from cache
     Given a WP install
-    And I try `wp theme install twentytwenty --activate`
+    And these installed and active themes:
+      """
+      twentytwenty
+      """
     And an empty cache
 
     When I run `wp core update --version=6.2.5 --force`
@@ -194,38 +212,44 @@ Feature: Update WordPress core
 
   Scenario: Ensure cached partial upgrades aren't used in full upgrade
     Given a WP install
-    And I try `wp theme install twentytwenty --activate`
+    And these installed and active themes:
+      """
+      twentytwenty
+      """
     And an empty cache
     And a wp-content/mu-plugins/upgrade-override.php file:
       """
       <?php
-      add_filter( 'pre_site_transient_update_core', function(){
-        return (object) array(
-          'updates' => array(
-              (object) array(
-                'response' => 'autoupdate',
-                'download' => 'https://downloads.wordpress.org/release/wordpress-6.5.5.zip',
-                'locale' => 'en_US',
-                'packages' => (object) array(
-                  'full' => 'https://downloads.wordpress.org/release/wordpress-6.5.5.zip',
-                  'no_content' => 'https://downloads.wordpress.org/release/wordpress-6.5.5-no-content.zip',
-                  'new_bundled' => 'https://downloads.wordpress.org/release/wordpress-6.5.5-new-bundled.zip',
-                  'partial' => 'https://downloads.wordpress.org/release/wordpress-6.5.5-partial-1.zip',
-                  'rollback' => 'https://downloads.wordpress.org/release/wordpress-6.5.5-rollback-1.zip',
-                ),
-                'current' => '6.5.5',
-                'version' => '6.5.5',
-                'php_version' => '8.2.1',
-                'mysql_version' => '5.0',
-                'new_bundled' => '6.4',
-                'partial_version' => '6.5.2',
-                'support_email' => 'updatehelp42@wordpress.org',
-                'new_files' => '',
-             ),
-          ),
-          'version_checked' => '6.5.5', // Needed to avoid PHP notice in `wp_version_check()`.
-        );
-      });
+      add_filter(
+          'pre_site_transient_update_core',
+          function () {
+              return (object) array(
+                  'updates' => array(
+                      (object) array(
+                          'response' => 'autoupdate',
+                          'download' => 'https://downloads.wordpress.org/release/wordpress-6.5.5.zip',
+                          'locale' => 'en_US',
+                          'packages' => (object) array(
+                              'full' => 'https://downloads.wordpress.org/release/wordpress-6.5.5.zip',
+                              'no_content' => 'https://downloads.wordpress.org/release/wordpress-6.5.5-no-content.zip',
+                              'new_bundled' => 'https://downloads.wordpress.org/release/wordpress-6.5.5-new-bundled.zip',
+                              'partial' => 'https://downloads.wordpress.org/release/wordpress-6.5.5-partial-1.zip',
+                              'rollback' => 'https://downloads.wordpress.org/release/wordpress-6.5.5-rollback-1.zip',
+                          ),
+                          'current' => '6.5.5',
+                          'version' => '6.5.5',
+                          'php_version' => '8.2.1',
+                          'mysql_version' => '5.0',
+                          'new_bundled' => '6.4',
+                          'partial_version' => '6.5.2',
+                          'support_email' => 'updatehelp42@wordpress.org',
+                          'new_files' => '',
+                      ),
+                  ),
+                  'version_checked' => '6.5.5', // Needed to avoid PHP notice in `wp_version_check()`.
+              );
+          }
+      );
       """
 
     When I run `wp core download --version=6.5.2 --force`
@@ -266,7 +290,10 @@ Feature: Update WordPress core
   @less-than-php-7.3 @require-mysql
   Scenario: Make sure files are cleaned up
     Given a WP install
-    And I try `wp theme install twentytwenty --activate`
+    And these installed and active themes:
+      """
+      twentytwenty
+      """
 
     When I run `wp core update --version=4.4 --force`
     Then the wp-includes/rest-api.php file should exist
@@ -303,7 +330,10 @@ Feature: Update WordPress core
   @require-mysql
   Scenario: Make sure files are cleaned up with mixed case
     Given a WP install
-    And I try `wp theme install twentytwenty --activate`
+    And these installed and active themes:
+      """
+      twentytwenty
+      """
 
     When I run `wp core update --version=5.8 --force`
     Then the wp-includes/Requests/Transport/cURL.php file should exist

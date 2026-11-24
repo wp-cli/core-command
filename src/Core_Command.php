@@ -293,12 +293,12 @@ class Core_Command extends WP_CLI_Command {
 					$bad_cache = true;
 				}
 			} else {
-				copy( $cache_file, $download_dir . basename( $cache_file ) );
+				self::save_archive( $cache_file, $download_dir . basename( $cache_file ) );
 			}
 		}
 
 		if ( ! $cache_file || $bad_cache ) {
-			$temp = Utils\get_temp_dir() . uniqid( 'wp_' ) . '.tmp';
+			$temp = Utils\make_temp_file( 'wp_', '.tmp' );
 			register_shutdown_function(
 				function () use ( &$temp ) {
 					if ( file_exists( $temp ) ) {
@@ -414,7 +414,11 @@ class Core_Command extends WP_CLI_Command {
 					WP_CLI::error( "Couldn't extract WordPress archive. {$exception->getMessage()}" );
 				}
 			} else {
-				copy( $temp, $download_dir . basename( $temp ) );
+				// Name a release like the cached copy of it. An archive downloaded from a URL keeps
+				// the random name of the temporary file, so that the URL cannot choose the name or
+				// type of a file written into the target directory.
+				$archive_name = $from_url ? basename( $temp ) : "wordpress-{$version}-{$locale}.{$extension}";
+				self::save_archive( $temp, $download_dir . $archive_name );
 			}
 
 			// Do not use the cache for nightly builds or for downloaded URLs
@@ -917,7 +921,7 @@ EOT;
 			$wp_config_path = Utils\locate_wp_config();
 			if ( true === Utils\get_flag_value( $assoc_args, 'skip-config' ) ) {
 				WP_CLI::log( "Addition of multisite constants to 'wp-config.php' skipped. You need to add them manually:\n{$ms_config}" );
-			} elseif ( is_writable( $wp_config_path ) && self::modify_wp_config( $ms_config ) ) {
+			} elseif ( false !== $wp_config_path && is_writable( $wp_config_path ) && self::modify_wp_config( $ms_config ) ) {
 				WP_CLI::log( "Added multisite constants to 'wp-config.php'." );
 			} else {
 				WP_CLI::warning( "Multisite constants could not be written to 'wp-config.php'. You may need to add them manually:\n{$ms_config}" );
@@ -996,6 +1000,9 @@ EOT;
 
 	private static function modify_wp_config( $content ) {
 		$wp_config_path = Utils\locate_wp_config();
+		if ( false === $wp_config_path ) {
+			return false;
+		}
 
 		$token           = "/* That's all, stop editing!";
 		$config_contents = (string) file_get_contents( $wp_config_path );
@@ -2241,8 +2248,54 @@ EOT;
 		return true;
 	}
 
+	/**
+	 * Save a downloaded archive at its destination in the download directory.
+	 *
+	 * The archive is written to a new file with a random name next to the destination first, and
+	 * then moved into place, so that a symlink at the destination is replaced instead of followed.
+	 *
+	 * @param string $source      Path of the archive to save.
+	 * @param string $destination Path to save the archive at.
+	 */
+	private static function save_archive( $source, $destination ): void {
+		$partial = dirname( $destination ) . '/.wp-cli-archive-' . bin2hex( random_bytes( 8 ) ) . '.part';
+
+		// Creating the file exclusively fails if anything, including a symlink, is already at its path.
+		// phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- Failures are reported below.
+		$input = @fopen( $source, 'rb' );
+		// phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- Failures are reported below.
+		$output = @fopen( $partial, 'xb' );
+
+		$copied = false !== $input && false !== $output && false !== stream_copy_to_stream( $input, $output );
+
+		if ( false !== $input ) {
+			fclose( $input );
+		}
+
+		if ( false !== $output ) {
+			fclose( $output );
+		}
+
+		// Keep the permissions of an archive that is replaced, as copying over it would have.
+		if ( $copied && ! is_link( $destination ) && is_file( $destination ) ) {
+			$mode = fileperms( $destination );
+			if ( false !== $mode ) {
+				chmod( $partial, $mode & 0777 );
+			}
+		}
+
+		// Moving the file into place replaces whatever is at the destination, rather than writing through a symlink there.
+		// phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- Failures are reported below.
+		if ( ! $copied || ! @rename( $partial, $destination ) ) {
+			if ( file_exists( $partial ) ) {
+				unlink( $partial );
+			}
+			WP_CLI::error( "Couldn't copy WordPress archive to '{$destination}'." );
+		}
+	}
+
 	private static function strip_content_dir( $zip_file ) {
-		$new_zip_file = Utils\get_temp_dir() . uniqid( 'wp_' ) . '.zip';
+		$new_zip_file = Utils\make_temp_file( 'wp_', '.zip' );
 		register_shutdown_function(
 			function () use ( $new_zip_file ) {
 				if ( file_exists( $new_zip_file ) ) {

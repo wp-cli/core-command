@@ -84,7 +84,7 @@ class CoreUpgrader extends DefaultCoreUpgrader {
 		$filename  = pathinfo( $package, PATHINFO_FILENAME );
 		$extension = pathinfo( $package, PATHINFO_EXTENSION );
 
-		$temp = Utils\get_temp_dir() . uniqid( 'wp_' ) . ".{$extension}";
+		$temp = Utils\make_temp_file( 'wp_', ".{$extension}" );
 		register_shutdown_function(
 			function () use ( $temp ) {
 				if ( file_exists( $temp ) ) {
