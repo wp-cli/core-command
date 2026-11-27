@@ -9,8 +9,10 @@ Feature: Update WordPress core
       twentytwenty
       """
 
-    When I run `wp core download --version=6.2 --force`
-    Then STDOUT should not be empty
+    # May produce a warning if the checksums for the version being replaced cannot be retrieved, e.g. for a development build.
+    When I try `wp core download --version=6.2 --force`
+    Then the return code should be 0
+    And STDOUT should not be empty
 
     When I try `wp eval 'echo $GLOBALS["wp_version"];'`
     Then STDOUT should be:
@@ -43,8 +45,10 @@ Feature: Update WordPress core
       twentytwenty
       """
 
-    When I run `wp core download --version=6.6 --force`
-    Then STDOUT should not be empty
+    # May produce a warning if the checksums for the version being replaced cannot be retrieved, e.g. for a development build.
+    When I try `wp core download --version=6.6 --force`
+    Then the return code should be 0
+    And STDOUT should not be empty
 
     When I run `wp eval 'echo $GLOBALS["wp_version"];'`
     Then STDOUT should be:
@@ -67,8 +71,10 @@ Feature: Update WordPress core
       twentytwenty
       """
 
-    When I run `wp core download --version=6.6 --force`
-    Then STDOUT should not be empty
+    # May produce a warning if the checksums for the version being replaced cannot be retrieved, e.g. for a development build.
+    When I try `wp core download --version=6.6 --force`
+    Then the return code should be 0
+    And STDOUT should not be empty
 
     When I run `wp eval 'echo $GLOBALS["wp_version"];'`
     Then STDOUT should be:
@@ -92,8 +98,10 @@ Feature: Update WordPress core
       twentytwenty
       """
 
-    When I run `wp core download --version=6.6 --force`
-    Then STDOUT should not be empty
+    # May produce a warning if the checksums for the version being replaced cannot be retrieved, e.g. for a development build.
+    When I try `wp core download --version=6.6 --force`
+    Then the return code should be 0
+    And STDOUT should not be empty
 
     When I run `wp eval 'echo $GLOBALS["wp_version"];'`
     Then STDOUT should be:
@@ -116,8 +124,10 @@ Feature: Update WordPress core
       twentytwenty
       """
 
-    When I run `wp core download --version=6.2.5 --force`
-    Then STDOUT should contain:
+    # May produce a warning if the checksums for the version being replaced cannot be retrieved, e.g. for a development build.
+    When I try `wp core download --version=6.2.5 --force`
+    Then the return code should be 0
+    And STDOUT should contain:
       """
       Success: WordPress downloaded.
       """
@@ -156,8 +166,10 @@ Feature: Update WordPress core
       """
     And an empty cache
 
-    When I run `wp core update --version=6.2.5 --force`
-    Then STDOUT should not contain:
+    # May produce a warning if the checksums for the version being replaced cannot be retrieved, e.g. for a development build.
+    When I try `wp core update --version=6.2.5 --force`
+    Then the return code should be 0
+    And STDOUT should not contain:
       """
       Using cached file
       """
@@ -182,7 +194,9 @@ Feature: Update WordPress core
   @require-php-7.4
   Scenario: Don't run update when up-to-date
     Given a WP install
-    And I run `wp core update`
+    # May produce a warning if the checksums for the version being replaced cannot be retrieved, e.g. for a development build.
+    And I try `wp core update`
+    And the return code should be 0
 
     When I run `wp core update`
     Then STDOUT should contain:
@@ -242,8 +256,11 @@ Feature: Update WordPress core
       );
       """
 
-    When I run `wp core download --version=6.5.2 --force`
-    And I run `wp core update`
+    # May produce a warning if the checksums for the version being replaced cannot be retrieved, e.g. for a development build.
+    When I try `wp core download --version=6.5.2 --force`
+    Then the return code should be 0
+
+    When I run `wp core update`
     Then STDOUT should contain:
       """
       Success: WordPress updated successfully.
@@ -285,8 +302,10 @@ Feature: Update WordPress core
       twentytwenty
       """
 
-    When I run `wp core update --version=4.4 --force`
-    Then the wp-includes/rest-api.php file should exist
+    # May produce a warning if the checksums for the version being replaced cannot be retrieved, e.g. for a development build.
+    When I try `wp core update --version=4.4 --force`
+    Then the return code should be 0
+    And the wp-includes/rest-api.php file should exist
     And the wp-includes/class-wp-comment.php file should exist
     And STDOUT should not contain:
       """
@@ -325,8 +344,10 @@ Feature: Update WordPress core
       twentytwenty
       """
 
-    When I run `wp core update --version=5.8 --force`
-    Then the wp-includes/Requests/Transport/cURL.php file should exist
+    # May produce a warning if the checksums for the version being replaced cannot be retrieved, e.g. for a development build.
+    When I try `wp core update --version=5.8 --force`
+    Then the return code should be 0
+    And the wp-includes/Requests/Transport/cURL.php file should exist
     And the wp-includes/Requests/Exception/Transport/cURL.php file should exist
     And the wp-includes/Requests/Exception/HTTP/502.php file should exist
     And the wp-includes/Requests/IRI.php file should exist
@@ -366,8 +387,10 @@ Feature: Update WordPress core
   Scenario Outline: Use `--version=(nightly|trunk)` to update to the latest nightly version
     Given a WP install
 
-    When I run `wp core update --version=<version>`
-    Then STDOUT should contain:
+    # May produce a warning if the checksums for the version being replaced cannot be retrieved, e.g. for a development build.
+    When I try `wp core update --version=<version>`
+    Then the return code should be 0
+    And STDOUT should contain:
       """
       Updating to version nightly (en_US)...
       Downloading update from https://wordpress.org/nightly-builds/wordpress-latest.zip...
@@ -411,8 +434,10 @@ Feature: Update WordPress core
   Scenario: Allow installing major version with trailing zero
     Given a WP install
 
-    When I run `wp core update --version=6.2.0 --force`
-    Then STDOUT should contain:
+    # May produce a warning if the checksums for the version being replaced cannot be retrieved, e.g. for a development build.
+    When I try `wp core update --version=6.2.0 --force`
+    Then the return code should be 0
+    And STDOUT should contain:
       """
       Success:
       """
@@ -456,7 +481,9 @@ Feature: Update WordPress core
   Scenario: Old files from $_old_files are cleaned up when upgrading
     Given a WP install
 
-    When I run `wp core download --version=6.8 --force`
+    # May produce a warning if the checksums for the version being replaced cannot be retrieved, e.g. for a development build.
+    When I try `wp core download --version=6.8 --force`
+    Then the return code should be 0
 
     # Create files that should be removed according to 6.9 old_files list
     Given a wp-includes/blocks/post-author/editor.css file:
@@ -498,8 +525,10 @@ Feature: Update WordPress core
   Scenario: Old files cleanup works when checksums unavailable
     Given a WP install
 
-    When I run `wp core download --version=6.8 --force`
-    Then STDOUT should contain:
+    # May produce a warning if the checksums for the version being replaced cannot be retrieved, e.g. for a development build.
+    When I try `wp core download --version=6.8 --force`
+    Then the return code should be 0
+    And STDOUT should contain:
       """
       Success: WordPress downloaded.
       """
@@ -628,8 +657,10 @@ Feature: Update WordPress core
       """
     And the return code should be 0
 
-    When I run `wp core update --version=6.0 --force`
-    Then STDOUT should contain:
+    # May produce a warning if the checksums for the version being replaced cannot be retrieved, e.g. for a development build.
+    When I try `wp core update --version=6.0 --force`
+    Then the return code should be 0
+    And STDOUT should contain:
       """
       Updating to version 6.0
       """

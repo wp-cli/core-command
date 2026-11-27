@@ -2,7 +2,9 @@ Feature: Find version for WordPress install
 
   Scenario: Verify core version
     Given a WP install
-    And I run `wp core download --version=4.4.2 --force`
+    # May produce a warning if the checksums for the version being replaced cannot be retrieved, e.g. for a development build.
+    And I try `wp core download --version=4.4.2 --force`
+    And the return code should be 0
 
     When I run `wp core version`
     Then STDOUT should be:

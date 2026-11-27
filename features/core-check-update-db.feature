@@ -18,7 +18,9 @@ Feature: Check if WordPress database update is needed
       """
       twentytwenty
       """
-    And I run `wp core download --version=5.4 --force`
+    # May produce a warning if the checksums for the version being replaced cannot be retrieved, e.g. for a development build.
+    And I try `wp core download --version=5.4 --force`
+    And the return code should be 0
     And I run `wp option update db_version 45805 --require=disable_sidebar_check.php`
 
     When I try `wp core check-update-db`
@@ -66,7 +68,9 @@ Feature: Check if WordPress database update is needed
       """
       twentytwenty
       """
-    And I run `wp core download --version=6.6 --force`
+    # May produce a warning if the checksums for the version being replaced cannot be retrieved, e.g. for a development build.
+    And I try `wp core download --version=6.6 --force`
+    And the return code should be 0
     And I run `wp option update db_version 57155 --require=disable_sidebar_check.php`
     And I run `wp site option update wpmu_upgrade_site 57155`
     And I run `wp site create --slug=foo`

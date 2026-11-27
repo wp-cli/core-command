@@ -18,7 +18,9 @@ Feature: Update core's database
       """
       twentytwenty
       """
-    And I run `wp core download --version=5.4 --force`
+    # May produce a warning if the checksums for the version being replaced cannot be retrieved, e.g. for a development build.
+    And I try `wp core download --version=5.4 --force`
+    And the return code should be 0
     And I run `wp option update db_version 45805 --require=disable_sidebar_check.php`
 
     When I run `wp core update-db`
@@ -51,7 +53,9 @@ Feature: Update core's database
       """
       twentytwenty
       """
-    And I run `wp core download --version=5.4 --force`
+    # May produce a warning if the checksums for the version being replaced cannot be retrieved, e.g. for a development build.
+    And I try `wp core download --version=5.4 --force`
+    And the return code should be 0
     And I run `wp option update db_version 45805 --require=disable_sidebar_check.php`
 
     When I run `wp core update-db --dry-run`
@@ -85,7 +89,9 @@ Feature: Update core's database
       """
       twentytwenty
       """
-    And I run `wp core download --version=5.4 --force`
+    # May produce a warning if the checksums for the version being replaced cannot be retrieved, e.g. for a development build.
+    And I try `wp core download --version=5.4 --force`
+    And the return code should be 0
     And I run `wp option update db_version 45805 --require=disable_sidebar_check.php`
     And I run `wp site option update wpmu_upgrade_site 45805`
     And I run `wp site create --slug=foo`
@@ -133,7 +139,9 @@ Feature: Update core's database
       """
       twentytwenty
       """
-    And I run `wp core download --version=5.4 --force`
+    # May produce a warning if the checksums for the version being replaced cannot be retrieved, e.g. for a development build.
+    And I try `wp core download --version=5.4 --force`
+    And the return code should be 0
     And I run `wp option update db_version 45805 --require=disable_sidebar_check.php`
     And I run `wp site option update wpmu_upgrade_site 45805`
     And I run `wp site create --slug=foo`
@@ -193,7 +201,9 @@ Feature: Update core's database
       """
       twentytwenty
       """
-    And I run `wp core download --version=5.4 --force`
+    # May produce a warning if the checksums for the version being replaced cannot be retrieved, e.g. for a development build.
+    And I try `wp core download --version=5.4 --force`
+    And the return code should be 0
     And I run `wp option update db_version 45805 --require=disable_sidebar_check.php`
     And I run `wp site option update wpmu_upgrade_site 45805`
     # Create 2 additional sites in network 1 (main site already exists; 3 total in network 1)
