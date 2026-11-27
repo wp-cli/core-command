@@ -9,8 +9,10 @@ Feature: Check for more recent versions
       twentytwenty
       """
 
-    When I run `wp core download --version=5.8 --force`
-    Then STDOUT should not be empty
+    # May produce a warning if the checksums for the version being replaced cannot be retrieved, e.g. for a development build.
+    When I try `wp core download --version=5.8 --force`
+    Then the return code should be 0
+    And STDOUT should not be empty
 
     When I run `wp core check-update --format=csv`
     Then STDOUT should match #{WP_VERSION-latest},major,https://downloads.(w|wordpress).org/release/wordpress-{WP_VERSION-latest}.zip#
